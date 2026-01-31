@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@akxr/design-system";
+import { Button, Chip } from "@akxr/design-system";
 
-// Simple icon component matching the Figma
+// Simple icon component
 const BrandIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
@@ -27,70 +27,52 @@ export default function DesignSystemShowcase() {
                         Button
                     </h2>
 
-                    {/* All 4 Variants */}
                     <div className="mb-8">
                         <h3 className="text-sm font-medium text-text-secondary mb-4">
                             Variants
                         </h3>
                         <div className="flex flex-col gap-4 max-w-xs">
-                            <Button variant="primary" leftIcon={<BrandIcon />}>
+                            <Button variant="primary">
                                 Join now
                             </Button>
-                            <Button variant="secondary" leftIcon={<BrandIcon />}>
+                            <Button variant="secondary">
                                 Join now
                             </Button>
-                            <Button variant="outline" leftIcon={<BrandIcon />}>
+                            <Button variant="outline">
                                 Join now
                             </Button>
-                            <Button variant="ghost" leftIcon={<BrandIcon />}>
+                            <Button variant="ghost">
                                 Join now
                             </Button>
                         </div>
                     </div>
 
-                    {/* Sizes */}
-                    <div className="mb-8">
-                        <h3 className="text-sm font-medium text-text-secondary mb-4">
-                            Sizes
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Button size="sm" leftIcon={<BrandIcon />}>
-                                Small
-                            </Button>
-                            <Button size="md" leftIcon={<BrandIcon />}>
-                                Medium
-                            </Button>
-                            <Button size="lg" leftIcon={<BrandIcon />}>
-                                Large
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* States */}
-                    <div className="mb-8">
+                    <div>
                         <h3 className="text-sm font-medium text-text-secondary mb-4">
                             States
                         </h3>
                         <div className="flex flex-wrap items-center gap-3">
-                            <Button leftIcon={<BrandIcon />}>Default</Button>
+                            <Button>Default</Button>
                             <Button disabled leftIcon={<BrandIcon />}>
                                 Disabled
                             </Button>
                             <Button isLoading>Loading</Button>
                         </div>
                     </div>
+                </section>
 
-                    {/* Without Icon */}
-                    <div>
-                        <h3 className="text-sm font-medium text-text-secondary mb-4">
-                            Without Icon
-                        </h3>
-                        <div className="flex flex-wrap gap-3">
-                            <Button variant="primary">Join now</Button>
-                            <Button variant="secondary">Join now</Button>
-                            <Button variant="outline">Join now</Button>
-                            <Button variant="ghost">Join now</Button>
-                        </div>
+                {/* Chips Section */}
+                <section className="mb-12">
+                    <h2 className="text-xl font-semibold mb-6 pb-2 border-b border-border-default">
+                        Chips
+                    </h2>
+
+                    <div className="flex flex-wrap gap-3">
+                        <Chip variant="success">Join now</Chip>
+                        <Chip variant="warning">Join now</Chip>
+                        <Chip variant="error">Join now</Chip>
+                        <Chip variant="info">Join now</Chip>
+                        <Chip variant="neutral">Join now</Chip>
                     </div>
                 </section>
 
@@ -126,18 +108,45 @@ export default function DesignSystemShowcase() {
                         <h3 className="text-sm font-medium text-text-secondary mb-3">
                             Status
                         </h3>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-3 gap-3 mb-3">
                             <div className="bg-success text-white p-4 rounded-lg text-center text-sm">
                                 success
                             </div>
+                            <div className="bg-success-muted text-white p-4 rounded-lg text-center text-sm">
+                                success-muted
+                            </div>
+                            <div className="bg-success-subtle text-success p-4 rounded-lg text-center text-sm">
+                                success-subtle
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 mb-3">
                             <div className="bg-error text-white p-4 rounded-lg text-center text-sm">
                                 error
                             </div>
+                            <div className="bg-error-muted text-white p-4 rounded-lg text-center text-sm">
+                                error-muted
+                            </div>
+                            <div className="bg-error-subtle text-error p-4 rounded-lg text-center text-sm">
+                                error-subtle
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 mb-3">
+                            <div className="bg-info text-white p-4 rounded-lg text-center text-sm">
+                                info
+                            </div>
+                            <div className="bg-info-muted text-white p-4 rounded-lg text-center text-sm">
+                                info-muted
+                            </div>
+                            <div className="bg-info-subtle text-info p-4 rounded-lg text-center text-sm">
+                                info-subtle
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
                             <div className="bg-warning text-text-inverted p-4 rounded-lg text-center text-sm">
                                 warning
                             </div>
-                            <div className="bg-info text-white p-4 rounded-lg text-center text-sm">
-                                info
+                            <div className="bg-warning-muted text-warning p-4 rounded-lg text-center text-sm">
+                                warning-muted
                             </div>
                         </div>
                     </div>
