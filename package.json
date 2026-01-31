@@ -1,0 +1,13 @@
+{
+  "name": "akxr-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter akxr-frontend dev",
+    "build": "pnpm --filter akxr-frontend build",
+    "build:packages": "pnpm --filter @akxr/design-system build",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
