@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Chip } from "@akxr/design-system";
+import { Button, Chip, Input } from "@akxr/design-system";
 
 // Simple icon component
 const BrandIcon = () => (
@@ -73,6 +73,29 @@ export default function DesignSystemShowcase() {
                         <Chip variant="error">Join now</Chip>
                         <Chip variant="info">Join now</Chip>
                         <Chip variant="neutral">Join now</Chip>
+                    </div>
+                </section>
+
+                {/* Input Section */}
+                <section className="mb-12">
+                    <h2 className="text-xl font-semibold mb-6 pb-2 border-b border-border-default">
+                        Input
+                    </h2>
+
+                    <div className="flex flex-col gap-6 max-w-md">
+                        <Input placeholder="m@example.com" />
+                        <Input label="Email" placeholder="m@example.com" />
+                        <Input
+                            label="Password"
+                            type="password"
+                            placeholder="Enter password"
+                            hint="Must be at least 8 characters"
+                        />
+                        <Input
+                            label="Username"
+                            placeholder="Enter username"
+                            error="This username is already taken"
+                        />
                     </div>
                 </section>
 
