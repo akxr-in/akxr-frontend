@@ -6,22 +6,29 @@ export interface ButtonProps
     variant?: "primary" | "secondary" | "outline" | "ghost";
     size?: "sm" | "md" | "lg";
     isLoading?: boolean;
+    leftIcon?: React.ReactNode;
     children: React.ReactNode;
 }
 
 const variantStyles = {
+    // Gold solid button, dark text
     primary:
-        "bg-primary text-primary-foreground border-primary hover:opacity-90",
+        "bg-brand text-text-inverted border-brand hover:bg-brand-hover hover:border-brand-hover",
+    // Brown solid button, gold text
     secondary:
-        "bg-secondary text-secondary-foreground border-secondary hover:opacity-80",
-    outline: "bg-transparent text-foreground border-border hover:bg-muted",
-    ghost: "bg-transparent text-foreground border-transparent hover:bg-muted",
+        "bg-brand-muted text-brand border-brand-muted hover:bg-brand-subtle hover:border-brand-subtle",
+    // Transparent with gold border, gold text
+    outline:
+        "bg-transparent text-brand border-brand hover:bg-brand-subtle",
+    // Dark with muted gold border, muted text
+    ghost:
+        "bg-transparent text-text-muted border-border-default hover:border-brand-hover hover:text-text-secondary",
 };
 
 const sizeStyles = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-[0.9375rem]",
-    lg: "px-6 py-3 text-base",
+    sm: "px-4 py-2 text-sm",
+    md: "px-6 py-3 text-base",
+    lg: "px-8 py-4 text-lg",
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -30,6 +37,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             variant = "primary",
             size = "md",
             isLoading = false,
+            leftIcon,
             children,
             className,
             disabled,
@@ -41,8 +49,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             <button
                 ref={ref}
                 className={cn(
-                    "inline-flex items-center justify-center gap-2 font-medium rounded-md border cursor-pointer transition-all duration-150 relative",
-                    "disabled:opacity-60 disabled:cursor-not-allowed",
+                    "inline-flex items-center justify-center gap-2 font-medium rounded-lg border cursor-pointer transition-all duration-150 relative",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
                     variantStyles[variant],
                     sizeStyles[size],
                     isLoading && "pointer-events-none",
@@ -51,13 +59,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 disabled={disabled || isLoading}
                 {...props}
             >
-                {isLoading && (
+                {isLoading ? (
                     <span
-                        className="absolute w-4 h-4 border-2 border-current border-r-transparent rounded-full animate-spin"
+                        className="w-5 h-5 border-2 border-current border-r-transparent rounded-full animate-spin"
                         aria-hidden="true"
                     />
-                )}
-                <span className={isLoading ? "invisible" : ""}>{children}</span>
+                ) : leftIcon ? (
+                    <span className="w-5 h-5 flex items-center justify-center">
+                        {leftIcon}
+                    </span>
+                ) : null}
+                <span>{children}</span>
             </button>
         );
     }
