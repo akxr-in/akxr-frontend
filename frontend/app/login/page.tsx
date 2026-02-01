@@ -5,6 +5,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { usePostUserAuthSignin } from "@akxr/api";
+import { toast } from "../providers";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants";
 
 const loginSchema = z.object({
     email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -14,17 +18,44 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+    const router = useRouter();
+    const loginMutation = usePostUserAuthSignin();
+
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
     });
 
     const onSubmit = async (data: LoginFormData) => {
-        console.log("Login data:", data);
-        // Handle login logic here
+        loginMutation.mutate(
+            { data: { email: data.email, password: data.password } },
+            {
+                onSuccess: (response) => {
+                    if (response?.status !== 200) {
+                        toast.error(response?.data?.message || "Login failed");
+                        return;
+                    }
+
+                    const { access_token, refresh_token, user } = response?.data?.data;
+
+                    // Store tokens
+                    localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
+                    localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+
+                    toast.success("Login successful!");
+
+                    // Redirect based on profile status
+                    if (user.profile_status === "AUTHENTICATED") {
+                        router.push("/complete-profile");
+                    } else {
+                        router.push("/");
+                    }
+                },
+            }
+        );
     };
 
     return (
@@ -74,7 +105,7 @@ export default function LoginPage() {
                         type="submit"
                         variant="primary"
                         className="w-full"
-                        isLoading={isSubmitting}
+                        isLoading={loginMutation.isPending}
                     >
                         Login
                     </Button>
