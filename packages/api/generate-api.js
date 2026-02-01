@@ -3,13 +3,14 @@ const p2o = require('postman-to-openapi');
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { BACKEND_API_BASE_URL } = require('./constants');
+
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 async function generateClient() {
   console.log('🔄 Fetching Postman collection from backend...');
 
   // Fetch Postman collection from backend
-  const response = await fetch(`${BACKEND_API_BASE_URL}/postman.json`);
+  const response = await fetch(`${baseUrl}/postman.json`);
   if (!response.ok) {
     throw new Error(`Failed to fetch Postman collection: ${response.statusText}`);
   }

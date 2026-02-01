@@ -1,6 +1,5 @@
 // orval.config.ts
 import { defineConfig } from 'orval';
-import { BACKEND_API_BASE_URL } from './constants';
 
 export default defineConfig({
     akxr: {
@@ -13,7 +12,7 @@ export default defineConfig({
             schemas: './src/api/models',
             client: 'react-query',
             httpClient: 'fetch',
-            baseUrl: BACKEND_API_BASE_URL,
+            baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
             override: {
                 mutator: {
                     path: './src/api/custom-fetch.ts',
