@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Chip, Input } from "@akxr/design-system";
+import { Button, Chip, Input, Tag } from "@akxr/design-system";
 
 // Simple icon component
 const BrandIcon = () => (
@@ -73,6 +73,21 @@ export default function DesignSystemShowcase() {
                         <Chip variant="error">Join now</Chip>
                         <Chip variant="info">Join now</Chip>
                         <Chip variant="neutral">Join now</Chip>
+                    </div>
+                </section>
+
+                {/* Tags Section */}
+                <section className="mb-12">
+                    <h2 className="text-xl font-semibold mb-6 pb-2 border-b border-border-default">
+                        Tags
+                    </h2>
+
+                    <div className="flex flex-wrap gap-3">
+                        <Tag onRemove={() => { }}>JavaScript</Tag>
+                        <Tag onRemove={() => { }}>CSS</Tag>
+                        <Tag onRemove={() => { }}>HTML</Tag>
+                        <Tag onRemove={() => { }}>NextJS</Tag>
+                        <Tag onRemove={() => { }}>Redux</Tag>
                     </div>
                 </section>
 
