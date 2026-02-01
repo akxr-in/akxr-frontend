@@ -5,14 +5,19 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { usePostUserAuthSignup, type PostUserAuthSignupBody } from "@akxr/api";
+import { toast } from "../providers";
+import { setAuthTokens } from "@/lib/utils";
 
 const signupSchema = z.object({
-    fullName: z.string().min(1, "Full name is required"),
+    fullName: z.string().min(2, "Full name must be at least 2 characters"),
     username: z
         .string()
         .min(1, "Username is required")
         .min(3, "Username must be at least 3 characters")
-        .regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers, and underscores"),
+        .max(50, "Username must be at most 50 characters")
+        .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens"),
     email: z.string().min(1, "Email is required").email("Invalid email address"),
     password: z
         .string()
@@ -36,11 +41,14 @@ const RequiredAsterisk = () => (
 );
 
 export default function SignupPage() {
+    const router = useRouter();
+    const signupMutation = usePostUserAuthSignup();
+
     const {
         register,
         handleSubmit,
         control,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm<SignupFormData>({
         resolver: zodResolver(signupSchema),
         defaultValues: {
@@ -49,8 +57,39 @@ export default function SignupPage() {
     });
 
     const onSubmit = async (data: SignupFormData) => {
-        console.log("Signup data:", data);
-        // Handle signup logic here
+        // Map form data to API body format
+        const signupBody: PostUserAuthSignupBody = {
+            full_name: data.fullName,
+            username: data.username,
+            email: data.email,
+            password: data.password,
+        };
+
+        signupMutation.mutate(
+            { data: signupBody },
+            {
+                onSuccess: (response) => {
+                    if (response?.status !== 201) {
+                        toast.error(response?.data?.message || "Signup failed");
+                        return;
+                    }
+
+                    const { access_token, refresh_token, user } = response?.data?.data;
+
+                    // Store tokens in both localStorage and cookies
+                    setAuthTokens(access_token, refresh_token);
+
+                    toast.success("Account created successfully!");
+
+                    // Redirect based on profile status
+                    if (user.profile_status === "AUTHENTICATED") {
+                        router.push("/complete-profile");
+                    } else {
+                        router.push("/");
+                    }
+                },
+            }
+        );
     };
 
     return (
@@ -152,7 +191,7 @@ export default function SignupPage() {
                         type="submit"
                         variant="primary"
                         className="w-full"
-                        isLoading={isSubmitting}
+                        isLoading={signupMutation.isPending}
                     >
                         Sign Up
                     </Button>
