@@ -19,9 +19,22 @@ export const customFetch = async <T>(
     },
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    // Try to extract error message from the response body
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+    // Extract error message from common API error response formats
+    errorMessage = data?.message || data?.error || errorMessage;
+
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  // Wrap the response to match the expected type structure
+  return {
+    data,
+    status: response.status,
+    headers: response.headers,
+  } as T;
 };
