@@ -9,3 +9,6 @@ export type { InputProps } from "./Input";
 
 export { Tag } from "./Tag";
 export type { TagProps } from "./Tag";
+
+export { Select } from "./Select";
+export type { SelectProps, SelectOption } from "./Select";
