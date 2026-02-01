@@ -1,566 +1,4439 @@
-openapi: 3.0.0
-info:
-  title: AKXR Backend API
-  description: API collection for AKXR Backend - UniDrop service
-  version: 1.0.0
-servers:
-  - url: http://{{base_url}}
-tags:
-  - name: Auth
-  - name: User
-  - name: Admin
-  - name: Meeting
-  - name: Batch
-paths:
-  /user/auth/signup:
-    post:
-      tags:
-        - Auth
-      summary: Sign Up
-      description: Create a new user account with email and password
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"email\": \"user@example.com\",\n  \"password\":
-                \"password123\",\n  \"username\": \"john_doe\",\n 
-                \"full_name\": \"John Doe\"\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /user/auth/signin:
-    post:
-      tags:
-        - Auth
-      summary: Sign In
-      description: Authenticate user with email and password
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"email\": \"user@example.com\",\n  \"password\":
-                \"password123\"\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /user/auth/refresh:
-    post:
-      tags:
-        - Auth
-      summary: Refresh Token
-      description: Get new access and refresh tokens using existing tokens
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"access_token\": \"{{jwt_token}}\",\n  \"refresh_token\":
-                \"your_refresh_token_here\"\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /user/github/login:
-    get:
-      tags:
-        - Auth
-      summary: GitHub Login
-      description: >-
-        Get the GitHub OAuth authorization URL to redirect the user for
-        authentication
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /user/github/callback:
-    get:
-      tags:
-        - Auth
-      summary: GitHub Callback
-      description: Handle GitHub OAuth callback and authenticate/register user
-      parameters:
-        - name: code
-          in: query
-          schema:
-            type: string
-          example: github_auth_code
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /user:
-    get:
-      tags:
-        - User
-      summary: Get Current User
-      description: Get the profile of the currently authenticated user
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-    patch:
-      tags:
-        - User
-      summary: Update User
-      description: Update the profile of the currently authenticated user
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"full_name\": \"John Doe Updated\",\n  \"skills\":
-                [\"JavaScript\", \"Python\"]\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /user/complete-profile:
-    post:
-      tags:
-        - User
-      summary: Complete Profile
-      description: >-
-        Complete the profile for a newly authenticated user with required
-        information
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"skills\": [\"JavaScript\", \"TypeScript\",
-                \"React\"],\n  \"linkedin_url\":
-                \"https://linkedin.com/in/johndoe\",\n  \"x_url\":
-                \"https://x.com/johndoe\",\n  \"github_url\":
-                \"https://github.com/johndoe\",\n  \"zulip_username\":
-                \"johndoe\",\n  \"did_internship\": false,\n  \"college_year\":
-                3\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /admin/upgrade-role:
-    post:
-      tags:
-        - Admin
-      summary: Upgrade User Role
-      description: Upgrade a user's role (Admin only)
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n 
-                \"new_role\": \"MENTOR\"\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{admin_key}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /admin/users:
-    get:
-      tags:
-        - Admin
-      summary: Get All Users
-      description: Retrieve a list of all users (Admin only)
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{admin_key}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting:
-    post:
-      tags:
-        - Meeting
-      summary: Create Meeting
-      description: >-
-        Create a new meeting for a batch. Only accessible by admins or mentors
-        of the batch.
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"title\": \"Weekly Team Sync\",\n  \"description\":
-                \"Discussion on project progress and blockers\",\n 
-                \"batch_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n 
-                \"scheduled_start_time\": \"2024-01-20T10:00:00Z\",\n 
-                \"duration_minutes\": 60\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting/{id}:
-    get:
-      tags:
-        - Meeting
-      summary: Get Meeting
-      description: Get a meeting by ID. Only accessible by meeting participants or admins.
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Meeting UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting/{id}/participants:
-    get:
-      tags:
-        - Meeting
-      summary: Get Meeting Participants
-      description: >-
-        Get all participants (students, mentors, admin) of a meeting. Only
-        accessible by meeting participants or admins.
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Meeting UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting/{id}/start:
-    post:
-      tags:
-        - Meeting
-      summary: Start Meeting
-      description: >-
-        Start a meeting session. Creates a MeetingSummary with IN_PROGRESS
-        status and initializes attendance records for all batch students. Only
-        accessible by mentors of the batch or admins.
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"initial_participant_ids\":
-                [\"550e8400-e29b-41d4-a716-446655440001\",
-                \"550e8400-e29b-41d4-a716-446655440002\"]\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Meeting UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting/{id}/end:
-    post:
-      tags:
-        - Meeting
-      summary: End Meeting
-      description: >-
-        End a meeting session and compute final attendance.
-        present_participant_ids = who is present RIGHT NOW.
-        joined_participant_ids = everyone who joined at any point. Attendance
-        status: PRESENT (present at end), PARTIALLY_PRESENT (joined but left),
-        ABSENT (never joined). Only accessible by mentors of the batch or
-        admins.
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"present_participant_ids\":
-                [\"550e8400-e29b-41d4-a716-446655440001\"],\n 
-                \"joined_participant_ids\":
-                [\"550e8400-e29b-41d4-a716-446655440001\",
-                \"550e8400-e29b-41d4-a716-446655440002\"]\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Meeting UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting/{id}/cancel:
-    post:
-      tags:
-        - Meeting
-      summary: Cancel Meeting
-      description: >-
-        Cancel a scheduled or in-progress meeting. Cannot cancel completed
-        meetings. Only accessible by mentors of the batch or admins.
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: '"{\n  \"reason\": \"Mentor unavailable due to emergency\"\n}"'
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Meeting UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /meeting/{id}/attendance:
-    get:
-      tags:
-        - Meeting
-      summary: Get Attendance
-      description: >-
-        Get attendance report for a meeting. Admins and mentors see all
-        attendees. Students can only see their own attendance record.
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Meeting UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /batch:
-    post:
-      tags:
-        - Batch
-      summary: Create Batch
-      description: >-
-        Create a new batch for organizing courses and students (requires
-        authentication)
-      requestBody:
-        content:
-          '*/*':
-            schema:
-              type: string
-              example: >-
-                "{\n  \"total_classes\": 30,\n  \"batch_name\": \"Batch
-                2024-A\",\n  \"mentor_ids\":
-                [\"550e8400-e29b-41d4-a716-446655440001\"],\n 
-                \"batch_start_date\": \"2024-02-01\",\n  \"batch_end_date\":
-                \"2024-06-30\",\n  \"estimated_end_date\": \"2024-06-30\",\n 
-                \"current_course_id\": null,\n  \"course_ids\":
-                [\"550e8400-e29b-41d4-a716-446655440003\"],\n 
-                \"completed_course_ids\": [],\n  \"batch_code\": \"B24A\",\n 
-                \"description\": \"First batch of 2024 cohort\",\n 
-                \"image_url\": \"https://example.com/batch-image.png\",\n 
-                \"meeting_id\": \"550e8400-e29b-41d4-a716-446655440004\"\n}"
-      parameters:
-        - name: Content-Type
-          in: header
-          schema:
-            type: string
-          example: application/json
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-    get:
-      tags:
-        - Batch
-      summary: Get All Batches
-      description: Get all batches (requires authentication)
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /batch/{id}:
-    get:
-      tags:
-        - Batch
-      summary: Get Batch by ID
-      description: Get a specific batch by ID (requires authentication)
-      parameters:
-        - name: Authorization
-          in: header
-          schema:
-            type: string
-          example: Bearer {{jwt_token}}
-        - name: id
-          in: path
-          schema:
-            type: string
-          required: true
-          description: Batch UUID
-          example: 550e8400-e29b-41d4-a716-446655440000
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AKXR Backend API",
+    "version": "1.0.0",
+    "description": "API documentation for AKXR Backend"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SignUpWithEmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "username",
+          "full_name"
+        ]
+      },
+      "SignInWithEmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token"
+        ]
+      },
+      "CompleteProfileRequest": {
+        "type": "object",
+        "properties": {
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "linkedin_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "x_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "github_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "zulip_username": {
+            "type": "string",
+            "nullable": true
+          },
+          "did_internship": {
+            "type": "boolean"
+          },
+          "college_year": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "skills"
+        ]
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "minLength": 2
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "linkedin_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "x_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "github_url": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "zulip_username": {
+            "type": "string",
+            "nullable": true
+          },
+          "did_internship": {
+            "type": "boolean"
+          },
+          "college_year": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "UpgradeRoleRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "new_role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "MENTOR",
+              "ADMIN"
+            ]
+          }
+        },
+        "required": [
+          "user_id",
+          "new_role"
+        ]
+      },
+      "GithubCallbackQuery": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "username": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "MENTOR",
+              "ADMIN"
+            ]
+          },
+          "profile_status": {
+            "type": "string",
+            "enum": [
+              "AUTHENTICATED",
+              "PROFILE_CREATED"
+            ]
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "linkedin_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "github_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "x_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "zulip_username": {
+            "type": "string",
+            "nullable": true
+          },
+          "did_internship": {
+            "type": "boolean"
+          },
+          "college_year": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "batch_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "full_name",
+          "role",
+          "profile_status",
+          "skills",
+          "did_internship",
+          "batch_ids",
+          "created_at"
+        ]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "STUDENT",
+                      "MENTOR",
+                      "ADMIN"
+                    ]
+                  },
+                  "profile_status": {
+                    "type": "string",
+                    "enum": [
+                      "AUTHENTICATED",
+                      "PROFILE_CREATED"
+                    ]
+                  },
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "linkedin_url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "github_url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "x_url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "zulip_username": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "did_internship": {
+                    "type": "boolean"
+                  },
+                  "college_year": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "batch_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "id",
+                  "email",
+                  "username",
+                  "full_name",
+                  "role",
+                  "profile_status",
+                  "skills",
+                  "did_internship",
+                  "batch_ids",
+                  "created_at"
+                ]
+              },
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "access_token",
+              "refresh_token"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "GithubAuthResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "STUDENT",
+                      "MENTOR",
+                      "ADMIN"
+                    ]
+                  },
+                  "profile_status": {
+                    "type": "string",
+                    "enum": [
+                      "AUTHENTICATED",
+                      "PROFILE_CREATED"
+                    ]
+                  },
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "linkedin_url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "github_url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "x_url": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "zulip_username": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "did_internship": {
+                    "type": "boolean"
+                  },
+                  "college_year": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "batch_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "id",
+                  "email",
+                  "username",
+                  "full_name",
+                  "role",
+                  "profile_status",
+                  "skills",
+                  "did_internship",
+                  "batch_ids",
+                  "created_at"
+                ]
+              },
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              },
+              "is_new_user": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "user",
+              "access_token",
+              "refresh_token",
+              "is_new_user"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "GithubLoginResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "auth_url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "auth_url"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "RefreshTokenResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "access_token",
+              "refresh_token"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "UserDataResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "username": {
+                "type": "string"
+              },
+              "full_name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "STUDENT",
+                  "MENTOR",
+                  "ADMIN"
+                ]
+              },
+              "profile_status": {
+                "type": "string",
+                "enum": [
+                  "AUTHENTICATED",
+                  "PROFILE_CREATED"
+                ]
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "linkedin_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "github_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "x_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "zulip_username": {
+                "type": "string",
+                "nullable": true
+              },
+              "did_internship": {
+                "type": "boolean"
+              },
+              "college_year": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 1,
+                "maximum": 5
+              },
+              "batch_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "username",
+              "full_name",
+              "role",
+              "profile_status",
+              "skills",
+              "did_internship",
+              "batch_ids",
+              "created_at"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "UsersListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "full_name": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "STUDENT",
+                    "MENTOR",
+                    "ADMIN"
+                  ]
+                },
+                "profile_status": {
+                  "type": "string",
+                  "enum": [
+                    "AUTHENTICATED",
+                    "PROFILE_CREATED"
+                  ]
+                },
+                "skills": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "linkedin_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "github_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "x_url": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "zulip_username": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "did_internship": {
+                  "type": "boolean"
+                },
+                "college_year": {
+                  "type": "integer",
+                  "nullable": true,
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "batch_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "email",
+                "username",
+                "full_name",
+                "role",
+                "profile_status",
+                "skills",
+                "did_internship",
+                "batch_ids",
+                "created_at"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "UpgradeRoleResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "username": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "STUDENT",
+                  "MENTOR",
+                  "ADMIN"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "username",
+              "email",
+              "role"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ]
+      },
+      "CreateMeetingRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "batch_id": {
+            "type": "string"
+          },
+          "scheduled_start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "default": 60
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "batch_id",
+          "scheduled_start_time"
+        ]
+      },
+      "StartMeetingRequest": {
+        "type": "object",
+        "properties": {
+          "initial_participant_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "default": []
+          }
+        }
+      },
+      "EndMeetingRequest": {
+        "type": "object",
+        "properties": {
+          "present_participant_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "joined_participant_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "present_participant_ids",
+          "joined_participant_ids"
+        ]
+      },
+      "CancelMeetingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "MeetingResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "batch_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scheduled_start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration_minutes": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "STARTED",
+              "ENDED",
+              "CANCELLED"
+            ]
+          },
+          "actual_start_time": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "actual_end_time": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "batch_id",
+          "scheduled_start_time",
+          "duration_minutes",
+          "status",
+          "created_at"
+        ]
+      },
+      "MeetingDataResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "batch_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "scheduled_start_time": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "duration_minutes": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "SCHEDULED",
+                  "STARTED",
+                  "ENDED",
+                  "CANCELLED"
+                ]
+              },
+              "actual_start_time": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "actual_end_time": {
+                "type": "string",
+                "nullable": true,
+                "format": "date-time"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "description",
+              "batch_id",
+              "scheduled_start_time",
+              "duration_minutes",
+              "status",
+              "created_at"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "CreateBatchRequest": {
+        "type": "object",
+        "properties": {
+          "total_classes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "batch_name": {
+            "type": "string"
+          },
+          "mentor_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "batch_start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "batch_end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "estimated_end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "current_course_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "course_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "completed_course_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "batch_code": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "description": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "meeting_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "total_classes",
+          "batch_name",
+          "mentor_ids",
+          "batch_start_date",
+          "batch_end_date",
+          "estimated_end_date",
+          "current_course_id",
+          "course_ids",
+          "completed_course_ids",
+          "batch_code",
+          "description",
+          "image_url",
+          "meeting_id"
+        ]
+      },
+      "BatchResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batch_name": {
+            "type": "string"
+          },
+          "batch_code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "total_classes": {
+            "type": "integer"
+          },
+          "batch_start_date": {
+            "type": "string"
+          },
+          "batch_end_date": {
+            "type": "string"
+          },
+          "estimated_end_date": {
+            "type": "string"
+          },
+          "mentor_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "course_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "current_course_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "completed_course_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "meeting_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "batch_name",
+          "batch_code",
+          "description",
+          "image_url",
+          "total_classes",
+          "batch_start_date",
+          "batch_end_date",
+          "estimated_end_date",
+          "mentor_ids",
+          "course_ids",
+          "current_course_id",
+          "completed_course_ids",
+          "meeting_id",
+          "created_at"
+        ]
+      },
+      "BatchDataResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "batch_name": {
+                "type": "string"
+              },
+              "batch_code": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "image_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "total_classes": {
+                "type": "integer"
+              },
+              "batch_start_date": {
+                "type": "string"
+              },
+              "batch_end_date": {
+                "type": "string"
+              },
+              "estimated_end_date": {
+                "type": "string"
+              },
+              "mentor_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "course_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "current_course_id": {
+                "type": "string",
+                "nullable": true
+              },
+              "completed_course_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "meeting_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "batch_name",
+              "batch_code",
+              "description",
+              "image_url",
+              "total_classes",
+              "batch_start_date",
+              "batch_end_date",
+              "estimated_end_date",
+              "mentor_ids",
+              "course_ids",
+              "current_course_id",
+              "completed_course_ids",
+              "meeting_id",
+              "created_at"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "BatchesListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "batch_name": {
+                  "type": "string"
+                },
+                "batch_code": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "image_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "total_classes": {
+                  "type": "integer"
+                },
+                "batch_start_date": {
+                  "type": "string"
+                },
+                "batch_end_date": {
+                  "type": "string"
+                },
+                "estimated_end_date": {
+                  "type": "string"
+                },
+                "mentor_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "course_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "current_course_id": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "completed_course_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "meeting_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "batch_name",
+                "batch_code",
+                "description",
+                "image_url",
+                "total_classes",
+                "batch_start_date",
+                "batch_end_date",
+                "estimated_end_date",
+                "mentor_ids",
+                "course_ids",
+                "current_course_id",
+                "completed_course_ids",
+                "meeting_id",
+                "created_at"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "AttendanceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "meeting_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PRESENT",
+              "ABSENT",
+              "JOINED_LATE"
+            ]
+          },
+          "joined_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "meeting_id",
+          "status"
+        ]
+      },
+      "AttendanceListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "user_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "meeting_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PRESENT",
+                    "ABSENT",
+                    "JOINED_LATE"
+                  ]
+                },
+                "joined_at": {
+                  "type": "string",
+                  "nullable": true,
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "user_id",
+                "meeting_id",
+                "status"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Health check endpoint",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Server is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/auth/signup": {
+      "post": {
+        "description": "Sign up with email and password",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8
+                  },
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50,
+                    "pattern": "^[a-zA-Z0-9_-]+$"
+                  },
+                  "full_name": {
+                    "type": "string",
+                    "minLength": 2
+                  }
+                },
+                "required": [
+                  "email",
+                  "password",
+                  "username",
+                  "full_name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email"
+                            },
+                            "username": {
+                              "type": "string"
+                            },
+                            "full_name": {
+                              "type": "string"
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "STUDENT",
+                                "MENTOR",
+                                "ADMIN"
+                              ]
+                            },
+                            "profile_status": {
+                              "type": "string",
+                              "enum": [
+                                "AUTHENTICATED",
+                                "PROFILE_CREATED"
+                              ]
+                            },
+                            "skills": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "linkedin_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "github_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "x_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "zulip_username": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "did_internship": {
+                              "type": "boolean"
+                            },
+                            "college_year": {
+                              "type": "integer",
+                              "nullable": true,
+                              "minimum": 1,
+                              "maximum": 5
+                            },
+                            "batch_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "email",
+                            "username",
+                            "full_name",
+                            "role",
+                            "profile_status",
+                            "skills",
+                            "did_internship",
+                            "batch_ids",
+                            "created_at"
+                          ]
+                        },
+                        "access_token": {
+                          "type": "string"
+                        },
+                        "refresh_token": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user",
+                        "access_token",
+                        "refresh_token"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/auth/signin": {
+      "post": {
+        "description": "Sign in with email and password",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sign in successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email"
+                            },
+                            "username": {
+                              "type": "string"
+                            },
+                            "full_name": {
+                              "type": "string"
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "STUDENT",
+                                "MENTOR",
+                                "ADMIN"
+                              ]
+                            },
+                            "profile_status": {
+                              "type": "string",
+                              "enum": [
+                                "AUTHENTICATED",
+                                "PROFILE_CREATED"
+                              ]
+                            },
+                            "skills": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "linkedin_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "github_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "x_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "zulip_username": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "did_internship": {
+                              "type": "boolean"
+                            },
+                            "college_year": {
+                              "type": "integer",
+                              "nullable": true,
+                              "minimum": 1,
+                              "maximum": 5
+                            },
+                            "batch_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "email",
+                            "username",
+                            "full_name",
+                            "role",
+                            "profile_status",
+                            "skills",
+                            "did_internship",
+                            "batch_ids",
+                            "created_at"
+                          ]
+                        },
+                        "access_token": {
+                          "type": "string"
+                        },
+                        "refresh_token": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "user",
+                        "access_token",
+                        "refresh_token"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/auth/refresh": {
+      "post": {
+        "description": "Refresh access and refresh tokens",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "access_token": {
+                    "type": "string"
+                  },
+                  "refresh_token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "access_token",
+                  "refresh_token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "access_token": {
+                          "type": "string"
+                        },
+                        "refresh_token": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "access_token",
+                        "refresh_token"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/github/login": {
+      "get": {
+        "description": "Initiate GitHub OAuth login",
+        "tags": [
+          "Auth",
+          "GitHub"
+        ],
+        "responses": {
+          "200": {
+            "description": "GitHub auth URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "auth_url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": [
+                        "auth_url"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/github/callback": {
+      "get": {
+        "description": "GitHub OAuth callback",
+        "tags": [
+          "Auth",
+          "GitHub"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "code",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GitHub authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email"
+                            },
+                            "username": {
+                              "type": "string"
+                            },
+                            "full_name": {
+                              "type": "string"
+                            },
+                            "role": {
+                              "type": "string",
+                              "enum": [
+                                "STUDENT",
+                                "MENTOR",
+                                "ADMIN"
+                              ]
+                            },
+                            "profile_status": {
+                              "type": "string",
+                              "enum": [
+                                "AUTHENTICATED",
+                                "PROFILE_CREATED"
+                              ]
+                            },
+                            "skills": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "linkedin_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "github_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "x_url": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "zulip_username": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "did_internship": {
+                              "type": "boolean"
+                            },
+                            "college_year": {
+                              "type": "integer",
+                              "nullable": true,
+                              "minimum": 1,
+                              "maximum": 5
+                            },
+                            "batch_ids": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "email",
+                            "username",
+                            "full_name",
+                            "role",
+                            "profile_status",
+                            "skills",
+                            "did_internship",
+                            "batch_ids",
+                            "created_at"
+                          ]
+                        },
+                        "access_token": {
+                          "type": "string"
+                        },
+                        "refresh_token": {
+                          "type": "string"
+                        },
+                        "is_new_user": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "user",
+                        "access_token",
+                        "refresh_token",
+                        "is_new_user"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "description": "Get current user profile",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "STUDENT",
+                            "MENTOR",
+                            "ADMIN"
+                          ]
+                        },
+                        "profile_status": {
+                          "type": "string",
+                          "enum": [
+                            "AUTHENTICATED",
+                            "PROFILE_CREATED"
+                          ]
+                        },
+                        "skills": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linkedin_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "github_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "x_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "zulip_username": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "did_internship": {
+                          "type": "boolean"
+                        },
+                        "college_year": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 1,
+                          "maximum": 5
+                        },
+                        "batch_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "username",
+                        "full_name",
+                        "role",
+                        "profile_status",
+                        "skills",
+                        "did_internship",
+                        "batch_ids",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "description": "Update user profile",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "linkedin_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "x_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "github_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "zulip_username": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "did_internship": {
+                    "type": "boolean"
+                  },
+                  "college_year": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "STUDENT",
+                            "MENTOR",
+                            "ADMIN"
+                          ]
+                        },
+                        "profile_status": {
+                          "type": "string",
+                          "enum": [
+                            "AUTHENTICATED",
+                            "PROFILE_CREATED"
+                          ]
+                        },
+                        "skills": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linkedin_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "github_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "x_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "zulip_username": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "did_internship": {
+                          "type": "boolean"
+                        },
+                        "college_year": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 1,
+                          "maximum": 5
+                        },
+                        "batch_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "username",
+                        "full_name",
+                        "role",
+                        "profile_status",
+                        "skills",
+                        "did_internship",
+                        "batch_ids",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/complete-profile": {
+      "post": {
+        "description": "Complete user profile with additional information",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "skills": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  "linkedin_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "x_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "github_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "format": "uri"
+                  },
+                  "zulip_username": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "did_internship": {
+                    "type": "boolean"
+                  },
+                  "college_year": {
+                    "type": "integer",
+                    "nullable": true,
+                    "minimum": 1,
+                    "maximum": 5
+                  }
+                },
+                "required": [
+                  "skills"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "STUDENT",
+                            "MENTOR",
+                            "ADMIN"
+                          ]
+                        },
+                        "profile_status": {
+                          "type": "string",
+                          "enum": [
+                            "AUTHENTICATED",
+                            "PROFILE_CREATED"
+                          ]
+                        },
+                        "skills": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "linkedin_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "github_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "x_url": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "zulip_username": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "did_internship": {
+                          "type": "boolean"
+                        },
+                        "college_year": {
+                          "type": "integer",
+                          "nullable": true,
+                          "minimum": 1,
+                          "maximum": 5
+                        },
+                        "batch_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "email",
+                        "username",
+                        "full_name",
+                        "role",
+                        "profile_status",
+                        "skills",
+                        "did_internship",
+                        "batch_ids",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/upgrade-role": {
+      "post": {
+        "description": "Upgrade user role (Admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "new_role": {
+                    "type": "string",
+                    "enum": [
+                      "STUDENT",
+                      "MENTOR",
+                      "ADMIN"
+                    ]
+                  }
+                },
+                "required": [
+                  "user_id",
+                  "new_role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role upgraded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "STUDENT",
+                            "MENTOR",
+                            "ADMIN"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "email",
+                        "role"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "description": "Get all users (Admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "full_name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "STUDENT",
+                              "MENTOR",
+                              "ADMIN"
+                            ]
+                          },
+                          "profile_status": {
+                            "type": "string",
+                            "enum": [
+                              "AUTHENTICATED",
+                              "PROFILE_CREATED"
+                            ]
+                          },
+                          "skills": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "linkedin_url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "github_url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "x_url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "zulip_username": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "did_internship": {
+                            "type": "boolean"
+                          },
+                          "college_year": {
+                            "type": "integer",
+                            "nullable": true,
+                            "minimum": 1,
+                            "maximum": 5
+                          },
+                          "batch_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "email",
+                          "username",
+                          "full_name",
+                          "role",
+                          "profile_status",
+                          "skills",
+                          "did_internship",
+                          "batch_ids",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting": {
+      "post": {
+        "description": "Create a new meeting",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "batch_id": {
+                    "type": "string"
+                  },
+                  "scheduled_start_time": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "duration_minutes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "default": 60
+                  }
+                },
+                "required": [
+                  "title",
+                  "description",
+                  "batch_id",
+                  "scheduled_start_time"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Meeting created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "batch_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scheduled_start_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "duration_minutes": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "SCHEDULED",
+                            "STARTED",
+                            "ENDED",
+                            "CANCELLED"
+                          ]
+                        },
+                        "actual_start_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "actual_end_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "batch_id",
+                        "scheduled_start_time",
+                        "duration_minutes",
+                        "status",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/{id}": {
+      "get": {
+        "description": "Get meeting by ID",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meeting details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "batch_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scheduled_start_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "duration_minutes": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "SCHEDULED",
+                            "STARTED",
+                            "ENDED",
+                            "CANCELLED"
+                          ]
+                        },
+                        "actual_start_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "actual_end_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "batch_id",
+                        "scheduled_start_time",
+                        "duration_minutes",
+                        "status",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Meeting not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/{id}/participants": {
+      "get": {
+        "description": "Get meeting participants",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of participants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "full_name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "STUDENT",
+                              "MENTOR",
+                              "ADMIN"
+                            ]
+                          },
+                          "profile_status": {
+                            "type": "string",
+                            "enum": [
+                              "AUTHENTICATED",
+                              "PROFILE_CREATED"
+                            ]
+                          },
+                          "skills": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "linkedin_url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "github_url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "x_url": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "zulip_username": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "did_internship": {
+                            "type": "boolean"
+                          },
+                          "college_year": {
+                            "type": "integer",
+                            "nullable": true,
+                            "minimum": 1,
+                            "maximum": 5
+                          },
+                          "batch_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "email",
+                          "username",
+                          "full_name",
+                          "role",
+                          "profile_status",
+                          "skills",
+                          "did_internship",
+                          "batch_ids",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Meeting not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/{id}/start": {
+      "post": {
+        "description": "Start a meeting",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "initial_participant_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "default": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Meeting started successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "batch_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scheduled_start_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "duration_minutes": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "SCHEDULED",
+                            "STARTED",
+                            "ENDED",
+                            "CANCELLED"
+                          ]
+                        },
+                        "actual_start_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "actual_end_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "batch_id",
+                        "scheduled_start_time",
+                        "duration_minutes",
+                        "status",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/{id}/end": {
+      "post": {
+        "description": "End a meeting",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "present_participant_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "joined_participant_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                },
+                "required": [
+                  "present_participant_ids",
+                  "joined_participant_ids"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Meeting ended successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "batch_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scheduled_start_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "duration_minutes": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "SCHEDULED",
+                            "STARTED",
+                            "ENDED",
+                            "CANCELLED"
+                          ]
+                        },
+                        "actual_start_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "actual_end_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "batch_id",
+                        "scheduled_start_time",
+                        "duration_minutes",
+                        "status",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/{id}/cancel": {
+      "post": {
+        "description": "Cancel a meeting",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Meeting cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "batch_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "scheduled_start_time": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "duration_minutes": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "SCHEDULED",
+                            "STARTED",
+                            "ENDED",
+                            "CANCELLED"
+                          ]
+                        },
+                        "actual_start_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "actual_end_time": {
+                          "type": "string",
+                          "nullable": true,
+                          "format": "date-time"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "batch_id",
+                        "scheduled_start_time",
+                        "duration_minutes",
+                        "status",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/meeting/{id}/attendance": {
+      "get": {
+        "description": "Get meeting attendance",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attendance list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "user_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "meeting_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "PRESENT",
+                              "ABSENT",
+                              "JOINED_LATE"
+                            ]
+                          },
+                          "joined_at": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "user_id",
+                          "meeting_id",
+                          "status"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Meeting not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch": {
+      "post": {
+        "description": "Create a new batch",
+        "tags": [
+          "Batch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "total_classes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "batch_name": {
+                    "type": "string"
+                  },
+                  "mentor_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "batch_start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "batch_end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "estimated_end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "current_course_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "course_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "completed_course_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "batch_code": {
+                    "type": "string",
+                    "maxLength": 4
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "image_url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "meeting_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "total_classes",
+                  "batch_name",
+                  "mentor_ids",
+                  "batch_start_date",
+                  "batch_end_date",
+                  "estimated_end_date",
+                  "current_course_id",
+                  "course_ids",
+                  "completed_course_ids",
+                  "batch_code",
+                  "description",
+                  "image_url",
+                  "meeting_id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Batch created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "batch_name": {
+                          "type": "string"
+                        },
+                        "batch_code": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "total_classes": {
+                          "type": "integer"
+                        },
+                        "batch_start_date": {
+                          "type": "string"
+                        },
+                        "batch_end_date": {
+                          "type": "string"
+                        },
+                        "estimated_end_date": {
+                          "type": "string"
+                        },
+                        "mentor_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "course_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "current_course_id": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "completed_course_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "meeting_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "batch_name",
+                        "batch_code",
+                        "description",
+                        "image_url",
+                        "total_classes",
+                        "batch_start_date",
+                        "batch_end_date",
+                        "estimated_end_date",
+                        "mentor_ids",
+                        "course_ids",
+                        "current_course_id",
+                        "completed_course_ids",
+                        "meeting_id",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Get all batches",
+        "tags": [
+          "Batch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all batches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "batch_name": {
+                            "type": "string"
+                          },
+                          "batch_code": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "image_url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "total_classes": {
+                            "type": "integer"
+                          },
+                          "batch_start_date": {
+                            "type": "string"
+                          },
+                          "batch_end_date": {
+                            "type": "string"
+                          },
+                          "estimated_end_date": {
+                            "type": "string"
+                          },
+                          "mentor_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "course_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "current_course_id": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "completed_course_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "meeting_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "batch_name",
+                          "batch_code",
+                          "description",
+                          "image_url",
+                          "total_classes",
+                          "batch_start_date",
+                          "batch_end_date",
+                          "estimated_end_date",
+                          "mentor_ids",
+                          "course_ids",
+                          "current_course_id",
+                          "completed_course_ids",
+                          "meeting_id",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch/{id}": {
+      "get": {
+        "description": "Get batch by ID",
+        "tags": [
+          "Batch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Batch details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "batch_name": {
+                          "type": "string"
+                        },
+                        "batch_code": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "total_classes": {
+                          "type": "integer"
+                        },
+                        "batch_start_date": {
+                          "type": "string"
+                        },
+                        "batch_end_date": {
+                          "type": "string"
+                        },
+                        "estimated_end_date": {
+                          "type": "string"
+                        },
+                        "mentor_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "course_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "current_course_id": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "completed_course_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "meeting_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "batch_name",
+                        "batch_code",
+                        "description",
+                        "image_url",
+                        "total_classes",
+                        "batch_start_date",
+                        "batch_end_date",
+                        "estimated_end_date",
+                        "mentor_ids",
+                        "course_ids",
+                        "current_course_id",
+                        "completed_course_ids",
+                        "meeting_id",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

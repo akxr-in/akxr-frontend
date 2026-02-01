@@ -20,7 +20,6 @@
     "@tanstack/react-query": "^5.90.20",
     "@types/node": "^20",
     "orval": "^8.2.0",
-    "postman-to-openapi": "^3.0.1",
     "react": "^19",
     "typescript": "^5"
   },
