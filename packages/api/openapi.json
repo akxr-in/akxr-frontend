@@ -1,0 +1,566 @@
+openapi: 3.0.0
+info:
+  title: AKXR Backend API
+  description: API collection for AKXR Backend - UniDrop service
+  version: 1.0.0
+servers:
+  - url: http://{{base_url}}
+tags:
+  - name: Auth
+  - name: User
+  - name: Admin
+  - name: Meeting
+  - name: Batch
+paths:
+  /user/auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: Sign Up
+      description: Create a new user account with email and password
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"email\": \"user@example.com\",\n  \"password\":
+                \"password123\",\n  \"username\": \"john_doe\",\n 
+                \"full_name\": \"John Doe\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /user/auth/signin:
+    post:
+      tags:
+        - Auth
+      summary: Sign In
+      description: Authenticate user with email and password
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"email\": \"user@example.com\",\n  \"password\":
+                \"password123\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /user/auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh Token
+      description: Get new access and refresh tokens using existing tokens
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"access_token\": \"{{jwt_token}}\",\n  \"refresh_token\":
+                \"your_refresh_token_here\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /user/github/login:
+    get:
+      tags:
+        - Auth
+      summary: GitHub Login
+      description: >-
+        Get the GitHub OAuth authorization URL to redirect the user for
+        authentication
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /user/github/callback:
+    get:
+      tags:
+        - Auth
+      summary: GitHub Callback
+      description: Handle GitHub OAuth callback and authenticate/register user
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+          example: github_auth_code
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /user:
+    get:
+      tags:
+        - User
+      summary: Get Current User
+      description: Get the profile of the currently authenticated user
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    patch:
+      tags:
+        - User
+      summary: Update User
+      description: Update the profile of the currently authenticated user
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"full_name\": \"John Doe Updated\",\n  \"skills\":
+                [\"JavaScript\", \"Python\"]\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /user/complete-profile:
+    post:
+      tags:
+        - User
+      summary: Complete Profile
+      description: >-
+        Complete the profile for a newly authenticated user with required
+        information
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"skills\": [\"JavaScript\", \"TypeScript\",
+                \"React\"],\n  \"linkedin_url\":
+                \"https://linkedin.com/in/johndoe\",\n  \"x_url\":
+                \"https://x.com/johndoe\",\n  \"github_url\":
+                \"https://github.com/johndoe\",\n  \"zulip_username\":
+                \"johndoe\",\n  \"did_internship\": false,\n  \"college_year\":
+                3\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /admin/upgrade-role:
+    post:
+      tags:
+        - Admin
+      summary: Upgrade User Role
+      description: Upgrade a user's role (Admin only)
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n 
+                \"new_role\": \"MENTOR\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{admin_key}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Get All Users
+      description: Retrieve a list of all users (Admin only)
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{admin_key}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting:
+    post:
+      tags:
+        - Meeting
+      summary: Create Meeting
+      description: >-
+        Create a new meeting for a batch. Only accessible by admins or mentors
+        of the batch.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"title\": \"Weekly Team Sync\",\n  \"description\":
+                \"Discussion on project progress and blockers\",\n 
+                \"batch_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n 
+                \"scheduled_start_time\": \"2024-01-20T10:00:00Z\",\n 
+                \"duration_minutes\": 60\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting/{id}:
+    get:
+      tags:
+        - Meeting
+      summary: Get Meeting
+      description: Get a meeting by ID. Only accessible by meeting participants or admins.
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Meeting UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting/{id}/participants:
+    get:
+      tags:
+        - Meeting
+      summary: Get Meeting Participants
+      description: >-
+        Get all participants (students, mentors, admin) of a meeting. Only
+        accessible by meeting participants or admins.
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Meeting UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting/{id}/start:
+    post:
+      tags:
+        - Meeting
+      summary: Start Meeting
+      description: >-
+        Start a meeting session. Creates a MeetingSummary with IN_PROGRESS
+        status and initializes attendance records for all batch students. Only
+        accessible by mentors of the batch or admins.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"initial_participant_ids\":
+                [\"550e8400-e29b-41d4-a716-446655440001\",
+                \"550e8400-e29b-41d4-a716-446655440002\"]\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Meeting UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting/{id}/end:
+    post:
+      tags:
+        - Meeting
+      summary: End Meeting
+      description: >-
+        End a meeting session and compute final attendance.
+        present_participant_ids = who is present RIGHT NOW.
+        joined_participant_ids = everyone who joined at any point. Attendance
+        status: PRESENT (present at end), PARTIALLY_PRESENT (joined but left),
+        ABSENT (never joined). Only accessible by mentors of the batch or
+        admins.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"present_participant_ids\":
+                [\"550e8400-e29b-41d4-a716-446655440001\"],\n 
+                \"joined_participant_ids\":
+                [\"550e8400-e29b-41d4-a716-446655440001\",
+                \"550e8400-e29b-41d4-a716-446655440002\"]\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Meeting UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting/{id}/cancel:
+    post:
+      tags:
+        - Meeting
+      summary: Cancel Meeting
+      description: >-
+        Cancel a scheduled or in-progress meeting. Cannot cancel completed
+        meetings. Only accessible by mentors of the batch or admins.
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: '"{\n  \"reason\": \"Mentor unavailable due to emergency\"\n}"'
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Meeting UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /meeting/{id}/attendance:
+    get:
+      tags:
+        - Meeting
+      summary: Get Attendance
+      description: >-
+        Get attendance report for a meeting. Admins and mentors see all
+        attendees. Students can only see their own attendance record.
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Meeting UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /batch:
+    post:
+      tags:
+        - Batch
+      summary: Create Batch
+      description: >-
+        Create a new batch for organizing courses and students (requires
+        authentication)
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"total_classes\": 30,\n  \"batch_name\": \"Batch
+                2024-A\",\n  \"mentor_ids\":
+                [\"550e8400-e29b-41d4-a716-446655440001\"],\n 
+                \"batch_start_date\": \"2024-02-01\",\n  \"batch_end_date\":
+                \"2024-06-30\",\n  \"estimated_end_date\": \"2024-06-30\",\n 
+                \"current_course_id\": null,\n  \"course_ids\":
+                [\"550e8400-e29b-41d4-a716-446655440003\"],\n 
+                \"completed_course_ids\": [],\n  \"batch_code\": \"B24A\",\n 
+                \"description\": \"First batch of 2024 cohort\",\n 
+                \"image_url\": \"https://example.com/batch-image.png\",\n 
+                \"meeting_id\": \"550e8400-e29b-41d4-a716-446655440004\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    get:
+      tags:
+        - Batch
+      summary: Get All Batches
+      description: Get all batches (requires authentication)
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /batch/{id}:
+    get:
+      tags:
+        - Batch
+      summary: Get Batch by ID
+      description: Get a specific batch by ID (requires authentication)
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+          example: Bearer {{jwt_token}}
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Batch UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}

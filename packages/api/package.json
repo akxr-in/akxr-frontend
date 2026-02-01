@@ -1,0 +1,28 @@
+{
+  "name": "@akxr/api",
+  "version": "0.1.0",
+  "description": "AKXR API Client - Generated API hooks and types",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./hooks/*": "./src/api/generated/*/index.ts",
+    "./models": "./src/api/models/index.ts"
+  },
+  "scripts": {
+    "generate": "node generate-api.js"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5",
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@types/node": "^20",
+    "orval": "^8.2.0",
+    "postman-to-openapi": "^3.0.1",
+    "react": "^19",
+    "typescript": "^5"
+  },
+  "license": "MIT"
+}
