@@ -13,6 +13,9 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { usePostUserCompleteProfile, type PostUserCompleteProfileBody } from "@akxr/api";
+import { toast } from "../providers";
 
 const profileSchema = z.object({
     internship: z.string().optional(),
@@ -67,6 +70,8 @@ const availableSkills = [
 const RequiredAsterisk = () => <span className="text-error ml-1">*</span>;
 
 export default function CompleteProfilePage() {
+    const router = useRouter();
+    const completeProfileMutation = usePostUserCompleteProfile();
     const [skillSearch, setSkillSearch] = useState("");
     const [showSkillDropdown, setShowSkillDropdown] = useState(false);
 
@@ -76,7 +81,7 @@ export default function CompleteProfilePage() {
         control,
         watch,
         setValue,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -137,8 +142,44 @@ export default function CompleteProfilePage() {
     };
 
     const onSubmit = async (data: ProfileFormData) => {
-        console.log("Profile data:", data);
-        // Handle profile completion logic here
+        // Helper function to construct full URL from username
+        const constructUrl = (username: string | undefined, baseUrl: string): string | null => {
+            if (!username || !username.trim()) return null;
+            const trimmed = username.trim();
+            // Remove leading/trailing slashes and protocol if present
+            const cleanUsername = trimmed.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/').pop() || trimmed;
+            return `${baseUrl}/${cleanUsername}`;
+        };
+
+        // Map form data to API body format
+        const completeProfileBody: PostUserCompleteProfileBody = {
+            skills: data.skills,
+            github_url: constructUrl(data.githubProfile, "https://github.com"),
+            linkedin_url: constructUrl(data.linkedinProfile, "https://linkedin.com/in"),
+            x_url: constructUrl(data.xProfile, "https://x.com"),
+            zulip_username: data.zulipUsername?.trim() || null,
+            did_internship: data.internship === "yes" ? true : data.internship === "no" ? false : undefined,
+            college_year: data.collegeYear === "graduated"
+                ? null
+                : data.collegeYear
+                    ? parseInt(data.collegeYear, 10)
+                    : null,
+        };
+
+        completeProfileMutation.mutate(
+            { data: completeProfileBody },
+            {
+                onSuccess: (response) => {
+                    if (response?.status !== 200) {
+                        toast.error(response?.data?.message || "Failed to complete profile");
+                        return;
+                    }
+
+                    toast.success("Profile completed successfully!");
+                    router.push("/");
+                },
+            }
+        );
     };
 
     return (
@@ -315,7 +356,7 @@ export default function CompleteProfilePage() {
                         type="submit"
                         variant="primary"
                         className="w-full"
-                        isLoading={isSubmitting}
+                        isLoading={completeProfileMutation.isPending}
                     >
                         Finish
                     </Button>
