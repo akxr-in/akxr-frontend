@@ -146,9 +146,12 @@ export default function CompleteProfilePage() {
             <div className="w-full max-w-xl">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-text-primary">
-                        Complete the form to get started
+                    <h1 className="text-3xl font-bold text-text-primary mb-2">
+                        Complete your profile
                     </h1>
+                    <p className="text-text-secondary">
+                        Tell us a bit more about yourself to get started
+                    </p>
                 </div>
 
                 {/* Profile Form */}
