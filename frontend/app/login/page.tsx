@@ -34,12 +34,13 @@ export default function LoginPage() {
             { data: { email: data.email, password: data.password } },
             {
                 onSuccess: (response) => {
-                    if (response?.status !== 200) {
+                    // Check if response has the expected structure
+                    if (response?.status !== 200 || !response?.data?.data) {
                         toast.error(response?.data?.message || "Login failed");
                         return;
                     }
 
-                    const { access_token, refresh_token, user } = response?.data?.data;
+                    const { access_token, refresh_token, user } = response.data.data;
 
                     // Store tokens in both localStorage and cookies
                     setAuthTokens(access_token, refresh_token);
