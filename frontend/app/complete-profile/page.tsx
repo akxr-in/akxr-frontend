@@ -98,10 +98,35 @@ export default function CompleteProfilePage() {
             !selectedSkills.includes(skill)
     );
 
+    // Check if the current search term is a valid custom skill
+    const trimmedSearch = skillSearch.trim();
+    const isCustomSkill =
+        trimmedSearch.length > 0 &&
+        !availableSkills.some(
+            (skill) => skill.toLowerCase() === trimmedSearch.toLowerCase()
+        ) &&
+        !selectedSkills.some(
+            (skill) => skill.toLowerCase() === trimmedSearch.toLowerCase()
+        );
+
     const addSkill = (skill: string) => {
-        setValue("skills", [...selectedSkills, skill]);
+        const trimmed = skill.trim();
+        if (trimmed && !selectedSkills.includes(trimmed)) {
+            setValue("skills", [...selectedSkills, trimmed]);
+        }
         setSkillSearch("");
         setShowSkillDropdown(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            if (isCustomSkill) {
+                addSkill(trimmedSearch);
+            } else if (filteredSkills.length > 0) {
+                addSkill(filteredSkills[0]);
+            }
+        }
     };
 
     const removeSkill = (skillToRemove: string) => {
@@ -171,10 +196,11 @@ export default function CompleteProfilePage() {
                             >
                                 <input
                                     type="text"
-                                    placeholder="Search or select your skills"
+                                    placeholder="Search or add your skills"
                                     value={skillSearch}
                                     onChange={(e) => setSkillSearch(e.target.value)}
                                     onFocus={() => setShowSkillDropdown(true)}
+                                    onKeyDown={handleKeyDown}
                                     className="flex-1 h-full bg-transparent text-text-primary outline-none placeholder:text-text-muted"
                                 />
                                 <svg
@@ -193,8 +219,31 @@ export default function CompleteProfilePage() {
                             </div>
 
                             {/* Dropdown */}
-                            {showSkillDropdown && filteredSkills.length > 0 && (
+                            {showSkillDropdown && (filteredSkills.length > 0 || isCustomSkill) && (
                                 <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                    {/* Custom skill option */}
+                                    {isCustomSkill && (
+                                        <button
+                                            type="button"
+                                            onClick={() => addSkill(trimmedSearch)}
+                                            className="w-full text-left px-4 py-2 text-brand hover:bg-bg-elevated transition-colors cursor-pointer flex items-center gap-2"
+                                        >
+                                            <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                            Add &quot;{trimmedSearch}&quot;
+                                        </button>
+                                    )}
                                     {filteredSkills.map((skill) => (
                                         <button
                                             key={skill}
