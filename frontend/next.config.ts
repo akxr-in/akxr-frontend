@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Transpile the workspace package
-  transpilePackages: ["@akxr/design-system"],
+  // Transpile workspace packages
+  transpilePackages: ["@akxr/design-system", "@akxr/api"],
 };
 
 export default nextConfig;
