@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 async function generateClient() {
   const openApiPath = path.join(__dirname, 'openapi.json');
