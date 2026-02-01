@@ -69,7 +69,7 @@ export default function SignupPage() {
             { data: signupBody },
             {
                 onSuccess: (response) => {
-                    if (response?.status !== 201) {
+                    if (response?.status !== 201 || !response?.data?.data) {
                         toast.error(response?.data?.message || "Signup failed");
                         return;
                     }
