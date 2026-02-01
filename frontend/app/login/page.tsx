@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePostUserAuthSignin } from "@akxr/api";
 import { toast } from "../providers";
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants";
+import { setAuthTokens } from "@/lib/utils";
 
 const loginSchema = z.object({
     email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -41,9 +41,8 @@ export default function LoginPage() {
 
                     const { access_token, refresh_token, user } = response?.data?.data;
 
-                    // Store tokens
-                    localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
-                    localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+                    // Store tokens in both localStorage and cookies
+                    setAuthTokens(access_token, refresh_token);
 
                     toast.success("Login successful!");
 
