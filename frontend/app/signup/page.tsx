@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePostUserAuthSignup, type PostUserAuthSignupBody } from "@akxr/api";
+import { usePostUserAuthSignup, type PostUserAuthSignupBody, getUserGithubLogin } from "@akxr/api";
 import { toast } from "../providers";
 import { setAuthTokens } from "@/lib/utils";
 
@@ -210,6 +210,18 @@ export default function SignupPage() {
                     variant="outline"
                     className="w-full"
                     leftIcon={<GithubIcon />}
+                    onClick={async () => {
+                        try {
+                            const response = await getUserGithubLogin();
+                            if (response?.status === 200 && response?.data?.data?.auth_url) {
+                                window.location.href = response.data.data.auth_url;
+                            } else {
+                                toast.error("Failed to initiate GitHub login");
+                            }
+                        } catch (error) {
+                            toast.error("Failed to initiate GitHub login");
+                        }
+                    }}
                 >
                     Continue with GitHub
                 </Button>
