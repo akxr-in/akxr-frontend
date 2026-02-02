@@ -12,3 +12,6 @@ export type { TagProps } from "./Tag";
 
 export { Select } from "./Select";
 export type { SelectProps, SelectOption } from "./Select";
+
+export { Spinner } from "./Spinner";
+export type { SpinnerProps } from "./Spinner";
