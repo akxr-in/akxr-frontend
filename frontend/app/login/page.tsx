@@ -97,6 +97,7 @@ export default function LoginPage() {
                             placeholder="••••••••"
                             {...register("password")}
                             error={errors.password?.message}
+                            showPasswordToggle
                         />
                     </div>
 

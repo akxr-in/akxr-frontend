@@ -163,6 +163,7 @@ export default function SignupPage() {
                             placeholder="••••••••"
                             {...register("password")}
                             error={errors.password?.message}
+                            showPasswordToggle
                         />
                     </div>
 
