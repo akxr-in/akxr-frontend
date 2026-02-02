@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { setAuthTokens } from "@/lib/utils";
 import { toast } from "../../providers";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants";
+import { Spinner } from "@akxr/design-system";
 
 export default function GithubCallbackPage() {
     const router = useRouter();
@@ -49,7 +50,7 @@ export default function GithubCallbackPage() {
     return (
         <div className="min-h-screen bg-bg-primary flex items-center justify-center">
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+                <Spinner size="lg" className="mx-auto mb-4" />
                 <p className="text-text-secondary">Completing GitHub authentication...</p>
             </div>
         </div>
