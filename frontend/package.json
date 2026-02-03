@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development next dev",
-    "build": "next build",
-    "build:staging": "NODE_ENV=staging next build",
-    "build:production": "NODE_ENV=production next build",
+    "build": "pnpm --filter @akxr/design-system build && next build",
+    "build:staging": "pnpm --filter @akxr/design-system build && NODE_ENV=staging next build",
+    "build:production": "pnpm --filter @akxr/design-system build && NODE_ENV=production next build",
     "start": "next start",
     "lint": "eslint"
   },
