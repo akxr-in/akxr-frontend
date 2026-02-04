@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter akxr-frontend dev",
-    "build": "pnpm run build:packages && pnpm --filter akxr-frontend build",
+    "build": "pnpm run generate:api && pnpm run build:packages && pnpm --filter akxr-frontend build",
     "build:packages": "pnpm --filter @akxr/design-system build",
     "start": "pnpm --filter akxr-frontend start",
     "lint": "pnpm -r lint",
