@@ -307,7 +307,7 @@ export default function BatchManagementPage() {
                             Manage attendance and track student progress.
                         </p>
                     </div>
-                    <Button variant="primary" onClick={() => console.log("Add new batch")}>
+                    <Button variant="secondary" onClick={() => console.log("Add new batch")}>
                         Add new batch
                     </Button>
                 </div>
