@@ -67,7 +67,7 @@ export const getPostBatchUrl = () => {
 
   
 
-  return `http://localhost:3000/batch`
+  return `https://api-staging.akxr.in/batch`
 }
 
 export const postBatch = async (postBatchBody: PostBatchBody, options?: RequestInit): Promise<postBatchResponse> => {
@@ -146,7 +146,7 @@ export const getGetBatchUrl = () => {
 
   
 
-  return `http://localhost:3000/batch`
+  return `https://api-staging.akxr.in/batch`
 }
 
 export const getBatch = async ( options?: RequestInit): Promise<getBatchResponse> => {
@@ -166,7 +166,7 @@ export const getBatch = async ( options?: RequestInit): Promise<getBatchResponse
 
 export const getGetBatchQueryKey = () => {
     return [
-    `http://localhost:3000/batch`
+    `https://api-staging.akxr.in/batch`
     ] as const;
     }
 
@@ -260,7 +260,7 @@ export const getGetBatchIdUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/batch/${id}`
+  return `https://api-staging.akxr.in/batch/${id}`
 }
 
 export const getBatchId = async (id: string, options?: RequestInit): Promise<getBatchIdResponse> => {
@@ -280,7 +280,7 @@ export const getBatchId = async (id: string, options?: RequestInit): Promise<get
 
 export const getGetBatchIdQueryKey = (id: string,) => {
     return [
-    `http://localhost:3000/batch/${id}`
+    `https://api-staging.akxr.in/batch/${id}`
     ] as const;
     }
 

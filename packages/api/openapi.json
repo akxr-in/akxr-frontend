@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://api-staging.akxr.in",
+      "url": "https://staging-api.akxr.in",
       "description": "Local development server"
     }
   ],

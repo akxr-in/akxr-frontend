@@ -79,7 +79,7 @@ export const getPostMeetingUrl = () => {
 
   
 
-  return `http://localhost:3000/meeting`
+  return `https://api-staging.akxr.in/meeting`
 }
 
 export const postMeeting = async (postMeetingBody: PostMeetingBody, options?: RequestInit): Promise<postMeetingResponse> => {
@@ -165,7 +165,7 @@ export const getGetMeetingIdUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/meeting/${id}`
+  return `https://api-staging.akxr.in/meeting/${id}`
 }
 
 export const getMeetingId = async (id: string, options?: RequestInit): Promise<getMeetingIdResponse> => {
@@ -185,7 +185,7 @@ export const getMeetingId = async (id: string, options?: RequestInit): Promise<g
 
 export const getGetMeetingIdQueryKey = (id: string,) => {
     return [
-    `http://localhost:3000/meeting/${id}`
+    `https://api-staging.akxr.in/meeting/${id}`
     ] as const;
     }
 
@@ -279,7 +279,7 @@ export const getGetMeetingIdParticipantsUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/meeting/${id}/participants`
+  return `https://api-staging.akxr.in/meeting/${id}/participants`
 }
 
 export const getMeetingIdParticipants = async (id: string, options?: RequestInit): Promise<getMeetingIdParticipantsResponse> => {
@@ -299,7 +299,7 @@ export const getMeetingIdParticipants = async (id: string, options?: RequestInit
 
 export const getGetMeetingIdParticipantsQueryKey = (id: string,) => {
     return [
-    `http://localhost:3000/meeting/${id}/participants`
+    `https://api-staging.akxr.in/meeting/${id}/participants`
     ] as const;
     }
 
@@ -393,7 +393,7 @@ export const getPostMeetingIdStartUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/meeting/${id}/start`
+  return `https://api-staging.akxr.in/meeting/${id}/start`
 }
 
 export const postMeetingIdStart = async (id: string,
@@ -480,7 +480,7 @@ export const getPostMeetingIdEndUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/meeting/${id}/end`
+  return `https://api-staging.akxr.in/meeting/${id}/end`
 }
 
 export const postMeetingIdEnd = async (id: string,
@@ -567,7 +567,7 @@ export const getPostMeetingIdCancelUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/meeting/${id}/cancel`
+  return `https://api-staging.akxr.in/meeting/${id}/cancel`
 }
 
 export const postMeetingIdCancel = async (id: string,
@@ -654,7 +654,7 @@ export const getGetMeetingIdAttendanceUrl = (id: string,) => {
 
   
 
-  return `http://localhost:3000/meeting/${id}/attendance`
+  return `https://api-staging.akxr.in/meeting/${id}/attendance`
 }
 
 export const getMeetingIdAttendance = async (id: string, options?: RequestInit): Promise<getMeetingIdAttendanceResponse> => {
@@ -674,7 +674,7 @@ export const getMeetingIdAttendance = async (id: string, options?: RequestInit):
 
 export const getGetMeetingIdAttendanceQueryKey = (id: string,) => {
     return [
-    `http://localhost:3000/meeting/${id}/attendance`
+    `https://api-staging.akxr.in/meeting/${id}/attendance`
     ] as const;
     }
 

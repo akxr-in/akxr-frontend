@@ -74,7 +74,7 @@ export const getPostUserAuthSignupUrl = () => {
 
   
 
-  return `http://localhost:3000/user/auth/signup`
+  return `https://api-staging.akxr.in/user/auth/signup`
 }
 
 export const postUserAuthSignup = async (postUserAuthSignupBody: PostUserAuthSignupBody, options?: RequestInit): Promise<postUserAuthSignupResponse> => {
@@ -160,7 +160,7 @@ export const getPostUserAuthSigninUrl = () => {
 
   
 
-  return `http://localhost:3000/user/auth/signin`
+  return `https://api-staging.akxr.in/user/auth/signin`
 }
 
 export const postUserAuthSignin = async (postUserAuthSigninBody: PostUserAuthSigninBody, options?: RequestInit): Promise<postUserAuthSigninResponse> => {
@@ -246,7 +246,7 @@ export const getPostUserAuthRefreshUrl = () => {
 
   
 
-  return `http://localhost:3000/user/auth/refresh`
+  return `https://api-staging.akxr.in/user/auth/refresh`
 }
 
 export const postUserAuthRefresh = async (postUserAuthRefreshBody: PostUserAuthRefreshBody, options?: RequestInit): Promise<postUserAuthRefreshResponse> => {
@@ -325,7 +325,7 @@ export const getGetUserGithubLoginUrl = () => {
 
   
 
-  return `http://localhost:3000/user/github/login`
+  return `https://api-staging.akxr.in/user/github/login`
 }
 
 export const getUserGithubLogin = async ( options?: RequestInit): Promise<getUserGithubLoginResponse> => {
@@ -345,7 +345,7 @@ export const getUserGithubLogin = async ( options?: RequestInit): Promise<getUse
 
 export const getGetUserGithubLoginQueryKey = () => {
     return [
-    `http://localhost:3000/user/github/login`
+    `https://api-staging.akxr.in/user/github/login`
     ] as const;
     }
 
@@ -446,7 +446,7 @@ export const getGetUserGithubCallbackUrl = (params: GetUserGithubCallbackParams,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `http://localhost:3000/user/github/callback?${stringifiedParams}` : `http://localhost:3000/user/github/callback`
+  return stringifiedParams.length > 0 ? `https://api-staging.akxr.in/user/github/callback?${stringifiedParams}` : `https://api-staging.akxr.in/user/github/callback`
 }
 
 export const getUserGithubCallback = async (params: GetUserGithubCallbackParams, options?: RequestInit): Promise<getUserGithubCallbackResponse> => {
@@ -466,7 +466,7 @@ export const getUserGithubCallback = async (params: GetUserGithubCallbackParams,
 
 export const getGetUserGithubCallbackQueryKey = (params?: GetUserGithubCallbackParams,) => {
     return [
-    `http://localhost:3000/user/github/callback`, ...(params ? [params] : [])
+    `https://api-staging.akxr.in/user/github/callback`, ...(params ? [params] : [])
     ] as const;
     }
 

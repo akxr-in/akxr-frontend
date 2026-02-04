@@ -69,7 +69,7 @@ export const getGetUserUrl = () => {
 
   
 
-  return `http://localhost:3000/user`
+  return `https://api-staging.akxr.in/user`
 }
 
 export const getUser = async ( options?: RequestInit): Promise<getUserResponse> => {
@@ -89,7 +89,7 @@ export const getUser = async ( options?: RequestInit): Promise<getUserResponse> 
 
 export const getGetUserQueryKey = () => {
     return [
-    `http://localhost:3000/user`
+    `https://api-staging.akxr.in/user`
     ] as const;
     }
 
@@ -183,7 +183,7 @@ export const getPatchUserUrl = () => {
 
   
 
-  return `http://localhost:3000/user`
+  return `https://api-staging.akxr.in/user`
 }
 
 export const patchUser = async (patchUserBody: PatchUserBody, options?: RequestInit): Promise<patchUserResponse> => {
@@ -269,7 +269,7 @@ export const getPostUserCompleteProfileUrl = () => {
 
   
 
-  return `http://localhost:3000/user/complete-profile`
+  return `https://api-staging.akxr.in/user/complete-profile`
 }
 
 export const postUserCompleteProfile = async (postUserCompleteProfileBody: PostUserCompleteProfileBody, options?: RequestInit): Promise<postUserCompleteProfileResponse> => {

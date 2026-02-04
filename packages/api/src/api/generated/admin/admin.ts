@@ -72,7 +72,7 @@ export const getPostAdminUpgradeRoleUrl = () => {
 
   
 
-  return `http://localhost:3000/admin/upgrade-role`
+  return `https://api-staging.akxr.in/admin/upgrade-role`
 }
 
 export const postAdminUpgradeRole = async (postAdminUpgradeRoleBody: PostAdminUpgradeRoleBody, options?: RequestInit): Promise<postAdminUpgradeRoleResponse> => {
@@ -158,7 +158,7 @@ export const getGetAdminUsersUrl = () => {
 
   
 
-  return `http://localhost:3000/admin/users`
+  return `https://api-staging.akxr.in/admin/users`
 }
 
 export const getAdminUsers = async ( options?: RequestInit): Promise<getAdminUsersResponse> => {
@@ -178,7 +178,7 @@ export const getAdminUsers = async ( options?: RequestInit): Promise<getAdminUse
 
 export const getGetAdminUsersQueryKey = () => {
     return [
-    `http://localhost:3000/admin/users`
+    `https://api-staging.akxr.in/admin/users`
     ] as const;
     }
 
