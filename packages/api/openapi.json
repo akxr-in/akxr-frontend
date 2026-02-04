@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://staging-api.akxr.in",
+      "url": "http://localhost:3000",
       "description": "Local development server"
     }
   ],

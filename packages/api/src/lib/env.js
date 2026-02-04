@@ -1,14 +1,13 @@
-type Environment = 'development' | 'staging' | 'production'
 
-const NODE_ENV = (process.env.NODE_ENV as Environment) || 'development'
+const NODE_ENV = (process.env.NODE_ENV) || 'development'
 
-const backendUrls: Record<Environment, string> = {
+const backendUrls = {
     development: 'http://localhost:3000',
     staging: 'https://api-staging.akxr.in',
     production: 'https://api.akxr.in'
 }
 
-export const env = {
+const env = {
     // Environment
     NODE_ENV,
     isDevelopment: NODE_ENV === 'development',
@@ -18,3 +17,7 @@ export const env = {
     // URLs
     BACKEND_URL: backendUrls[NODE_ENV],
 }
+
+module.exports = {
+    env
+};

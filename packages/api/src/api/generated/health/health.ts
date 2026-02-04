@@ -51,7 +51,7 @@ export const getGetHealthUrl = () => {
 
   
 
-  return `https://api-staging.akxr.in/health`
+  return `/health`
 }
 
 export const getHealth = async ( options?: RequestInit): Promise<getHealthResponse> => {
@@ -71,7 +71,7 @@ export const getHealth = async ( options?: RequestInit): Promise<getHealthRespon
 
 export const getGetHealthQueryKey = () => {
     return [
-    `https://api-staging.akxr.in/health`
+    `/health`
     ] as const;
     }
 
