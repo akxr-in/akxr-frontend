@@ -6,6 +6,7 @@ import {
     CalendarIcon,
     UsersIcon,
     CheckCircleIcon,
+    Chip,
 } from "@akxr/design-system";
 
 // Types
@@ -27,41 +28,6 @@ interface BatchCardProps {
     onViewDetails?: () => void;
 }
 
-// Status Badge Component
-const StatusBadge = ({ status }: { status: BatchStatus }) => {
-    const statusConfig = {
-        to_be_started: {
-            label: "To be started",
-            dotColor: "bg-text-muted",
-            bgColor: "bg-bg-elevated",
-            textColor: "text-text-secondary",
-        },
-        ongoing: {
-            label: "Ongoing",
-            dotColor: "bg-success",
-            bgColor: "bg-success/10",
-            textColor: "text-success",
-        },
-        completed: {
-            label: "Completed",
-            dotColor: "bg-success",
-            bgColor: "bg-success/10",
-            textColor: "text-success",
-        },
-    };
-
-    const config = statusConfig[status];
-
-    return (
-        <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}
-        >
-            <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor}`} />
-            {config.label}
-        </span>
-    );
-};
-
 // Progress Bar Component
 const ProgressBar = ({
     value,
@@ -73,7 +39,7 @@ const ProgressBar = ({
     const bgColor = variant === "success" ? "bg-success" : "bg-brand";
 
     return (
-        <div className="h-1.5 bg-bg-elevated rounded-full overflow-hidden">
+        <div className="h-4 bg-bg-elevated rounded-full overflow-hidden">
             <div
                 className={`h-full ${bgColor} rounded-full transition-all duration-300`}
                 style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
@@ -101,9 +67,23 @@ const BatchCard = ({
 
     return (
         <div className="bg-bg-card border border-border-default rounded-lg p-5 flex flex-col">
-            {/* Status Badge */}
+            {/* Status Chip */}
             <div className="mb-3">
-                <StatusBadge status={status} />
+                {status === "to_be_started" && (
+                    <Chip variant="neutral" className="text-xs py-1 px-2.5">
+                        To be started
+                    </Chip>
+                )}
+                {status === "ongoing" && (
+                    <Chip variant="warning" className="text-xs py-1 px-2.5">
+                        Ongoing
+                    </Chip>
+                )}
+                {status === "completed" && (
+                    <Chip variant="success" className="text-xs py-1 px-2.5">
+                        Completed
+                    </Chip>
+                )}
             </div>
 
             {/* Title & Mentor */}
