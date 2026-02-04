@@ -170,7 +170,7 @@ export default function CompleteProfilePage() {
             { data: completeProfileBody },
             {
                 onSuccess: (response) => {
-                    if (response?.status !== 200) {
+                    if (response?.status !== 200 || !response?.data?.data) {
                         toast.error(response?.data?.message || "Failed to complete profile");
                         return;
                     }
