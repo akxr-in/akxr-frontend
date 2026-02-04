@@ -3,9 +3,12 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter akxr-frontend dev",
-    "build": "pnpm --filter @akxr/design-system build && pnpm --filter akxr-frontend build",
+    "build": "pnpm run build:packages && pnpm --filter akxr-frontend build",
     "build:packages": "pnpm --filter @akxr/design-system build",
-    "lint": "pnpm -r lint"
+    "start": "pnpm --filter akxr-frontend start",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r --filter @akxr/design-system clean && rm -rf frontend/.next",
+    "generate:api": "pnpm --filter @akxr/api generate"
   },
   "devDependencies": {
     "typescript": "^5"
