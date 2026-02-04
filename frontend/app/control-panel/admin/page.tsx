@@ -72,7 +72,7 @@ const RequestCard = ({
   onViewDetails,
 }: RequestCardProps) => {
   return (
-    <div className="bg-bg-card border border-border-default rounded-lg p-5 relative">
+    <div className="bg-bg-card/80 p-5 relative">
       {isNew && (
         <div className="absolute top-5 right-5">
           <div className="w-2.5 h-2.5 rounded-full bg-brand" />
@@ -320,8 +320,8 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-semibold text-text-primary mb-4">
             Pending requests
           </h2>
-          <div className="bg-bg-card/50 rounded-lg overflow-hidden">
-            <div className="space-y-4">
+          <div className="bg-bg-card rounded-lg overflow-hidden border border-border-default">
+            <div className="divide-y divide-border-default">
               {pendingRequests.map((request) => (
                 <RequestCard
                   key={request.id}
