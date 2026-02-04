@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
 
     // If user is authenticated, check latest profile status from backend
     if (isAuthenticated) {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+        const apiBaseUrl = 'https://api-staging.akxr.in';
 
         try {
             // Call the backend /user endpoint to get fresh profile_status

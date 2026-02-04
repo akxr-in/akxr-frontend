@@ -12,7 +12,7 @@ export default defineConfig({
             schemas: './src/api/models',
             client: 'react-query',
             httpClient: 'fetch',
-            baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+            baseUrl: 'https://api-staging.akxr.in',
             override: {
                 mutator: {
                     path: './src/api/custom-fetch.ts',

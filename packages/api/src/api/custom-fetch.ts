@@ -3,7 +3,7 @@ export const customFetch = async <T>(
   url: string,
   options: RequestInit
 ): Promise<T> => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const baseUrl = 'https://api-staging.akxr.in';
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
   // Check if URL is already absolute (starts with http:// or https://)
