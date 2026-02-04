@@ -83,13 +83,15 @@ const RequestCard = ({
         <div className="text-text-muted mt-0.5">
           <BellIcon />
         </div>
-        <div className="flex-1">
-          <h3 className="text-text-primary font-medium">
-            {name} requested: {requestType}
-          </h3>
-          <p className="text-text-muted text-sm mt-0.5">{batchName}</p>
+        <div className="flex-1 flex flex-col gap-3">
+          <div>
+            <h3 className="text-text-primary font-medium">
+              {name} requested: {requestType}
+            </h3>
+            <p className="text-text-muted text-sm">{batchName}</p>
+          </div>
 
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-4">
             <div>
               <span className="text-text-muted text-xs block">Prev Date</span>
               <span className="text-text-primary text-sm font-medium">{prevDate}</span>
@@ -103,7 +105,7 @@ const RequestCard = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 mt-5">
+          <div className="flex items-center gap-3">
             <Button variant="primary" size="sm" onClick={onAccept} className="min-w-[120px]">
               Accept
             </Button>
