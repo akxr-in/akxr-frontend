@@ -53,13 +53,30 @@ const loginData: PostUserAuthSigninBody = {
 - **Batch** - `useGetBatch`, `usePostBatch`
 - **Meeting** - `useGetMeeting`, `usePostMeeting`, etc.
 
-## Environment Variables
+## Environment Configuration
 
-Set `NEXT_PUBLIC_API_URL` in your environment:
+**`packages/api/src/lib/env.ts` is the source of truth for all backend URLs.**
 
-- **Development:** `http://localhost:3000`
-- **Staging:** `https://api-staging.akxr.com`
-- **Production:** `https://api.akxr.com`
+URLs are automatically determined based on `NODE_ENV`:
+
+- **Development** (`NODE_ENV=development`): `http://localhost:3000`
+- **Staging** (`NODE_ENV=staging`): `https://api-staging.akxr.in`
+- **Production** (`NODE_ENV=production`): `https://api.akxr.in`
+
+**Usage:**
+```typescript
+import { env } from '@akxr/api';
+
+// Access backend URL
+const backendUrl = env.BACKEND_URL;
+
+// Check environment
+if (env.isDevelopment) {
+  // development-specific code
+}
+```
+
+**Note:** All API calls automatically use `env.BACKEND_URL` based on the current `NODE_ENV`. No additional environment variables needed.
 
 ## Generating API Client
 
@@ -74,7 +91,7 @@ pnpm orval
 ```
 
 This will:
-1. Fetch OpenAPI spec from `${NEXT_PUBLIC_API_URL}/openapi.json`
+1. Fetch OpenAPI spec from `${env.BACKEND_URL}/openapi.json` (based on `NODE_ENV`)
 2. Generate React Query hooks and TypeScript types
 3. Output to `src/api/generated/` and `src/api/models/`
 
@@ -83,7 +100,8 @@ This will:
 The package uses a custom fetch function (`custom-fetch.ts`) that:
 - Handles authentication tokens automatically
 - Wraps responses with status and headers
-- Supports environment-based URL configuration
+- **Uses `env.BACKEND_URL` from `env.ts` as the source of truth for backend URLs**
+- Automatically selects the correct URL based on `NODE_ENV`
 
 ## Error Handling
 

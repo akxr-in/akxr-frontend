@@ -1,6 +1,8 @@
 // orval.config.ts
 import { defineConfig } from 'orval';
 
+// Note: baseUrl is removed so orval generates relative URLs (e.g., '/batch')
+// The customFetch mutator will prepend env.BACKEND_URL to relative URLs
 export default defineConfig({
     akxr: {
         input: {
@@ -12,7 +14,7 @@ export default defineConfig({
             schemas: './src/api/models',
             client: 'react-query',
             httpClient: 'fetch',
-            baseUrl: 'https://api-staging.akxr.in',
+            // baseUrl removed - customFetch handles URL resolution using env.BACKEND_URL
             override: {
                 mutator: {
                     path: './src/api/custom-fetch.ts',

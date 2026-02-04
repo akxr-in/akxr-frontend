@@ -32,7 +32,8 @@ export async function middleware(request: NextRequest) {
 
     // // If user is authenticated, check latest profile status from backend
     // if (isAuthenticated) {
-    //     const apiBaseUrl = 'https://api-staging.akxr.in';
+    //     import { env } from '@/lib/env';
+    //     const apiBaseUrl = env.BACKEND_URL;
 
     //     try {
     //         // Call the backend /user endpoint to get fresh profile_status

@@ -35,13 +35,17 @@ pnpm dev
 pnpm build:packages
 ```
 
-## Environment Variables
+## Environment Configuration
 
-Create environment files in `frontend/`:
+**`packages/api/src/lib/env.ts` is the source of truth for all backend URLs.**
 
-- `.env.development` - `NEXT_PUBLIC_API_URL=http://localhost:3000`
-- `.env.staging` - `NEXT_PUBLIC_API_URL=https://api-staging.akxr.com`
-- `.env.production` - `NEXT_PUBLIC_API_URL=https://api.akxr.com`
+URLs are automatically determined based on `NODE_ENV`:
+
+- **Development** (`NODE_ENV=development`): `http://localhost:3000`
+- **Staging** (`NODE_ENV=staging`): `https://api-staging.akxr.in`
+- **Production** (`NODE_ENV=production`): `https://api.akxr.in`
+
+**Note:** All API calls automatically use `env.BACKEND_URL` based on the current `NODE_ENV`. No additional environment variables needed.
 
 ## Commands
 

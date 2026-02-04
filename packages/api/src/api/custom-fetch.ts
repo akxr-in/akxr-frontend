@@ -1,9 +1,12 @@
 // src/api/custom-fetch.ts
+import { env } from '../lib/env';
+
 export const customFetch = async <T>(
   url: string,
   options: RequestInit
 ): Promise<T> => {
-  const baseUrl = 'https://api-staging.akxr.in';
+  // Get API URL from env config (source of truth)
+  const baseUrl = env.BACKEND_URL;
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
   // Check if URL is already absolute (starts with http:// or https://)

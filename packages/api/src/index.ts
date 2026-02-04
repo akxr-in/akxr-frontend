@@ -10,3 +10,6 @@ export * from './api/models';
 
 // Re-export custom fetch for customization
 export { customFetch } from './api/custom-fetch';
+
+// Re-export env configuration
+export { env } from './lib/env';
