@@ -129,7 +129,7 @@ interface CompactRequestProps {
 
 const CompactRequest = ({ name, requestType }: CompactRequestProps) => {
   return (
-    <div className="flex items-center gap-3 px-5 py-3 border-t border-border-default">
+    <div className="flex items-center gap-3 px-5 py-3">
       <div className="text-text-muted">
         <BellIcon />
       </div>
@@ -216,6 +216,7 @@ export default function AdminDashboard() {
     totalStudents: 115,
     studentGrowth: "+12% from last month",
     activeBatches: 8,
+    avgAttendance: "92%",
   };
 
   const pendingRequests = [
@@ -300,7 +301,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Row */}
-        <div className="flex gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <StatCard
             title="Total Students"
             value={stats.totalStudents}
@@ -320,7 +321,7 @@ export default function AdminDashboard() {
             Pending requests
           </h2>
           <div className="bg-bg-card/50 rounded-lg overflow-hidden">
-            <div className="space-y-4 p-4">
+            <div className="space-y-4">
               {pendingRequests.map((request) => (
                 <RequestCard
                   key={request.id}
