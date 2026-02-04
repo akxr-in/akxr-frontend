@@ -72,7 +72,7 @@ const RequestCard = ({
   onViewDetails,
 }: RequestCardProps) => {
   return (
-    <div className="bg-bg-card/80 p-5 relative">
+    <div className="bg-brand-muted/40 p-5 relative">
       {isNew && (
         <div className="absolute top-5 right-5">
           <div className="w-2.5 h-2.5 rounded-full bg-brand" />
@@ -129,7 +129,7 @@ interface CompactRequestProps {
 
 const CompactRequest = ({ name, requestType }: CompactRequestProps) => {
   return (
-    <div className="flex items-center gap-3 px-5 py-3">
+    <div className="flex items-center gap-3 px-5 py-3 bg-bg-muted border-t border-border-default">
       <div className="text-text-muted">
         <BellIcon />
       </div>
