@@ -28,7 +28,7 @@ const StatCard = ({ title, value, subtitle, badge }: StatCardProps) => {
   };
 
   return (
-    <div className="bg-bg-secondary border border-border-default rounded-lg p-5 flex-1">
+    <div className="bg-bg-card border border-border-default rounded-lg p-5 flex-1">
       <div className="flex items-start justify-between">
         <span className="text-text-muted text-sm">{title}</span>
         {badge && (
@@ -72,7 +72,7 @@ const RequestCard = ({
   onViewDetails,
 }: RequestCardProps) => {
   return (
-    <div className="bg-bg-secondary border border-border-default rounded-lg p-5 relative">
+    <div className="bg-bg-card border border-border-default rounded-lg p-5 relative">
       {isNew && (
         <div className="absolute top-5 right-5">
           <div className="w-2.5 h-2.5 rounded-full bg-brand" />
@@ -319,7 +319,7 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-semibold text-text-primary mb-4">
             Pending requests
           </h2>
-          <div className="bg-bg-secondary/50 rounded-lg overflow-hidden">
+          <div className="bg-bg-card/50 rounded-lg overflow-hidden">
             <div className="space-y-4 p-4">
               {pendingRequests.map((request) => (
                 <RequestCard
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
               {selectedDate}
             </button>
           </div>
-          <div className="bg-bg-secondary border border-border-default rounded-lg px-5">
+          <div className="bg-bg-card border border-border-default rounded-lg px-5">
             {scheduledClasses.map((classItem) => (
               <ScheduledClassCard
                 key={classItem.id}
