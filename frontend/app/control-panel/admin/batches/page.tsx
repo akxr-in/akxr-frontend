@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
     Button,
     CalendarIcon,
@@ -199,6 +200,8 @@ const NavItem = ({ active = false }: { active?: boolean }) => (
 
 // Main Page Component
 export default function BatchManagementPage() {
+    const router = useRouter();
+
     // Mock data - replace with actual API data
     const batches: BatchCardProps[] = [
         {
@@ -315,7 +318,9 @@ export default function BatchManagementPage() {
                         <BatchCard
                             key={batch.id}
                             {...batch}
-                            onViewDetails={() => console.log("View details", batch.id)}
+                            onViewDetails={() =>
+                                router.push(`/control-panel/admin/batches/${batch.id}`)
+                            }
                         />
                     ))}
                 </div>
