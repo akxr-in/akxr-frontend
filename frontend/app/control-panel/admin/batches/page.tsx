@@ -179,7 +179,7 @@ const BatchCard = ({
 
             {/* View Details Button */}
             <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 className="w-full mt-5"
                 onClick={onViewDetails}

@@ -19,7 +19,7 @@ const variantStyles = {
         "bg-brand-muted text-primary border-brand-muted hover:bg-brand-subtle hover:border-brand-subtle",
     // Transparent with gold border, gold text
     outline:
-        "bg-transparent text-primary border-brand hover:bg-brand-subtle",
+        "bg-transparent text-primary border-brand-muted hover:bg-brand-subtle",
     // Dark with muted gold border, muted text
     ghost:
         "bg-transparent text-text-muted border-border-default hover:border-brand-hover hover:text-text-secondary",
