@@ -30,42 +30,42 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
-    // If user is authenticated, check latest profile status from backend
-    if (isAuthenticated) {
-        const apiBaseUrl = 'https://api-staging.akxr.in';
+    // // If user is authenticated, check latest profile status from backend
+    // if (isAuthenticated) {
+    //     const apiBaseUrl = 'https://api-staging.akxr.in';
 
-        try {
-            // Call the backend /user endpoint to get fresh profile_status
-            const userResponse = await fetch(`${apiBaseUrl}/user`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
+    //     try {
+    //         // Call the backend /user endpoint to get fresh profile_status
+    //         const userResponse = await fetch(`${apiBaseUrl}/user`, {
+    //             headers: {
+    //                 Authorization: `Bearer ${accessToken}`,
+    //             },
+    //         });
 
-            if (userResponse.ok) {
-                const userData = await userResponse.json();
-                const profileStatus = userData?.data?.profile_status;
+    //         if (userResponse.ok) {
+    //             const userData = await userResponse.json();
+    //             const profileStatus = userData?.data?.profile_status;
 
-                // If profile is incomplete (AUTHENTICATED), force user to stay on /complete-profile
-                if (profileStatus === "AUTHENTICATED" && !isCompleteProfileRoute) {
-                    return NextResponse.redirect(new URL("/complete-profile", request.url));
-                }
+    //             // If profile is incomplete (AUTHENTICATED), force user to stay on /complete-profile
+    //             if (profileStatus === "AUTHENTICATED" && !isCompleteProfileRoute) {
+    //                 return NextResponse.redirect(new URL("/complete-profile", request.url));
+    //             }
 
-                // If profile is completed, prevent access to /complete-profile
-                if (profileStatus === "PROFILE_CREATED" && isCompleteProfileRoute) {
-                    return NextResponse.redirect(new URL("/", request.url));
-                }
-            } else if (userResponse.status === 401) {
-                // Token invalid/expired – treat as unauthenticated
-                const loginUrl = new URL("/login", request.url);
-                loginUrl.searchParams.set("redirect", pathname);
-                return NextResponse.redirect(loginUrl);
-            }
-        } catch {
-            // If the user check fails (network/backend issue), just fall through
-            // and let the request continue to avoid blocking the app
-        }
-    }
+    //             // If profile is completed, prevent access to /complete-profile
+    //             if (profileStatus === "PROFILE_CREATED" && isCompleteProfileRoute) {
+    //                 return NextResponse.redirect(new URL("/", request.url));
+    //             }
+    //         } else if (userResponse.status === 401) {
+    //             // Token invalid/expired – treat as unauthenticated
+    //             const loginUrl = new URL("/login", request.url);
+    //             loginUrl.searchParams.set("redirect", pathname);
+    //             return NextResponse.redirect(loginUrl);
+    //         }
+    //     } catch {
+    //         // If the user check fails (network/backend issue), just fall through
+    //         // and let the request continue to avoid blocking the app
+    //     }
+    // }
 
     // Authenticated user trying to access unauth route -> redirect to home
     if (isAuthenticated && isUnauthRoute) {
