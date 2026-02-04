@@ -8,6 +8,7 @@ import {
   GridIcon,
   ArrowRightIcon,
 } from "@akxr/design-system";
+import { SidebarNav } from "../components/SidebarNav";
 
 // Stat Card Component
 interface StatCardProps {
@@ -198,18 +199,6 @@ const ScheduledClassCard = ({
   );
 };
 
-// Sidebar Navigation Item
-interface NavItemProps {
-  active?: boolean;
-}
-
-const NavItem = ({ active = false }: NavItemProps) => (
-  <div
-    className={`w-10 h-10 rounded-md ${active ? "bg-brand" : "bg-brand-muted"
-      } cursor-pointer hover:bg-brand-hover transition-colors`}
-  />
-);
-
 // Main Page Component
 export default function AdminDashboard() {
   // Mock data - replace with actual API data
@@ -279,16 +268,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-bg-primary flex">
       {/* Sidebar */}
-      <aside className="w-16 bg-bg-primary border-r border-border-default py-6 flex flex-col items-center gap-3">
-        <NavItem active />
-        <NavItem />
-        <NavItem />
-        <NavItem />
-        <NavItem />
-        <NavItem />
-        <div className="flex-1" />
-        <NavItem />
-      </aside>
+      <SidebarNav activeIndex={0} />
 
       {/* Main Content */}
       <main className="flex-1 p-8 overflow-auto">

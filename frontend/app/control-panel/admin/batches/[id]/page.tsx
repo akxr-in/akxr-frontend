@@ -1,16 +1,7 @@
 "use client";
 
-import {
-    Button, Input
-} from "@akxr/design-system";
-
-// Sidebar Navigation Item (same as other admin pages)
-const NavItem = ({ active = false }: { active?: boolean }) => (
-    <div
-        className={`w-10 h-10 rounded-md ${active ? "bg-brand" : "bg-brand-muted"
-            } cursor-pointer hover:bg-brand-hover transition-colors`}
-    />
-);
+import { Button, Input } from "@akxr/design-system";
+import { SidebarNav } from "../../../components/SidebarNav";
 
 type AttendanceStatus = "present" | "absent" | "partial";
 
@@ -75,16 +66,7 @@ export default function BatchDetailPage() {
     return (
         <div className="min-h-screen bg-bg-primary flex">
             {/* Sidebar */}
-            <aside className="w-16 bg-bg-primary border-r border-border-default py-6 flex flex-col items-center gap-3">
-                <NavItem active />
-                <NavItem />
-                <NavItem />
-                <NavItem />
-                <NavItem />
-                <NavItem />
-                <div className="flex-1" />
-                <NavItem />
-            </aside>
+            <SidebarNav activeIndex={1} />
 
             {/* Main Content */}
             <main className="flex-1 p-8 overflow-auto">

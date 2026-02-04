@@ -9,6 +9,7 @@ import {
     Chip,
     ProgressBar,
 } from "@akxr/design-system";
+import { SidebarNav } from "../../components/SidebarNav";
 
 // Types
 type BatchStatus = "to_be_started" | "ongoing" | "completed";
@@ -151,14 +152,6 @@ const BatchCard = ({
     );
 };
 
-// Sidebar Navigation Item
-const NavItem = ({ active = false }: { active?: boolean }) => (
-    <div
-        className={`w-10 h-10 rounded-md ${active ? "bg-brand" : "bg-brand-muted"
-            } cursor-pointer hover:bg-brand-hover transition-colors`}
-    />
-);
-
 // Main Page Component
 export default function BatchManagementPage() {
     const router = useRouter();
@@ -245,16 +238,7 @@ export default function BatchManagementPage() {
     return (
         <div className="min-h-screen bg-bg-primary flex">
             {/* Sidebar */}
-            <aside className="w-16 bg-bg-primary border-r border-border-default py-6 flex flex-col items-center gap-3">
-                <NavItem active />
-                <NavItem />
-                <NavItem />
-                <NavItem />
-                <NavItem />
-                <NavItem />
-                <div className="flex-1" />
-                <NavItem />
-            </aside>
+            <SidebarNav activeIndex={1} />
 
             {/* Main Content */}
             <main className="flex-1 p-8 overflow-auto">
