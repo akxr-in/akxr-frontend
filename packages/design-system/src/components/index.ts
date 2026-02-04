@@ -15,3 +15,6 @@ export type { SelectProps, SelectOption } from "./Select";
 
 export { Spinner } from "./Spinner";
 export type { SpinnerProps } from "./Spinner";
+
+export { ProgressBar } from "./ProgressBar";
+export type { ProgressBarProps } from "./ProgressBar";
