@@ -7,4 +7,7 @@ export { CalendarIcon } from "./CalendarIcon";
 export { ClockIcon } from "./ClockIcon";
 export { GridIcon } from "./GridIcon";
 export { ArrowRightIcon, ArrowLeftIcon, ArrowUpIcon, ArrowDownIcon } from "./ArrowRightIcon";
+export { UsersIcon, UserIcon } from "./UsersIcon";
+export { CheckIcon, CheckCircleIcon } from "./CheckIcon";
+export { PlusIcon, PlusCircleIcon } from "./PlusIcon";
 export type { IconProps } from "./GithubIcon";
