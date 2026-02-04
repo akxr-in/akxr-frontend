@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Input } from "@akxr/design-system";
-import { SidebarNav } from "../../../components/SidebarNav";
+import { SidebarNav } from "../../../../../components/SidebarNav";
 
 type AttendanceStatus = "present" | "absent" | "partial";
 

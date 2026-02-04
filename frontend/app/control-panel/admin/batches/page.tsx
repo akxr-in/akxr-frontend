@@ -9,7 +9,7 @@ import {
     Chip,
     ProgressBar,
 } from "@akxr/design-system";
-import { SidebarNav } from "../../components/SidebarNav";
+import { SidebarNav } from "../../../../components/SidebarNav";
 
 // Types
 type BatchStatus = "to_be_started" | "ongoing" | "completed";

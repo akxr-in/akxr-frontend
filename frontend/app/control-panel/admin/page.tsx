@@ -8,7 +8,7 @@ import {
   GridIcon,
   ArrowRightIcon,
 } from "@akxr/design-system";
-import { SidebarNav } from "../components/SidebarNav";
+import { SidebarNav } from "../../../components/SidebarNav";
 
 // Stat Card Component
 interface StatCardProps {
