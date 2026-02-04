@@ -13,6 +13,7 @@
   --bg-secondary: #1a1a1a;
   --bg-elevated: #27272a;
   --bg-deep: #050505;
+  --bg-card: #0A0A0A;
 
   /* ========== TEXT ========== */
   --text-primary: #cccccc;
@@ -93,6 +94,7 @@
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-elevated: var(--bg-elevated);
   --color-bg-deep: var(--bg-deep);
+  --color-bg-card: var(--bg-card);
 
   /* Text */
   --color-text-primary: var(--text-primary);
