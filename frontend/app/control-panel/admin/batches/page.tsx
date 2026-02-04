@@ -7,6 +7,7 @@ import {
     UsersIcon,
     CheckCircleIcon,
     Chip,
+    ProgressBar,
 } from "@akxr/design-system";
 
 // Types
@@ -27,26 +28,6 @@ interface BatchCardProps {
     courseProgress?: number;
     onViewDetails?: () => void;
 }
-
-// Progress Bar Component
-const ProgressBar = ({
-    value,
-    variant = "brand",
-}: {
-    value: number;
-    variant?: "brand" | "success";
-}) => {
-    const bgColor = variant === "success" ? "bg-success" : "bg-brand";
-
-    return (
-        <div className="h-4 bg-bg-elevated rounded-full overflow-hidden">
-            <div
-                className={`h-full ${bgColor} rounded-full transition-all duration-300`}
-                style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-            />
-        </div>
-    );
-};
 
 // Batch Card Component
 const BatchCard = ({
