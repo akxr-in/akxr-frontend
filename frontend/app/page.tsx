@@ -2,7 +2,6 @@
 
 import { Button, Spinner } from "@akxr/design-system";
 import { useRouter } from "next/navigation";
-import { clearAuthTokens } from "@/lib/utils";
 import { useGetUser } from "@akxr/api";
 
 export default function Home() {
@@ -10,8 +9,7 @@ export default function Home() {
   const { data, isLoading, error } = useGetUser();
 
   const handleLogout = () => {
-    clearAuthTokens();
-    router.push("/login");
+    router.push("/logout");
   };
 
   if (isLoading) {
