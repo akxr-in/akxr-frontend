@@ -8,38 +8,74 @@ import {
   Chip,
   ProgressBar,
 } from "@akxr/design-system";
+import type { GetBatch200DataItem } from "@akxr/api";
 
 export type BatchStatus = "to_be_started" | "ongoing" | "completed";
 
 export interface BatchCardProps {
-  id: string;
-  name: string;
-  mentorName: string;
-  description: string;
-  status: BatchStatus;
-  startDate: string;
-  endDate: string;
-  studentsEnrolled: number;
-  totalSeats?: number;
-  seatsAvailable?: boolean;
-  attendance?: number;
-  courseProgress?: number;
+  batch: GetBatch200DataItem;
   onViewDetails?: () => void;
 }
 
-export const BatchCard = ({
-  name,
-  mentorName,
-  description,
-  status,
-  startDate,
-  endDate,
-  studentsEnrolled,
-  seatsAvailable,
-  attendance,
-  courseProgress,
-  onViewDetails,
-}: BatchCardProps) => {
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getBatchStatus(
+  startDate: string,
+  endDate: string | null
+): BatchStatus {
+  const now = new Date();
+  const start = new Date(startDate);
+
+  if (!endDate) {
+    return now >= start ? "ongoing" : "to_be_started";
+  }
+
+  const end = new Date(endDate);
+
+  if (now < start) {
+    return "to_be_started";
+  } else if (now >= start && now <= end) {
+    return "ongoing";
+  } else {
+    return "completed";
+  }
+}
+
+function calculateCourseProgress(
+  completedCourseIds: string[],
+  courseIds: string[]
+): number {
+  if (courseIds.length === 0) return 0;
+  return Math.round((completedCourseIds.length / courseIds.length) * 100);
+}
+
+export const BatchCard = ({ batch, onViewDetails }: BatchCardProps) => {
+  const status = getBatchStatus(batch.batch_start_date, batch.batch_end_date);
+  const name = batch.batch_name;
+  const courseProgress = calculateCourseProgress(
+    batch.completed_course_ids,
+    batch.course_ids
+  );
+  const studentsEnrolled = 0; // TODO: hook up real value when backend provides it
+  const mentorName =
+    batch.mentor_ids.length > 0
+      ? `Mentor ${batch.mentor_ids[0].slice(0, 8)}`
+      : "No mentor assigned";
+  const description = batch.description || "No description available";
+  const startDate = formatDate(batch.batch_start_date);
+  const endDate = batch.batch_end_date
+    ? formatDate(batch.batch_end_date)
+    : "TBD";
+  const seatsAvailable = status === "to_be_started";
+  const attendance = status !== "to_be_started" ? undefined : undefined; // placeholder
+
   const isOngoingOrCompleted = status === "ongoing" || status === "completed";
   const progressValue = courseProgress ?? (studentsEnrolled / 30) * 100;
 
