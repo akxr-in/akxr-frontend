@@ -1,5 +1,5 @@
 
-const NODE_ENV = (process.env.APP_ENV) || 'development'
+const APP_ENV = (process.env.APP_ENV) || 'development'
 
 const backendUrls = {
     development: 'http://localhost:3000',
@@ -9,13 +9,13 @@ const backendUrls = {
 
 const env = {
     // Environment
-    NODE_ENV,
-    isDevelopment: NODE_ENV === 'development',
-    isStaging: NODE_ENV === 'staging',
-    isProduction: NODE_ENV === 'production',
+    APP_ENV,
+    isDevelopment: APP_ENV === 'development',
+    isStaging: APP_ENV === 'staging',
+    isProduction: APP_ENV === 'production',
 
     // URLs
-    BACKEND_URL: backendUrls[NODE_ENV],
+    BACKEND_URL: backendUrls[APP_ENV],
 }
 
 module.exports = {
