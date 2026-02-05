@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development next dev",
+    "dev": "APP_ENV=development next dev",
     "build": "pnpm --filter @akxr/design-system build && next build",
     "start": "next start",
     "lint": "eslint"

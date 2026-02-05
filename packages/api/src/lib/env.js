@@ -1,5 +1,5 @@
 
-const NODE_ENV = (process.env.NODE_ENV) || 'development'
+const NODE_ENV = (process.env.APP_ENV) || 'development'
 
 const backendUrls = {
     development: 'http://localhost:3000',
