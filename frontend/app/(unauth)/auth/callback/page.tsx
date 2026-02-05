@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { setAuthTokens } from "@/lib/utils";
-import { toast } from "../../providers";
+import { toast } from "../../../providers";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants";
 import { Spinner } from "@akxr/design-system";
 

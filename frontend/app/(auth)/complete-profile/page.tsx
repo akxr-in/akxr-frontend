@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePostUserCompleteProfile, type PostUserCompleteProfileBody } from "@akxr/api";
-import { toast } from "../providers";
+import { toast } from "../../providers";
 
 const profileSchema = z.object({
     internship: z.string().optional(),

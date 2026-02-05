@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePostUserAuthSignin, getUserGithubLogin } from "@akxr/api";
-import { toast } from "../providers";
+import { toast } from "../../providers";
 import { setAuthTokens } from "@/lib/utils";
 
 const loginSchema = z.object({

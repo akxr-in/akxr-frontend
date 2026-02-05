@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@akxr/design-system";
-import { SidebarNav } from "../../../../components/SidebarNav";
-import { BatchCard, type BatchCardProps } from "../../../../components/BatchCard";
+import { SidebarNav } from "../../../../../components/SidebarNav";
+import { BatchCard, type BatchCardProps } from "../../../../../components/BatchCard";
 
 // Main Page Component
 export default function BatchManagementPage() {
