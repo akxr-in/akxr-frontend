@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePostUserAuthSignin, getUserGithubLogin } from "@akxr/api";
+import { usePostUserAuthSignin, getUserGithubLogin, env } from "@akxr/api";
 import { toast } from "../../providers";
 import { setAuthTokens } from "@/lib/utils";
 
@@ -28,6 +28,8 @@ export default function LoginPage() {
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
     });
+
+    console.log({ env })
 
     const onSubmit = async (data: LoginFormData) => {
         loginMutation.mutate(

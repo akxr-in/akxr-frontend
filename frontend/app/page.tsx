@@ -3,7 +3,6 @@
 import { Button, Spinner } from "@akxr/design-system";
 import { useRouter } from "next/navigation";
 import { useGetUser } from "@akxr/api";
-import { env } from "@akxr/api";
 
 export default function Home() {
   const router = useRouter();
@@ -12,9 +11,6 @@ export default function Home() {
   const handleLogout = () => {
     router.push("/logout");
   };
-
-  console.log({ env })
-
 
   if (isLoading) {
     return (
