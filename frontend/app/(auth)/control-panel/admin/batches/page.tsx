@@ -1,92 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@akxr/design-system";
+import { Button, Spinner } from "@akxr/design-system";
 import { SidebarNav } from "../../../../../components/SidebarNav";
-import { BatchCard, type BatchCardProps } from "../../../../../components/BatchCard";
+import { BatchCard } from "../../../../../components/BatchCard";
+import { useGetBatch } from "@akxr/api";
 
 // Main Page Component
 export default function BatchManagementPage() {
     const router = useRouter();
+    const { data, isLoading, error } = useGetBatch();
 
-    // Mock data - replace with actual API data
-    const batches: BatchCardProps[] = [
-        {
-            id: "1",
-            name: "Name of Batch",
-            mentorName: "Mentor Name",
-            description:
-                "Learn how to build scalable, accessible, and performant user interfaces using modern design systems and component architecture...",
-            status: "to_be_started",
-            startDate: "Jan 1, 2026",
-            endDate: "Jan 7, 2026",
-            studentsEnrolled: 21,
-            seatsAvailable: true,
-        },
-        {
-            id: "2",
-            name: "Name of Batch",
-            mentorName: "Mentor Name",
-            description:
-                "Learn how to build scalable, accessible, and performant user interfaces using modern design systems and component architecture...",
-            status: "ongoing",
-            startDate: "Jan 1, 2026",
-            endDate: "Jan 7, 2026",
-            studentsEnrolled: 21,
-            attendance: 98,
-            courseProgress: 68,
-        },
-        {
-            id: "3",
-            name: "Name of Batch",
-            mentorName: "Mentor Name",
-            description:
-                "Learn how to build scalable, accessible, and performant user interfaces using modern design systems and component architecture...",
-            status: "to_be_started",
-            startDate: "Jan 1, 2026",
-            endDate: "Jan 7, 2026",
-            studentsEnrolled: 21,
-            seatsAvailable: true,
-        },
-        {
-            id: "4",
-            name: "Name of Batch",
-            mentorName: "Mentor Name",
-            description:
-                "Learn how to build scalable, accessible, and performant user interfaces using modern design systems and component architecture...",
-            status: "ongoing",
-            startDate: "Jan 1, 2026",
-            endDate: "Jan 7, 2026",
-            studentsEnrolled: 21,
-            attendance: 98,
-            courseProgress: 68,
-        },
-        {
-            id: "5",
-            name: "Name of Batch",
-            mentorName: "Mentor Name",
-            description:
-                "Learn how to build scalable, accessible, and performant user interfaces using modern design systems and component architecture...",
-            status: "to_be_started",
-            startDate: "Jan 1, 2026",
-            endDate: "Jan 7, 2026",
-            studentsEnrolled: 21,
-            seatsAvailable: true,
-        },
-        {
-            id: "6",
-            name: "Name of Batch",
-            mentorName: "Mentor Name",
-            description:
-                "Learn how to build scalable, accessible, and performant user interfaces using modern design systems and component architecture...",
-            status: "completed",
-            startDate: "Jan 1, 2026",
-            endDate: "Jan 7, 2026",
-            studentsEnrolled: 21,
-            attendance: 88,
-            courseProgress: 100,
-        },
-    ];
+    // customFetch wraps the response as { data: <openapi>, status, headers }
+    // and GetBatch200 is { data: GetBatch200DataItem[], message }
+    const batchData = Array.isArray(data?.data?.data)
+        ? data.data.data
+        : [];
 
     return (
         <div className="min-h-screen bg-bg-primary flex">
@@ -110,18 +39,53 @@ export default function BatchManagementPage() {
                     </Button>
                 </div>
 
+                {/* Loading State */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-12">
+                        <Spinner size="lg" />
+                    </div>
+                )}
+
+                {/* Error State */}
+                {error ? (
+                    <div className="bg-error/10 border border-error/20 rounded-lg p-4 text-error">
+                        <p className="font-medium">Failed to load batches</p>
+                        <p className="text-sm mt-1">
+                            {error instanceof Error
+                                ? error.message
+                                : typeof error === "string"
+                                    ? error
+                                    : "An error occurred while loading batches"}
+                        </p>
+                    </div>
+                ) : null}
+
                 {/* Batch Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {batches.map((batch) => (
-                        <BatchCard
-                            key={batch.id}
-                            {...batch}
-                            onViewDetails={() =>
-                                router.push(`/control-panel/admin/batches/${batch.id}`)
-                            }
-                        />
-                    ))}
-                </div>
+                {!isLoading && !error && (
+                    <>
+                        {batchData.length === 0 ? (
+                            <div className="text-center py-12">
+                                <p className="text-text-muted">
+                                    No batches found. Create your first batch to get started.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {batchData.map((batch) => (
+                                    <BatchCard
+                                        key={batch.id}
+                                        batch={batch}
+                                        onViewDetails={() =>
+                                            router.push(
+                                                `/control-panel/admin/batches/${batch.id}`
+                                            )
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
             </main>
         </div>
     );
