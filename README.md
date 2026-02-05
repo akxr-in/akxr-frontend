@@ -39,13 +39,13 @@ pnpm build:packages
 
 **`packages/api/src/lib/env.ts` is the source of truth for all backend URLs.**
 
-URLs are automatically determined based on `NODE_ENV`:
+URLs are automatically determined based on `APP_ENV`:
 
-- **Development** (`NODE_ENV=development`): `http://localhost:3000`
-- **Staging** (`NODE_ENV=staging`): `https://api-staging.akxr.in`
-- **Production** (`NODE_ENV=production`): `https://api.akxr.in`
+- **Development** (`APP_ENV=development`): `http://localhost:3000`
+- **Staging** (`APP_ENV=staging`): `https://api-staging.akxr.in`
+- **Production** (`APP_ENV=production`): `https://api.akxr.in`
 
-**Note:** All API calls automatically use `env.BACKEND_URL` based on the current `NODE_ENV`. No additional environment variables needed.
+**Note:** All API calls automatically use `env.BACKEND_URL` based on the current `APP_ENV`. No additional environment variables needed.
 
 ## Commands
 

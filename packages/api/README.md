@@ -57,11 +57,11 @@ const loginData: PostUserAuthSigninBody = {
 
 **`packages/api/src/lib/env.ts` is the source of truth for all backend URLs.**
 
-URLs are automatically determined based on `NODE_ENV`:
+URLs are automatically determined based on `APP_ENV`:
 
-- **Development** (`NODE_ENV=development`): `http://localhost:3000`
-- **Staging** (`NODE_ENV=staging`): `https://api-staging.akxr.in`
-- **Production** (`NODE_ENV=production`): `https://api.akxr.in`
+- **Development** (`APP_ENV=development`): `http://localhost:3000`
+- **Staging** (`APP_ENV=staging`): `https://api-staging.akxr.in`
+- **Production** (`APP_ENV=production`): `https://api.akxr.in`
 
 **Usage:**
 ```typescript
@@ -76,7 +76,7 @@ if (env.isDevelopment) {
 }
 ```
 
-**Note:** All API calls automatically use `env.BACKEND_URL` based on the current `NODE_ENV`. No additional environment variables needed.
+**Note:** All API calls automatically use `env.BACKEND_URL` based on the current `APP_ENV`. No additional environment variables needed.
 
 ## Generating API Client
 
@@ -91,7 +91,7 @@ pnpm orval
 ```
 
 This will:
-1. Fetch OpenAPI spec from `${env.BACKEND_URL}/openapi.json` (based on `NODE_ENV`)
+1. Fetch OpenAPI spec from `${env.BACKEND_URL}/openapi.json` (based on `APP_ENV`)
 2. Generate React Query hooks and TypeScript types
 3. Output to `src/api/generated/` and `src/api/models/`
 
@@ -101,7 +101,7 @@ The package uses a custom fetch function (`custom-fetch.ts`) that:
 - Handles authentication tokens automatically
 - Wraps responses with status and headers
 - **Uses `env.BACKEND_URL` from `env.ts` as the source of truth for backend URLs**
-- Automatically selects the correct URL based on `NODE_ENV`
+- Automatically selects the correct URL based on `APP_ENV`
 
 ## Error Handling
 
