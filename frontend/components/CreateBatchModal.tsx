@@ -15,7 +15,8 @@ const createBatchSchema = z.object({
         .min(1, "Batch code is required")
         .max(4, "Batch code must be at most 4 characters"),
     description: z.string().min(1, "Description is required"),
-    mentorId: z.string().optional(),
+    totalClasses: z.number({ message: "Total classes is required" }).min(1, "Must be at least 1"),
+    mentorIds: z.array(z.string()),
     courseIds: z.array(z.string()),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.string().min(1, "End date is required"),
@@ -35,9 +36,8 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
     const { data: usersData } = useGetAdminUsers();
     const { data: coursesData } = useGetAdminCourses();
 
-    // Local UI state for searchable dropdowns (not part of form schema)
+    // Local UI state for searchable dropdowns
     const [mentorSearch, setMentorSearch] = useState("");
-    const [mentorDisplayName, setMentorDisplayName] = useState("");
     const [showMentorDropdown, setShowMentorDropdown] = useState(false);
     const [courseSearch, setCourseSearch] = useState("");
     const [showCourseDropdown, setShowCourseDropdown] = useState(false);
@@ -55,7 +55,8 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
             batchName: "",
             batchCode: "",
             description: "",
-            mentorId: "",
+            totalClasses: 0,
+            mentorIds: [],
             courseIds: [],
             startDate: "",
             endDate: "",
@@ -63,7 +64,7 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
     });
 
     const selectedCourses = watch("courseIds");
-    const selectedMentorId = watch("mentorId");
+    const selectedMentorIds = watch("mentorIds");
 
     // Get mentors from admin users
     const allUsers =
@@ -72,8 +73,10 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
             : [];
     const mentors = allUsers.filter((u) => u.role === "MENTOR");
 
-    const filteredMentors = mentors.filter((m) =>
-        m.full_name.toLowerCase().includes(mentorSearch.toLowerCase())
+    const filteredMentors = mentors.filter(
+        (m) =>
+            m.full_name.toLowerCase().includes(mentorSearch.toLowerCase()) &&
+            !selectedMentorIds.includes(m.id)
     );
 
     // Get courses from backend
@@ -108,6 +111,36 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
         };
     }, [open, onClose]);
 
+    // Mentor multi-select helpers
+    const addMentor = (mentorId: string) => {
+        if (mentorId && !selectedMentorIds.includes(mentorId)) {
+            setValue("mentorIds", [...selectedMentorIds, mentorId]);
+        }
+        setMentorSearch("");
+        setShowMentorDropdown(false);
+    };
+
+    const removeMentor = (mentorId: string) => {
+        setValue(
+            "mentorIds",
+            selectedMentorIds.filter((id) => id !== mentorId)
+        );
+    };
+
+    const getMentorName = (mentorId: string) => {
+        return mentors.find((m) => m.id === mentorId)?.full_name || mentorId;
+    };
+
+    const handleMentorKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            if (filteredMentors.length > 0) {
+                addMentor(filteredMentors[0].id);
+            }
+        }
+    };
+
+    // Course multi-select helpers
     const addCourse = (courseId: string) => {
         if (courseId && !selectedCourses.includes(courseId)) {
             setValue("courseIds", [...selectedCourses, courseId]);
@@ -139,7 +172,6 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
     const resetAll = () => {
         reset();
         setMentorSearch("");
-        setMentorDisplayName("");
         setCourseSearch("");
         setShowMentorDropdown(false);
         setShowCourseDropdown(false);
@@ -147,19 +179,15 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
 
     const onSubmit = (data: CreateBatchFormData) => {
         const body: PostBatchBody = {
+            total_classes: data.totalClasses,
             batch_name: data.batchName,
             batch_code: data.batchCode,
             description: data.description,
-            image_url: "",
-            total_classes: 0,
             batch_start_date: data.startDate,
             batch_end_date: data.endDate,
             estimated_end_date: data.endDate,
-            mentor_ids: data.mentorId ? [data.mentorId] : [],
+            mentor_ids: data.mentorIds,
             course_ids: data.courseIds,
-            current_course_id: null,
-            completed_course_ids: [],
-            meeting_id: "",
         };
 
         postBatch.mutate(
@@ -258,112 +286,89 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
                         )}
                     </div>
 
-                    {/* Assign Mentor */}
-                    <div>
-                        <label className="text-sm font-medium text-text-primary block mb-2">
-                            Assign Mentor
-                        </label>
-                        <div className="relative">
-                            <div
-                                className={`flex items-center w-full rounded-md border bg-bg-primary h-12 px-4 transition-all duration-150 ${showMentorDropdown
-                                    ? "border-border-focus ring-1 ring-border-focus"
-                                    : "border-border-default"
-                                    }`}
-                            >
-                                <input
-                                    type="text"
-                                    placeholder="Search mentor name and choose"
-                                    value={mentorDisplayName || mentorSearch}
-                                    onChange={(e) => {
-                                        setMentorSearch(e.target.value);
-                                        setMentorDisplayName("");
-                                        setValue("mentorId", "");
-                                    }}
-                                    onFocus={() => setShowMentorDropdown(true)}
-                                    onBlur={() =>
-                                        setTimeout(
-                                            () => setShowMentorDropdown(false),
-                                            200
-                                        )
-                                    }
-                                    className="flex-1 h-full bg-transparent text-text-primary outline-none placeholder:text-text-muted"
-                                />
+                    {/* Total Classes */}
+                    <Input
+                        type="number"
+                        label="Total Classes"
+                        placeholder="Enter number of classes"
+                        min={1}
+                        {...register("totalClasses", { valueAsNumber: true })}
+                        error={errors.totalClasses?.message}
+                    />
+
+                    {/* Assign Mentors */}
+                    <div className="relative">
+                        <Input
+                            label="Assign Mentors"
+                            placeholder="Search and select mentors"
+                            value={mentorSearch}
+                            onChange={(e) => setMentorSearch(e.target.value)}
+                            onFocus={() => setShowMentorDropdown(true)}
+                            onBlur={() =>
+                                setTimeout(() => setShowMentorDropdown(false), 200)
+                            }
+                            onKeyDown={handleMentorKeyDown}
+                        />
+                        {showMentorDropdown && filteredMentors.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-40 overflow-y-auto">
+                                {filteredMentors.map((mentor) => (
+                                    <button
+                                        key={mentor.id}
+                                        type="button"
+                                        onClick={() => addMentor(mentor.id)}
+                                        className="w-full text-left px-4 py-2 text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
+                                    >
+                                        {mentor.full_name}
+                                        <span className="text-text-muted text-xs ml-2">
+                                            ({mentor.role})
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
-                            {showMentorDropdown && filteredMentors.length > 0 && (
-                                <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-40 overflow-y-auto">
-                                    {filteredMentors.map((mentor) => (
-                                        <button
-                                            key={mentor.id}
-                                            type="button"
-                                            onClick={() => {
-                                                setValue("mentorId", mentor.id);
-                                                setMentorDisplayName(
-                                                    mentor.full_name
-                                                );
-                                                setMentorSearch("");
-                                                setShowMentorDropdown(false);
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
-                                        >
-                                            {mentor.full_name}
-                                            <span className="text-text-muted text-xs ml-2">
-                                                ({mentor.role})
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        )}
+
+                        {/* Selected Mentor Tags */}
+                        {selectedMentorIds.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {selectedMentorIds.map((mentorId) => (
+                                    <Tag
+                                        key={mentorId}
+                                        onRemove={() => removeMentor(mentorId)}
+                                    >
+                                        {getMentorName(mentorId)}
+                                    </Tag>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Courses */}
-                    <div>
-                        <label className="text-sm font-medium text-text-primary block mb-2">
-                            Courses
-                        </label>
-                        <div className="relative">
-                            <div
-                                className={`flex items-center w-full rounded-md border bg-bg-primary h-12 px-4 transition-all duration-150 ${showCourseDropdown
-                                    ? "border-border-focus ring-1 ring-border-focus"
-                                    : "border-border-default"
-                                    }`}
-                            >
-                                <input
-                                    type="text"
-                                    placeholder="Search and select courses"
-                                    value={courseSearch}
-                                    onChange={(e) =>
-                                        setCourseSearch(e.target.value)
-                                    }
-                                    onFocus={() => setShowCourseDropdown(true)}
-                                    onBlur={() =>
-                                        setTimeout(
-                                            () => setShowCourseDropdown(false),
-                                            200
-                                        )
-                                    }
-                                    onKeyDown={handleCourseKeyDown}
-                                    className="flex-1 h-full bg-transparent text-text-primary outline-none placeholder:text-text-muted"
-                                />
+                    <div className="relative">
+                        <Input
+                            label="Courses"
+                            placeholder="Search and select courses"
+                            value={courseSearch}
+                            onChange={(e) => setCourseSearch(e.target.value)}
+                            onFocus={() => setShowCourseDropdown(true)}
+                            onBlur={() =>
+                                setTimeout(() => setShowCourseDropdown(false), 200)
+                            }
+                            onKeyDown={handleCourseKeyDown}
+                        />
+                        {showCourseDropdown && filteredCourses.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-40 overflow-y-auto">
+                                {filteredCourses.map((course) => (
+                                    <button
+                                        key={course.id}
+                                        type="button"
+                                        onClick={() => addCourse(course.id)}
+                                        className="w-full text-left px-4 py-2 text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
+                                    >
+                                        {course.name}
+                                    </button>
+                                ))}
                             </div>
-                            {showCourseDropdown &&
-                                filteredCourses.length > 0 && (
-                                    <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-40 overflow-y-auto">
-                                        {filteredCourses.map((course) => (
-                                            <button
-                                                key={course.id}
-                                                type="button"
-                                                onClick={() =>
-                                                    addCourse(course.id)
-                                                }
-                                                className="w-full text-left px-4 py-2 text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
-                                            >
-                                                {course.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                        </div>
+                        )}
 
                         {/* Selected Course Tags */}
                         {selectedCourses.length > 0 && (
@@ -382,50 +387,20 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
 
                     {/* Start Date & End Date */}
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-text-primary">
-                                Start Date
-                            </label>
-                            <div
-                                className={`flex items-center w-full rounded-md border bg-bg-primary h-12 px-4 transition-all duration-150 focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus ${errors.startDate
-                                    ? "border-error"
-                                    : "border-border-default"
-                                    }`}
-                            >
-                                <input
-                                    type="date"
-                                    {...register("startDate")}
-                                    className="flex-1 h-full bg-transparent text-text-primary outline-none scheme-dark"
-                                />
-                            </div>
-                            {errors.startDate && (
-                                <span className="text-sm text-error">
-                                    {errors.startDate.message}
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-text-primary">
-                                End Date
-                            </label>
-                            <div
-                                className={`flex items-center w-full rounded-md border bg-bg-primary h-12 px-4 transition-all duration-150 focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus ${errors.endDate
-                                    ? "border-error"
-                                    : "border-border-default"
-                                    }`}
-                            >
-                                <input
-                                    type="date"
-                                    {...register("endDate")}
-                                    className="flex-1 h-full bg-transparent text-text-primary outline-none scheme-dark"
-                                />
-                            </div>
-                            {errors.endDate && (
-                                <span className="text-sm text-error">
-                                    {errors.endDate.message}
-                                </span>
-                            )}
-                        </div>
+                        <Input
+                            type="date"
+                            label="Start Date"
+                            className="scheme-dark"
+                            {...register("startDate")}
+                            error={errors.startDate?.message}
+                        />
+                        <Input
+                            type="date"
+                            label="End Date"
+                            className="scheme-dark"
+                            {...register("endDate")}
+                            error={errors.endDate?.message}
+                        />
                     </div>
 
                     {/* Action Buttons */}
