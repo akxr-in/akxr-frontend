@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { cn } from "../lib/utils";
+import { Input } from "./Input";
 import { Tag } from "./Tag";
 
 export interface MultiSelectOption {
@@ -30,12 +31,6 @@ export interface MultiSelectProps {
     className?: string;
 }
 
-const sizeStyles = {
-    sm: "h-10 text-sm",
-    md: "h-12 text-base",
-    lg: "h-14 text-lg",
-};
-
 export const MultiSelect: React.FC<MultiSelectProps> = ({
     label,
     placeholder = "Search and select...",
@@ -50,7 +45,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 }) => {
     const [search, setSearch] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
 
     const filteredOptions = options.filter(
         (opt) =>
@@ -96,45 +90,26 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         }
     };
 
-    const hasError = Boolean(error);
     const hasDropdownItems = filteredOptions.length > 0 || isCustom;
 
     return (
-        <div className={cn("flex flex-col gap-2 w-full", className)}>
-            {label && (
-                <label className="text-sm font-medium text-text-primary">
-                    {label}
-                </label>
-            )}
-
+        <div className={cn("w-full", className)}>
             <div className="relative">
-                <div
-                    className={cn(
-                        "flex items-center w-full rounded-md border bg-bg-primary transition-all duration-150",
-                        "focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus",
-                        sizeStyles[size],
-                        hasError
-                            ? "border-error focus-within:border-error focus-within:ring-error"
-                            : "border-border-default"
-                    )}
-                >
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        placeholder={placeholder}
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            setShowDropdown(true);
-                        }}
-                        onFocus={() => setShowDropdown(true)}
-                        onBlur={() =>
-                            setTimeout(() => setShowDropdown(false), 200)
-                        }
-                        onKeyDown={handleKeyDown}
-                        className="flex-1 h-full bg-transparent text-text-primary outline-none px-4 placeholder:text-text-muted"
-                    />
-                </div>
+                <Input
+                    label={label}
+                    placeholder={placeholder}
+                    size={size}
+                    value={search}
+                    onChange={(e) => {
+                        setSearch(e.target.value);
+                        setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    onBlur={() =>
+                        setTimeout(() => setShowDropdown(false), 200)
+                    }
+                    onKeyDown={handleKeyDown}
+                />
 
                 {showDropdown && hasDropdownItems && (
                     <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-40 overflow-y-auto">
@@ -177,7 +152,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
             </div>
 
             {value.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                     {value.map((v) => (
                         <Tag key={v} onRemove={() => removeItem(v)}>
                             {getLabel(v)}
@@ -187,7 +162,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
             )}
 
             {error && (
-                <span className="text-sm text-error">{error}</span>
+                <span className="text-sm text-error mt-1">{error}</span>
             )}
         </div>
     );
