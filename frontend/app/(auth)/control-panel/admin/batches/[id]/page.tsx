@@ -243,7 +243,7 @@ export default function BatchDetailPage() {
                                         className="border-t border-border-default"
                                     >
                                         <td className="px-6 py-4 text-text-primary">
-                                            {student.username}
+                                            {student.full_name}
                                         </td>
                                         <td className="px-6 py-4">
                                             <Dropdown
