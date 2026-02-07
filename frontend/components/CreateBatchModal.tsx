@@ -2,8 +2,8 @@
 
 import { useRef, useEffect } from "react";
 import { Button, Input, MultiSelect } from "@akxr/design-system";
-import { usePostBatch, useGetAdminUsers, useGetAdminCourses } from "@akxr/api";
-import type { PostBatchBody } from "@akxr/api";
+import { usePostBatch, usePatchBatchId, useGetAdminUsers, useGetAdminCourses } from "@akxr/api";
+import type { PostBatchBody, PatchBatchIdBody } from "@akxr/api";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,15 +24,38 @@ const createBatchSchema = z.object({
 
 type CreateBatchFormData = z.infer<typeof createBatchSchema>;
 
+interface BatchData {
+    id: string;
+    batch_name: string;
+    batch_code: string;
+    description: string;
+    total_classes: number;
+    batch_start_date: string;
+    batch_end_date: string;
+    mentor_ids: string[];
+    course_ids: string[];
+}
+
 interface CreateBatchModalProps {
     open: boolean;
     onClose: () => void;
     onSuccess?: () => void;
+    /** When provided, the modal operates in "edit" mode and pre-fills the form */
+    batch?: BatchData | null;
 }
 
-export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalProps) {
+function toDateInputValue(dateString: string): string {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+}
+
+export function CreateBatchModal({ open, onClose, onSuccess, batch }: CreateBatchModalProps) {
     const overlayRef = useRef<HTMLDivElement>(null);
+    const isEditMode = !!batch;
     const postBatch = usePostBatch();
+    const patchBatch = usePatchBatchId();
     const { data: usersData } = useGetAdminUsers();
     const { data: coursesData } = useGetAdminCourses();
 
@@ -56,6 +79,33 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
             endDate: "",
         },
     });
+
+    // Pre-fill form when batch data changes (edit mode)
+    useEffect(() => {
+        if (batch && open) {
+            reset({
+                batchName: batch.batch_name,
+                batchCode: batch.batch_code,
+                description: batch.description,
+                totalClasses: batch.total_classes,
+                mentorIds: batch.mentor_ids ?? [],
+                courseIds: batch.course_ids ?? [],
+                startDate: toDateInputValue(batch.batch_start_date),
+                endDate: toDateInputValue(batch.batch_end_date),
+            });
+        } else if (!batch && open) {
+            reset({
+                batchName: "",
+                batchCode: "",
+                description: "",
+                totalClasses: 0,
+                mentorIds: [],
+                courseIds: [],
+                startDate: "",
+                endDate: "",
+            });
+        }
+    }, [batch, open, reset]);
 
     const selectedMentorIds = watch("mentorIds");
     const selectedCourseIds = watch("courseIds");
@@ -99,29 +149,50 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
         };
     }, [open, onClose]);
 
-    const onSubmit = (data: CreateBatchFormData) => {
-        const body: PostBatchBody = {
-            total_classes: data.totalClasses,
-            batch_name: data.batchName,
-            batch_code: data.batchCode,
-            description: data.description,
-            batch_start_date: data.startDate,
-            batch_end_date: data.endDate,
-            estimated_end_date: data.endDate,
-            mentor_ids: data.mentorIds,
-            course_ids: data.courseIds,
+    const isMutating = postBatch.isPending || patchBatch.isPending;
+
+    const onSubmit = (formData: CreateBatchFormData) => {
+        const onMutationSuccess = () => {
+            reset();
+            onClose();
+            onSuccess?.();
         };
 
-        postBatch.mutate(
-            { data: body },
-            {
-                onSuccess: () => {
-                    reset();
-                    onClose();
-                    onSuccess?.();
-                },
-            }
-        );
+        if (isEditMode && batch) {
+            const body: PatchBatchIdBody = {
+                total_classes: formData.totalClasses,
+                batch_name: formData.batchName,
+                batch_code: formData.batchCode,
+                description: formData.description,
+                batch_start_date: formData.startDate,
+                batch_end_date: formData.endDate,
+                estimated_end_date: formData.endDate,
+                mentor_ids: formData.mentorIds,
+                course_ids: formData.courseIds,
+            };
+
+            patchBatch.mutate(
+                { id: batch.id, data: body },
+                { onSuccess: onMutationSuccess }
+            );
+        } else {
+            const body: PostBatchBody = {
+                total_classes: formData.totalClasses,
+                batch_name: formData.batchName,
+                batch_code: formData.batchCode,
+                description: formData.description,
+                batch_start_date: formData.startDate,
+                batch_end_date: formData.endDate,
+                estimated_end_date: formData.endDate,
+                mentor_ids: formData.mentorIds,
+                course_ids: formData.courseIds,
+            };
+
+            postBatch.mutate(
+                { data: body },
+                { onSuccess: onMutationSuccess }
+            );
+        }
     };
 
     const handleCancel = () => {
@@ -141,7 +212,7 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-text-primary">
-                        Create new batch
+                        {isEditMode ? "Edit batch" : "Create new batch"}
                     </h2>
                     <button
                         type="button"
@@ -259,9 +330,9 @@ export function CreateBatchModal({ open, onClose, onSuccess }: CreateBatchModalP
                         <Button
                             type="submit"
                             variant="primary"
-                            isLoading={postBatch.isPending}
+                            isLoading={isMutating}
                         >
-                            Save
+                            {isEditMode ? "Update" : "Save"}
                         </Button>
                         <Button
                             type="button"
