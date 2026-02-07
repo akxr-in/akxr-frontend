@@ -28,6 +28,11 @@ import type {
   GetBatch200,
   GetBatchId200,
   GetBatchId404,
+  PatchBatchId200,
+  PatchBatchId400,
+  PatchBatchId403,
+  PatchBatchId404,
+  PatchBatchIdBody,
   PostBatch201,
   PostBatch400,
   PostBatchBody
@@ -347,3 +352,101 @@ export function useGetBatchId<TData = Awaited<ReturnType<typeof getBatchId>>, TE
 
 
 
+/**
+ * Update a batch (Admin only)
+ */
+export type patchBatchIdResponse200 = {
+  data: PatchBatchId200
+  status: 200
+}
+
+export type patchBatchIdResponse400 = {
+  data: PatchBatchId400
+  status: 400
+}
+
+export type patchBatchIdResponse403 = {
+  data: PatchBatchId403
+  status: 403
+}
+
+export type patchBatchIdResponse404 = {
+  data: PatchBatchId404
+  status: 404
+}
+    
+export type patchBatchIdResponseSuccess = (patchBatchIdResponse200) & {
+  headers: Headers;
+};
+export type patchBatchIdResponseError = (patchBatchIdResponse400 | patchBatchIdResponse403 | patchBatchIdResponse404) & {
+  headers: Headers;
+};
+
+export type patchBatchIdResponse = (patchBatchIdResponseSuccess | patchBatchIdResponseError)
+
+export const getPatchBatchIdUrl = (id: string,) => {
+
+
+  
+
+  return `/batch/${id}`
+}
+
+export const patchBatchId = async (id: string,
+    patchBatchIdBody: PatchBatchIdBody, options?: RequestInit): Promise<patchBatchIdResponse> => {
+  
+  return customFetch<patchBatchIdResponse>(getPatchBatchIdUrl(id),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      patchBatchIdBody,)
+  }
+);}
+
+
+
+
+export const getPatchBatchIdMutationOptions = <TError = PatchBatchId400 | PatchBatchId403 | PatchBatchId404,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchBatchId>>, TError,{id: string;data: PatchBatchIdBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchBatchId>>, TError,{id: string;data: PatchBatchIdBody}, TContext> => {
+
+const mutationKey = ['patchBatchId'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchBatchId>>, {id: string;data: PatchBatchIdBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  patchBatchId(id,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchBatchIdMutationResult = NonNullable<Awaited<ReturnType<typeof patchBatchId>>>
+    export type PatchBatchIdMutationBody = PatchBatchIdBody
+    export type PatchBatchIdMutationError = PatchBatchId400 | PatchBatchId403 | PatchBatchId404
+
+    export const usePatchBatchId = <TError = PatchBatchId400 | PatchBatchId403 | PatchBatchId404,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchBatchId>>, TError,{id: string;data: PatchBatchIdBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchBatchId>>,
+        TError,
+        {id: string;data: PatchBatchIdBody},
+        TContext
+      > => {
+      return useMutation(getPatchBatchIdMutationOptions(options), queryClient);
+    }
+    
