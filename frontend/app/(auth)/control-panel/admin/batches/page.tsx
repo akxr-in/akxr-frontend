@@ -6,7 +6,7 @@ import { Button, Spinner } from "@akxr/design-system";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { BatchCard } from "../../../../../components/BatchCard";
-import { CreateBatchModal } from "../../../../../components/CreateBatchModal";
+import { CreateBatchModal } from "../../../../../components/CrudBatchModal";
 import { useGetBatch, getGetBatchQueryKey } from "@akxr/api";
 
 // Main Page Component

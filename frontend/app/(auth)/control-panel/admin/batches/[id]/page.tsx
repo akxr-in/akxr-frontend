@@ -6,7 +6,7 @@ import { Button, Input, Spinner } from "@akxr/design-system";
 import { useGetBatchId, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
-import { CreateBatchModal } from "../../../../../../components/CreateBatchModal";
+import { CreateBatchModal } from "../../../../../../components/CrudBatchModal";
 
 type AttendanceStatus = "present" | "absent" | "partial";
 
