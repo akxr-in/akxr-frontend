@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Button, Input, Spinner, Chip, Dropdown } from "@akxr/design-system";
 import type { DropdownOption } from "@akxr/design-system";
-import { useGetBatchId, useGetBatchIdMeetings, getGetBatchIdQueryKey } from "@akxr/api";
+import { useGetBatchId, useGetBatchIdMeetings, useGetMeetingIdParticipants, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
@@ -32,23 +32,6 @@ const SortIcon = () => (
     </svg>
 );
 
-interface StudentRow {
-    id: number;
-    name: string;
-    status: AttendanceStatus;
-    modified: boolean;
-    progress: number;
-}
-
-const mockStudents: StudentRow[] = [
-    { id: 1, name: "Jan 1, 2026", status: "present", modified: true, progress: 70 },
-    { id: 2, name: "Jan 2, 2026", status: "present", modified: false, progress: 88 },
-    { id: 3, name: "Jan 3, 2026", status: "partial", modified: false, progress: 94 },
-    { id: 4, name: "Jan 4, 2026", status: "present", modified: false, progress: 64 },
-    { id: 5, name: "Jan 5, 2026", status: "absent", modified: true, progress: 89 },
-    { id: 6, name: "Jan 6, 2026", status: "present", modified: false, progress: 100 },
-    { id: 7, name: "Jan 7, 2026", status: "absent", modified: false, progress: 78 },
-];
 
 export default function BatchDetailPage() {
     const params = useParams<{ id: string }>();
@@ -86,9 +69,24 @@ export default function BatchDetailPage() {
         })
         : "No sessions";
 
-    const totalStudents = 21;
-    const presentStudents = 18;
-    const avgProgress = 84;
+    // Fetch participants for the active meeting/session
+    const { data: participantsData, isLoading: isLoadingParticipants } =
+        useGetMeetingIdParticipants(activeSessionId, {
+            query: { enabled: !!activeSessionId },
+        });
+
+    const participants = useMemo(() => {
+        if (participantsData?.status === 200 && Array.isArray(participantsData.data?.data)) {
+            return participantsData.data.data;
+        }
+        return [];
+    }, [participantsData]);
+
+    const totalStudents = participants.length;
+    // For now we don't have per-participant attendance status from the API,
+    // so we show total count. You can refine once the API includes attendance info.
+    const presentStudents = totalStudents;
+    const avgProgress = 0;
 
     if (isLoading) {
         return (
@@ -205,37 +203,51 @@ export default function BatchDetailPage() {
                             </tr>
                         </thead>
                         <tbody className="bg-bg-primary">
-                            {mockStudents.map((student) => (
-                                <tr
-                                    key={student.id}
-                                    className="border-t border-border-default"
-                                >
-                                    <td className="px-6 py-4 text-text-primary">
-                                        {student.name}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <Dropdown
-                                            value={student.status}
-                                            options={attendanceOptions}
-                                            trigger={(selected) => {
-                                                const config = statusChipConfig[selected.value as AttendanceStatus];
-                                                return (
-                                                    <Chip variant={config.variant} className="text-xs">
-                                                        {config.label}
-                                                    </Chip>
-                                                );
-                                            }}
-                                            menuClassName="min-w-[180px]"
-                                        />
-                                    </td>
-                                    <td className="px-6 py-4 text-text-secondary">
-                                        {student.modified ? "Yes" : "No"}
-                                    </td>
-                                    <td className="px-6 py-4 text-text-muted text-right">
-                                        {student.progress}%
+                            {isLoadingParticipants ? (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-8 text-center">
+                                        <Spinner size="md" />
                                     </td>
                                 </tr>
-                            ))}
+                            ) : participants.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-text-muted">
+                                        {activeSessionId ? "No participants found" : "Select a session to view participants"}
+                                    </td>
+                                </tr>
+                            ) : (
+                                participants.map((participant) => (
+                                    <tr
+                                        key={participant.id}
+                                        className="border-t border-border-default"
+                                    >
+                                        <td className="px-6 py-4 text-text-primary">
+                                            {participant.username}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <Dropdown
+                                                value="present"
+                                                options={attendanceOptions}
+                                                trigger={(selected) => {
+                                                    const config = statusChipConfig[selected.value as AttendanceStatus];
+                                                    return (
+                                                        <Chip variant={config.variant} className="text-xs">
+                                                            {config.label}
+                                                        </Chip>
+                                                    );
+                                                }}
+                                                menuClassName="min-w-[180px]"
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 text-text-secondary">
+                                            Yes (mock)
+                                        </td>
+                                        <td className="px-6 py-4 text-text-muted text-right">
+                                            Mock%
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
