@@ -1340,6 +1340,80 @@
           "message"
         ]
       },
+      "BatchMeetingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "batch_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "scheduled_start_time": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "duration_minutes": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "SCHEDULED",
+                    "STARTED",
+                    "ENDED",
+                    "CANCELLED"
+                  ]
+                },
+                "actual_start_time": {
+                  "type": "string",
+                  "nullable": true,
+                  "format": "date-time"
+                },
+                "actual_end_time": {
+                  "type": "string",
+                  "nullable": true,
+                  "format": "date-time"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "description",
+                "batch_id",
+                "scheduled_start_time",
+                "duration_minutes",
+                "status",
+                "created_at"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
       "BatchesListResponse": {
         "type": "object",
         "properties": {
@@ -4854,6 +4928,135 @@
                   },
                   "required": [
                     "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch/{id}/meetings": {
+      "get": {
+        "description": "Get all meetings for a batch",
+        "tags": [
+          "Batch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of meetings for the batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "batch_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scheduled_start_time": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "duration_minutes": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "SCHEDULED",
+                              "STARTED",
+                              "ENDED",
+                              "CANCELLED"
+                            ]
+                          },
+                          "actual_start_time": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "actual_end_time": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "batch_id",
+                          "scheduled_start_time",
+                          "duration_minutes",
+                          "status",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
                     "message"
                   ]
                 }
