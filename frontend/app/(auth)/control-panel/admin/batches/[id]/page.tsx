@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Button, Input, Spinner, Chip, Dropdown } from "@akxr/design-system";
 import type { DropdownOption } from "@akxr/design-system";
-import { useGetBatchId, getGetBatchIdQueryKey } from "@akxr/api";
+import { useGetBatchId, useGetBatchIdMeetings, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
@@ -55,11 +55,37 @@ export default function BatchDetailPage() {
     const batchId = params.id;
     const queryClient = useQueryClient();
     const { data, isLoading } = useGetBatchId(batchId);
+    const { data: meetingsData } = useGetBatchIdMeetings(batchId);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedSessionId, setSelectedSessionId] = useState<string>("");
 
     const batch = data?.status === 200 ? data.data.data : null;
 
-    const selectedDate = "Jan 4, 2026";
+    // Build session options from meetings
+    const meetings =
+        meetingsData?.status === 200 && Array.isArray(meetingsData.data?.data)
+            ? meetingsData.data.data
+            : [];
+
+    const sessionOptions: DropdownOption<string>[] = meetings.map((m) => {
+        const date = new Date(m.scheduled_start_time);
+        const label = `${m.title} — ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+        return { value: m.id, label: <span className="text-sm text-text-secondary">{label}</span> };
+    });
+
+    // Auto-select first session if none selected
+    const activeSessionId =
+        selectedSessionId || (meetings.length > 0 ? meetings[0].id : "");
+    const activeSession = meetings.find((m) => m.id === activeSessionId);
+
+    const selectedDate = activeSession
+        ? new Date(activeSession.scheduled_start_time).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        })
+        : "No sessions";
+
     const totalStudents = 21;
     const presentStudents = 18;
     const avgProgress = 84;
@@ -101,20 +127,31 @@ export default function BatchDetailPage() {
                 <section className="mb-6 max-w-2xl">
                     {/* Batch dropdown */}
                     <button className="flex w-full items-center justify-between px-5 py-3 rounded-xl bg-bg-card border border-border-default text-sm text-text-secondary">
-                        <span>Batch Name search from drop dow</span>
+                        <span>Sessions Dropdown with search</span>
                         <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                     </button>
 
                     {/* Date & Session row */}
                     <div className="mt-3 flex flex-col sm:flex-row gap-3">
-                        <button className="flex flex-1 items-center gap-2 px-5 py-3 rounded-xl bg-black text-sm text-text-secondary">
+                        <Dropdown
+                            value={activeSessionId}
+                            options={sessionOptions.length > 0 ? sessionOptions : [{ value: "", label: <span className="text-sm text-text-muted">No sessions available</span> }]}
+                            onChange={(id) => setSelectedSessionId(id)}
+                            disabled={meetings.length === 0}
+                            trigger={(selected) => (
+                                <div className="flex flex-1 items-center justify-between px-5 py-3 rounded-xl bg-black text-sm text-text-secondary min-w-[200px]">
+                                    <span className="truncate">
+                                        {activeSession?.title || "Select Session"}
+                                    </span>
+                                    <svg className="w-4 h-4 text-text-muted shrink-0 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                                </div>
+                            )}
+                            menuClassName="min-w-[280px]"
+                        />
+                        <div className="flex items-center gap-2 px-5 py-3 rounded-xl bg-black text-sm text-text-secondary">
                             <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H4.75z" clipRule="evenodd" /></svg>
                             <span>{selectedDate}</span>
-                        </button>
-                        <button className="flex flex-1 items-center justify-between px-5 py-3 rounded-xl bg-black text-sm text-text-secondary">
-                            <span>Select Session</span>
-                            <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                        </button>
+                        </div>
                     </div>
 
                     {/* Stats */}
