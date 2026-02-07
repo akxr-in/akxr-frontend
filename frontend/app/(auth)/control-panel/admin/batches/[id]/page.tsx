@@ -108,41 +108,41 @@ export default function BatchDetailPage() {
                     </Button>
                 </div>
 
-                {/* Filters & Summary (left-aligned block like design) */}
-                <section className="mb-6 max-w-xl">
-                    {/* Top dropdown */}
-                    <button className="flex w-full items-center justify-between px-4 py-2.5 rounded-lg bg-bg-secondary border border-border-default text-sm text-text-secondary">
+                {/* Filters & Summary */}
+                <section className="mb-6 max-w-2xl">
+                    {/* Batch dropdown */}
+                    <button className="flex w-full items-center justify-between px-5 py-3 rounded-xl bg-bg-card border border-border-default text-sm text-text-secondary">
                         <span>Batch Name search from drop dow</span>
-                        <span className="text-text-muted">▾</span>
+                        <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                     </button>
 
                     {/* Date & Session row */}
                     <div className="mt-3 flex flex-col sm:flex-row gap-3">
-                        <button className="flex flex-1 items-center justify-between px-4 py-2.5 rounded-lg bg-bg-secondary border border-border-default text-sm text-text-secondary">
-                            <span>Jan 4, 2026</span>
-                            <span className="text-text-muted">▾</span>
+                        <button className="flex flex-1 items-center gap-2 px-5 py-3 rounded-xl bg-black text-sm text-text-secondary">
+                            <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H4.75z" clipRule="evenodd" /></svg>
+                            <span>{selectedDate}</span>
                         </button>
-                        <button className="flex flex-1 items-center justify-between px-4 py-2.5 rounded-lg bg-bg-secondary border border-border-default text-sm text-text-secondary">
+                        <button className="flex flex-1 items-center justify-between px-5 py-3 rounded-xl bg-black text-sm text-text-secondary">
                             <span>Select Session</span>
-                            <span className="text-text-muted">▾</span>
+                            <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
                         </button>
                     </div>
 
                     {/* Stats */}
-                    <div className="mt-4 space-y-1.5 text-sm text-text-secondary">
+                    <div className="mt-5 space-y-2 text-sm text-text-muted">
                         <div className="flex items-center justify-between">
                             <span>Total Students</span>
-                            <span className="text-text-primary">{totalStudents}</span>
+                            <span className="text-text-primary font-medium">{totalStudents}</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Present</span>
-                            <span className="text-text-primary">
+                            <span className="text-text-primary font-medium">
                                 {presentStudents}/{totalStudents}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Avg Progress</span>
-                            <span className="text-text-primary">{avgProgress}%</span>
+                            <span className="text-text-primary font-medium">{avgProgress}%</span>
                         </div>
                     </div>
 
