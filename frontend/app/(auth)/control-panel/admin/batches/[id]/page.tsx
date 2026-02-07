@@ -6,7 +6,7 @@ import { Button, Input, Spinner, Chip } from "@akxr/design-system";
 import { useGetBatchId, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
-import { CreateBatchModal } from "../../../../../../components/CrudBatchModal";
+import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
 
 type AttendanceStatus = "present" | "absent" | "partial";
 
@@ -233,7 +233,7 @@ export default function BatchDetailPage() {
             </main>
 
             {/* Edit Batch Modal */}
-            <CreateBatchModal
+            <CrudBatchModal
                 open={showEditModal}
                 onClose={() => setShowEditModal(false)}
                 batch={batch}

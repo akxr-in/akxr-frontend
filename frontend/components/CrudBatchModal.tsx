@@ -51,7 +51,7 @@ function toDateInputValue(dateString: string): string {
     return d.toISOString().split("T")[0];
 }
 
-export function CreateBatchModal({ open, onClose, onSuccess, batch }: CreateBatchModalProps) {
+export function CrudBatchModal({ open, onClose, onSuccess, batch }: CreateBatchModalProps) {
     const overlayRef = useRef<HTMLDivElement>(null);
     const isEditMode = !!batch;
     const postBatch = usePostBatch();
