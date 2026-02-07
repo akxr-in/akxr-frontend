@@ -4,7 +4,7 @@ import {
     Button,
     Input,
     Select,
-    Tag,
+    MultiSelect,
     GithubIcon,
     LinkedinIcon,
     XIcon,
@@ -12,7 +12,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { usePostUserCompleteProfile, type PostUserCompleteProfileBody } from "@akxr/api";
 import { toast } from "../../providers";
@@ -72,8 +72,6 @@ const RequiredAsterisk = () => <span className="text-error ml-1">*</span>;
 export default function CompleteProfilePage() {
     const router = useRouter();
     const completeProfileMutation = usePostUserCompleteProfile();
-    const [skillSearch, setSkillSearch] = useState("");
-    const [showSkillDropdown, setShowSkillDropdown] = useState(false);
 
     const {
         register,
@@ -97,49 +95,10 @@ export default function CompleteProfilePage() {
 
     const selectedSkills = watch("skills");
 
-    const filteredSkills = availableSkills.filter(
-        (skill) =>
-            skill.toLowerCase().includes(skillSearch.toLowerCase()) &&
-            !selectedSkills.includes(skill)
+    const skillOptions = useMemo(
+        () => availableSkills.map((s) => ({ value: s, label: s })),
+        []
     );
-
-    // Check if the current search term is a valid custom skill
-    const trimmedSearch = skillSearch.trim();
-    const isCustomSkill =
-        trimmedSearch.length > 0 &&
-        !availableSkills.some(
-            (skill) => skill.toLowerCase() === trimmedSearch.toLowerCase()
-        ) &&
-        !selectedSkills.some(
-            (skill) => skill.toLowerCase() === trimmedSearch.toLowerCase()
-        );
-
-    const addSkill = (skill: string) => {
-        const trimmed = skill.trim();
-        if (trimmed && !selectedSkills.includes(trimmed)) {
-            setValue("skills", [...selectedSkills, trimmed]);
-        }
-        setSkillSearch("");
-        setShowSkillDropdown(false);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            if (isCustomSkill) {
-                addSkill(trimmedSearch);
-            } else if (filteredSkills.length > 0) {
-                addSkill(filteredSkills[0]);
-            }
-        }
-    };
-
-    const removeSkill = (skillToRemove: string) => {
-        setValue(
-            "skills",
-            selectedSkills.filter((skill) => skill !== skillToRemove)
-        );
-    };
 
     const onSubmit = async (data: ProfileFormData) => {
         // Helper function to construct full URL from username
@@ -226,99 +185,15 @@ export default function CompleteProfilePage() {
                     </div>
 
                     {/* Skills */}
-                    <div>
-                        <label className="text-sm font-medium text-text-primary flex items-center mb-2">
-                            Skills
-                            <RequiredAsterisk />
-                        </label>
-                        <div className="relative">
-                            <div
-                                className={`flex items-center w-full rounded-md border bg-bg-primary h-12 px-4 transition-all duration-150 ${showSkillDropdown
-                                    ? "border-border-focus ring-1 ring-border-focus"
-                                    : "border-border-default"
-                                    } ${errors.skills ? "border-error" : ""}`}
-                            >
-                                <input
-                                    type="text"
-                                    placeholder="Search or add your skills"
-                                    value={skillSearch}
-                                    onChange={(e) => setSkillSearch(e.target.value)}
-                                    onFocus={() => setShowSkillDropdown(true)}
-                                    onKeyDown={handleKeyDown}
-                                    className="flex-1 h-full bg-transparent text-text-primary outline-none placeholder:text-text-muted"
-                                />
-                                <svg
-                                    className="w-4 h-4 text-text-muted"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 9l-7 7-7-7"
-                                    />
-                                </svg>
-                            </div>
-
-                            {/* Dropdown */}
-                            {showSkillDropdown && (filteredSkills.length > 0 || isCustomSkill) && (
-                                <div className="absolute z-10 w-full mt-1 bg-bg-secondary border border-border-default rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                    {/* Custom skill option */}
-                                    {isCustomSkill && (
-                                        <button
-                                            type="button"
-                                            onClick={() => addSkill(trimmedSearch)}
-                                            className="w-full text-left px-4 py-2 text-brand hover:bg-bg-elevated transition-colors cursor-pointer flex items-center gap-2"
-                                        >
-                                            <svg
-                                                className="w-4 h-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M12 4v16m8-8H4"
-                                                />
-                                            </svg>
-                                            Add &quot;{trimmedSearch}&quot;
-                                        </button>
-                                    )}
-                                    {filteredSkills.map((skill) => (
-                                        <button
-                                            key={skill}
-                                            type="button"
-                                            onClick={() => addSkill(skill)}
-                                            className="w-full text-left px-4 py-2 text-text-primary hover:bg-bg-elevated transition-colors cursor-pointer"
-                                        >
-                                            {skill}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Selected Skills Tags */}
-                        {selectedSkills.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                                {selectedSkills.map((skill) => (
-                                    <Tag key={skill} onRemove={() => removeSkill(skill)}>
-                                        {skill}
-                                    </Tag>
-                                ))}
-                            </div>
-                        )}
-
-                        {errors.skills && (
-                            <span className="text-sm text-error mt-2 block">
-                                {errors.skills.message}
-                            </span>
-                        )}
-                    </div>
+                    <MultiSelect
+                        label="Skills *"
+                        placeholder="Search or add your skills"
+                        options={skillOptions}
+                        value={selectedSkills}
+                        onChange={(skills) => setValue("skills", skills)}
+                        allowCustom
+                        error={errors.skills?.message}
+                    />
 
                     {/* GitHub & LinkedIn Row */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
