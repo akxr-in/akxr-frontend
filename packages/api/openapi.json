@@ -1104,9 +1104,7 @@
           "course_ids",
           "completed_course_ids",
           "batch_code",
-          "description",
-          "image_url",
-          "meeting_id"
+          "description"
         ]
       },
       "BatchResponse": {
@@ -4177,9 +4175,7 @@
                   "course_ids",
                   "completed_course_ids",
                   "batch_code",
-                  "description",
-                  "image_url",
-                  "meeting_id"
+                  "description"
                 ]
               }
             }

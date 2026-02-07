@@ -21,6 +21,6 @@ export type PostBatchBody = {
   /** @maxLength 4 */
   batch_code: string;
   description: string;
-  image_url: string;
-  meeting_id: string;
+  image_url?: string;
+  meeting_id?: string;
 };
