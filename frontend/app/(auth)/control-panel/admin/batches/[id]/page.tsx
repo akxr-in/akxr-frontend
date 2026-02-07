@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Button, Input, Spinner, Chip } from "@akxr/design-system";
+import { Button, Input, Spinner, Chip, Dropdown } from "@akxr/design-system";
+import type { DropdownOption } from "@akxr/design-system";
 import { useGetBatchId, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
@@ -19,58 +20,17 @@ const statusChipConfig: Record<
     partial: { label: "Partially Present", variant: "warning" },
 };
 
+const attendanceOptions: DropdownOption<AttendanceStatus>[] = [
+    { value: "present", label: <Chip variant="success" className="text-xs">Present</Chip> },
+    { value: "absent", label: <Chip variant="error" className="text-xs">Absent</Chip> },
+    { value: "partial", label: <Chip variant="warning" className="text-xs">Partially Present</Chip> },
+];
+
 const SortIcon = () => (
     <svg className="w-3.5 h-3.5 text-text-muted inline-block ml-1" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 3.5l3 4H5l3-4zM8 12.5l-3-4h6l-3 4z" />
     </svg>
 );
-
-const StatusDropdown = ({
-    status,
-    onChange,
-}: {
-    status: AttendanceStatus;
-    onChange?: (s: AttendanceStatus) => void;
-}) => {
-    const [open, setOpen] = useState(false);
-    const config = statusChipConfig[status];
-
-    return (
-        <div className="relative inline-block">
-            <button
-                type="button"
-                onClick={() => setOpen(!open)}
-                className="cursor-pointer"
-            >
-                <Chip variant={config.variant} className="text-xs">
-                    {config.label}
-                </Chip>
-            </button>
-            {open && (
-                <div className="absolute z-20 top-full left-0 mt-1 bg-bg-card border border-border-default rounded-lg shadow-xl py-1.5 min-w-[180px]">
-                    {(Object.keys(statusChipConfig) as AttendanceStatus[]).map((s) => {
-                        const c = statusChipConfig[s];
-                        return (
-                            <button
-                                key={s}
-                                type="button"
-                                onClick={() => {
-                                    onChange?.(s);
-                                    setOpen(false);
-                                }}
-                                className="flex items-center w-full px-3 py-2 hover:bg-bg-elevated/60 transition-colors cursor-pointer"
-                            >
-                                <Chip variant={c.variant} className="text-xs">
-                                    {c.label}
-                                </Chip>
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
-    );
-};
 
 interface StudentRow {
     id: number;
@@ -217,7 +177,19 @@ export default function BatchDetailPage() {
                                         {student.name}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <StatusDropdown status={student.status} />
+                                        <Dropdown
+                                            value={student.status}
+                                            options={attendanceOptions}
+                                            trigger={(selected) => {
+                                                const config = statusChipConfig[selected.value as AttendanceStatus];
+                                                return (
+                                                    <Chip variant={config.variant} className="text-xs">
+                                                        {config.label}
+                                                    </Chip>
+                                                );
+                                            }}
+                                            menuClassName="min-w-[180px]"
+                                        />
                                     </td>
                                     <td className="px-6 py-4 text-text-secondary">
                                         {student.modified ? "Yes" : "No"}
