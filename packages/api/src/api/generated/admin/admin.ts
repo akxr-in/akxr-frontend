@@ -25,6 +25,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetAdminCourses200,
+  GetAdminCourses403,
+  GetAdminCourses500,
   GetAdminUsers200,
   GetAdminUsers403,
   PostAdminUpgradeRole200,
@@ -236,6 +239,125 @@ export function useGetAdminUsers<TData = Awaited<ReturnType<typeof getAdminUsers
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetAdminUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Get all courses (Admin only)
+ */
+export type getAdminCoursesResponse200 = {
+  data: GetAdminCourses200
+  status: 200
+}
+
+export type getAdminCoursesResponse403 = {
+  data: GetAdminCourses403
+  status: 403
+}
+
+export type getAdminCoursesResponse500 = {
+  data: GetAdminCourses500
+  status: 500
+}
+    
+export type getAdminCoursesResponseSuccess = (getAdminCoursesResponse200) & {
+  headers: Headers;
+};
+export type getAdminCoursesResponseError = (getAdminCoursesResponse403 | getAdminCoursesResponse500) & {
+  headers: Headers;
+};
+
+export type getAdminCoursesResponse = (getAdminCoursesResponseSuccess | getAdminCoursesResponseError)
+
+export const getGetAdminCoursesUrl = () => {
+
+
+  
+
+  return `/admin/courses`
+}
+
+export const getAdminCourses = async ( options?: RequestInit): Promise<getAdminCoursesResponse> => {
+  
+  return customFetch<getAdminCoursesResponse>(getGetAdminCoursesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetAdminCoursesQueryKey = () => {
+    return [
+    `/admin/courses`
+    ] as const;
+    }
+
+    
+export const getGetAdminCoursesQueryOptions = <TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminCoursesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminCourses>>> = ({ signal }) => getAdminCourses({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminCoursesQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminCourses>>>
+export type GetAdminCoursesQueryError = GetAdminCourses403 | GetAdminCourses500
+
+
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminCourses>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminCourses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminCourses>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminCourses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminCoursesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

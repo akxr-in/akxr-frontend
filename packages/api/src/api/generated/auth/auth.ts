@@ -25,8 +25,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  GetUserGithubCallback200,
-  GetUserGithubCallback400,
   GetUserGithubCallbackParams,
   GetUserGithubLogin200,
   PostUserAuthRefresh200,
@@ -415,24 +413,17 @@ export function useGetUserGithubLogin<TData = Awaited<ReturnType<typeof getUserG
 /**
  * GitHub OAuth callback
  */
-export type getUserGithubCallbackResponse200 = {
-  data: GetUserGithubCallback200
-  status: 200
-}
-
-export type getUserGithubCallbackResponse400 = {
-  data: GetUserGithubCallback400
-  status: 400
+export type getUserGithubCallbackResponse302 = {
+  data: void
+  status: 302
 }
     
-export type getUserGithubCallbackResponseSuccess = (getUserGithubCallbackResponse200) & {
-  headers: Headers;
-};
-export type getUserGithubCallbackResponseError = (getUserGithubCallbackResponse400) & {
+;
+export type getUserGithubCallbackResponseError = (getUserGithubCallbackResponse302) & {
   headers: Headers;
 };
 
-export type getUserGithubCallbackResponse = (getUserGithubCallbackResponseSuccess | getUserGithubCallbackResponseError)
+export type getUserGithubCallbackResponse = (getUserGithubCallbackResponseError)
 
 export const getGetUserGithubCallbackUrl = (params: GetUserGithubCallbackParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -471,7 +462,7 @@ export const getGetUserGithubCallbackQueryKey = (params?: GetUserGithubCallbackP
     }
 
     
-export const getGetUserGithubCallbackQueryOptions = <TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = GetUserGithubCallback400>(params: GetUserGithubCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserGithubCallback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetUserGithubCallbackQueryOptions = <TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = void>(params: GetUserGithubCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserGithubCallback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -490,10 +481,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetUserGithubCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof getUserGithubCallback>>>
-export type GetUserGithubCallbackQueryError = GetUserGithubCallback400
+export type GetUserGithubCallbackQueryError = void
 
 
-export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = GetUserGithubCallback400>(
+export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = void>(
  params: GetUserGithubCallbackParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserGithubCallback>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getUserGithubCallback>>,
@@ -503,7 +494,7 @@ export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUs
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = GetUserGithubCallback400>(
+export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = void>(
  params: GetUserGithubCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserGithubCallback>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getUserGithubCallback>>,
@@ -513,12 +504,12 @@ export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUs
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = GetUserGithubCallback400>(
+export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = void>(
  params: GetUserGithubCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserGithubCallback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = GetUserGithubCallback400>(
+export function useGetUserGithubCallback<TData = Awaited<ReturnType<typeof getUserGithubCallback>>, TError = void>(
  params: GetUserGithubCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserGithubCallback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

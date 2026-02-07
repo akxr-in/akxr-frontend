@@ -1379,6 +1379,147 @@
           "message"
         ]
       },
+      "CourseResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "lesson_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "time_allotted_in_weeks": {
+            "type": "integer"
+          },
+          "weekly_content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "week_number": {
+                  "type": "integer"
+                },
+                "lesson_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "week_number",
+                "lesson_ids"
+              ]
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "lesson_ids",
+          "time_allotted_in_weeks",
+          "weekly_content",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CoursesListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "lesson_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "time_allotted_in_weeks": {
+                  "type": "integer"
+                },
+                "weekly_content": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "week_number": {
+                        "type": "integer"
+                      },
+                      "lesson_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "week_number",
+                      "lesson_ids"
+                    ]
+                  }
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "description",
+                "lesson_ids",
+                "time_allotted_in_weeks",
+                "weekly_content",
+                "created_at",
+                "updated_at"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
       "AttendanceResponse": {
         "type": "object",
         "properties": {
@@ -2015,153 +2156,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "GitHub authentication successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "user": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string",
-                              "format": "uuid"
-                            },
-                            "email": {
-                              "type": "string",
-                              "format": "email"
-                            },
-                            "username": {
-                              "type": "string"
-                            },
-                            "full_name": {
-                              "type": "string"
-                            },
-                            "role": {
-                              "type": "string",
-                              "enum": [
-                                "STUDENT",
-                                "MENTOR",
-                                "ADMIN"
-                              ]
-                            },
-                            "profile_status": {
-                              "type": "string",
-                              "enum": [
-                                "AUTHENTICATED",
-                                "PROFILE_CREATED"
-                              ]
-                            },
-                            "skills": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "linkedin_url": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "github_url": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "x_url": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "zulip_username": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "did_internship": {
-                              "type": "boolean"
-                            },
-                            "college_year": {
-                              "type": "integer",
-                              "nullable": true,
-                              "minimum": 1,
-                              "maximum": 5
-                            },
-                            "batch_ids": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "created_at": {
-                              "type": "string",
-                              "format": "date-time"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "email",
-                            "username",
-                            "full_name",
-                            "role",
-                            "profile_status",
-                            "skills",
-                            "did_internship",
-                            "batch_ids",
-                            "created_at"
-                          ]
-                        },
-                        "access_token": {
-                          "type": "string"
-                        },
-                        "refresh_token": {
-                          "type": "string"
-                        },
-                        "is_new_user": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "user",
-                        "access_token",
-                        "refresh_token",
-                        "is_new_user"
-                      ]
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message"
-                  ]
-                }
-              }
-            }
+          "302": {
+            "description": "Redirects to the frontend auth callback URL with tokens or error information encoded in the URL fragment"
           }
         }
       }
@@ -2949,6 +2945,150 @@
           },
           "403": {
             "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/courses": {
+      "get": {
+        "description": "Get all courses (Admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "lesson_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "time_allotted_in_weeks": {
+                            "type": "integer"
+                          },
+                          "weekly_content": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "week_number": {
+                                  "type": "integer"
+                                },
+                                "lesson_ids": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "week_number",
+                                "lesson_ids"
+                              ]
+                            }
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "description",
+                          "lesson_ids",
+                          "time_allotted_in_weeks",
+                          "weekly_content",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
