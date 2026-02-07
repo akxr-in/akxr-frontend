@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Button, Input, Spinner, Chip, Dropdown } from "@akxr/design-system";
 import type { DropdownOption } from "@akxr/design-system";
-import { useGetBatchId, useGetBatchIdMeetings, useGetMeetingIdParticipants, getGetBatchIdQueryKey } from "@akxr/api";
+import { useGetBatchId, useGetBatchIdMeetings, useGetMeetingIdParticipants, useGetAdminUsers, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
@@ -39,6 +39,7 @@ export default function BatchDetailPage() {
     const queryClient = useQueryClient();
     const { data, isLoading } = useGetBatchId(batchId);
     const { data: meetingsData } = useGetBatchIdMeetings(batchId);
+    const { data: usersData } = useGetAdminUsers();
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedSessionId, setSelectedSessionId] = useState<string>("");
 
@@ -69,24 +70,44 @@ export default function BatchDetailPage() {
         })
         : "No sessions";
 
-    // Fetch participants for the active meeting/session
+    // Get all students in this batch from admin users
+    const batchStudents = useMemo(() => {
+        if (usersData?.status === 200 && Array.isArray(usersData.data?.data)) {
+            return usersData.data.data.filter(
+                (u) => u.batch_ids?.includes(batchId) && u.role === "STUDENT"
+            );
+        }
+        return [];
+    }, [usersData, batchId]);
+
+    // Fetch participants (attendees) for the active meeting/session
     const { data: participantsData, isLoading: isLoadingParticipants } =
         useGetMeetingIdParticipants(activeSessionId, {
             query: { enabled: !!activeSessionId },
         });
 
-    const participants = useMemo(() => {
+    const participantIds = useMemo(() => {
         if (participantsData?.status === 200 && Array.isArray(participantsData.data?.data)) {
-            return participantsData.data.data;
+            return new Set(participantsData.data.data.map((p) => p.id));
         }
-        return [];
+        return new Set<string>();
     }, [participantsData]);
 
-    const totalStudents = participants.length;
-    // For now we don't have per-participant attendance status from the API,
-    // so we show total count. You can refine once the API includes attendance info.
-    const presentStudents = totalStudents;
-    const avgProgress = 0;
+    // Build student rows: all batch students with attendance status from meeting participants
+    const studentRows = useMemo(() => {
+        return batchStudents.map((student) => ({
+            ...student,
+            attendance: (activeSessionId
+                ? participantIds.has(student.id)
+                    ? "present"
+                    : "absent"
+                : "present") as AttendanceStatus,
+        }));
+    }, [batchStudents, participantIds, activeSessionId]);
+
+    const totalStudents = studentRows.length;
+    const presentStudents = studentRows.filter((s) => s.attendance === "present").length;
+    const absentStudents = studentRows.filter((s) => s.attendance === "absent").length;
 
     if (isLoading) {
         return (
@@ -166,7 +187,7 @@ export default function BatchDetailPage() {
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Avg Progress</span>
-                            <span className="text-text-primary font-medium">{avgProgress}%</span>
+                            <span className="text-text-primary font-medium">Test%</span>
                         </div>
                     </div>
 
@@ -209,24 +230,24 @@ export default function BatchDetailPage() {
                                         <Spinner size="md" />
                                     </td>
                                 </tr>
-                            ) : participants.length === 0 ? (
+                            ) : studentRows.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-8 text-center text-text-muted">
-                                        {activeSessionId ? "No participants found" : "Select a session to view participants"}
+                                        No students in this batch
                                     </td>
                                 </tr>
                             ) : (
-                                participants.map((participant) => (
+                                studentRows.map((student) => (
                                     <tr
-                                        key={participant.id}
+                                        key={student.id}
                                         className="border-t border-border-default"
                                     >
                                         <td className="px-6 py-4 text-text-primary">
-                                            {participant.username}
+                                            {student.username}
                                         </td>
                                         <td className="px-6 py-4">
                                             <Dropdown
-                                                value="present"
+                                                value={student.attendance}
                                                 options={attendanceOptions}
                                                 trigger={(selected) => {
                                                     const config = statusChipConfig[selected.value as AttendanceStatus];
