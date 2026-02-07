@@ -1,15 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Spinner } from "@akxr/design-system";
+import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { BatchCard } from "../../../../../components/BatchCard";
-import { useGetBatch } from "@akxr/api";
+import { CreateBatchModal } from "../../../../../components/CreateBatchModal";
+import { useGetBatch, getGetBatchQueryKey } from "@akxr/api";
 
 // Main Page Component
 export default function BatchManagementPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { data, isLoading, error } = useGetBatch();
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // customFetch wraps the response as { data: <openapi>, status, headers }
     // and GetBatch200 is { data: GetBatch200DataItem[], message }
@@ -34,7 +39,7 @@ export default function BatchManagementPage() {
                             Manage attendance and track student progress.
                         </p>
                     </div>
-                    <Button variant="secondary" onClick={() => console.log("Add new batch")}>
+                    <Button variant="secondary" onClick={() => setShowCreateModal(true)}>
                         Add new batch
                     </Button>
                 </div>
@@ -87,6 +92,15 @@ export default function BatchManagementPage() {
                     </>
                 )}
             </main>
+
+            {/* Create Batch Modal */}
+            <CreateBatchModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: getGetBatchQueryKey() });
+                }}
+            />
         </div>
     );
 }
