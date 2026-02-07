@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Button, Input, Spinner } from "@akxr/design-system";
+import { Button, Input, Spinner, Chip } from "@akxr/design-system";
 import { useGetBatchId, getGetBatchIdQueryKey } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
@@ -10,36 +10,65 @@ import { CreateBatchModal } from "../../../../../../components/CrudBatchModal";
 
 type AttendanceStatus = "present" | "absent" | "partial";
 
-const statusConfig: Record<
+const statusChipConfig: Record<
     AttendanceStatus,
-    { label: string; color: string; bg: string }
+    { label: string; variant: "success" | "error" | "warning" }
 > = {
-    present: {
-        label: "Present",
-        color: "text-success",
-        bg: "bg-success/15",
-    },
-    absent: {
-        label: "Absent",
-        color: "text-error",
-        bg: "bg-error/15",
-    },
-    partial: {
-        label: "Partially Present",
-        color: "text-warning",
-        bg: "bg-warning/15",
-    },
+    present: { label: "Present", variant: "success" },
+    absent: { label: "Absent", variant: "error" },
+    partial: { label: "Partially Present", variant: "warning" },
 };
 
-const StatusPill = ({ status }: { status: AttendanceStatus }) => {
-    const config = statusConfig[status];
+const SortIcon = () => (
+    <svg className="w-3.5 h-3.5 text-text-muted inline-block ml-1" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 3.5l3 4H5l3-4zM8 12.5l-3-4h6l-3 4z" />
+    </svg>
+);
+
+const StatusDropdown = ({
+    status,
+    onChange,
+}: {
+    status: AttendanceStatus;
+    onChange?: (s: AttendanceStatus) => void;
+}) => {
+    const [open, setOpen] = useState(false);
+    const config = statusChipConfig[status];
+
     return (
-        <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${config.bg} ${config.color}`}
-        >
-            <span className="w-1.5 h-1.5 rounded-full bg-current" />
-            {config.label}
-        </span>
+        <div className="relative inline-block">
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="cursor-pointer"
+            >
+                <Chip variant={config.variant} className="text-xs">
+                    {config.label}
+                </Chip>
+            </button>
+            {open && (
+                <div className="absolute z-20 top-full left-0 mt-1 bg-bg-card border border-border-default rounded-lg shadow-xl py-1.5 min-w-[180px]">
+                    {(Object.keys(statusChipConfig) as AttendanceStatus[]).map((s) => {
+                        const c = statusChipConfig[s];
+                        return (
+                            <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                    onChange?.(s);
+                                    setOpen(false);
+                                }}
+                                className="flex items-center w-full px-3 py-2 hover:bg-bg-elevated/60 transition-colors cursor-pointer"
+                            >
+                                <Chip variant={c.variant} className="text-xs">
+                                    {c.label}
+                                </Chip>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
     );
 };
 
@@ -146,51 +175,54 @@ export default function BatchDetailPage() {
                         </div>
                     </div>
 
-                    {/* Search */}
-                    <div className="mt-4">
-                        <Input placeholder="Search students..." />
-                    </div>
                 </section>
 
+                {/* Search + Date row */}
+                <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex-1 max-w-md">
+                        <Input placeholder="Search students..." />
+                    </div>
+                    <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default bg-bg-primary text-sm text-text-secondary">
+                        <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H4.75z" clipRule="evenodd" /></svg>
+                        <span>{selectedDate}</span>
+                    </button>
+                </div>
+
                 {/* Table */}
-                <div className="bg-bg-card border border-border-default rounded-lg overflow-hidden">
+                <div className="rounded-lg overflow-hidden border border-border-default">
                     <table className="w-full text-sm">
-                        <thead className="bg-bg-secondary text-text-muted">
-                            <tr>
-                                <th className="px-6 py-3 text-left font-medium">
-                                    Name of student
+                        <thead>
+                            <tr className="bg-bg-secondary">
+                                <th className="px-6 py-3.5 text-left text-xs font-medium text-primary">
+                                    Name of student <SortIcon />
                                 </th>
-                                <th className="px-6 py-3 text-left font-medium">
-                                    Status
+                                <th className="px-6 py-3.5 text-left text-xs font-medium text-primary">
+                                    Status <SortIcon />
                                 </th>
-                                <th className="px-6 py-3 text-left font-medium">
-                                    Modified
+                                <th className="px-6 py-3.5 text-left text-xs font-medium text-primary">
+                                    Modified <SortIcon />
                                 </th>
-                                <th className="px-6 py-3 text-left font-medium">
-                                    Progress
+                                <th className="px-6 py-3.5 text-right text-xs font-medium text-primary">
+                                    Progress <SortIcon />
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {mockStudents.map((student, index) => (
+                        <tbody className="bg-bg-primary">
+                            {mockStudents.map((student) => (
                                 <tr
                                     key={student.id}
-                                    className={
-                                        index % 2 === 0
-                                            ? "bg-bg-card"
-                                            : "bg-bg-elevated/40"
-                                    }
+                                    className="border-t border-border-default"
                                 >
-                                    <td className="px-6 py-3 text-text-primary">
+                                    <td className="px-6 py-4 text-text-primary">
                                         {student.name}
                                     </td>
-                                    <td className="px-6 py-3">
-                                        <StatusPill status={student.status} />
+                                    <td className="px-6 py-4">
+                                        <StatusDropdown status={student.status} />
                                     </td>
-                                    <td className="px-6 py-3 text-text-secondary">
+                                    <td className="px-6 py-4 text-text-secondary">
                                         {student.modified ? "Yes" : "No"}
                                     </td>
-                                    <td className="px-6 py-3 text-text-primary">
+                                    <td className="px-6 py-4 text-text-muted text-right">
                                         {student.progress}%
                                     </td>
                                 </tr>
