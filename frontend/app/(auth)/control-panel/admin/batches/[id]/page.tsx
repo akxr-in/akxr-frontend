@@ -1,7 +1,12 @@
 "use client";
 
-import { Button, Input } from "@akxr/design-system";
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import { Button, Input, Spinner } from "@akxr/design-system";
+import { useGetBatchId, getGetBatchIdQueryKey } from "@akxr/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
+import { CreateBatchModal } from "../../../../../../components/CreateBatchModal";
 
 type AttendanceStatus = "present" | "absent" | "partial";
 
@@ -57,11 +62,29 @@ const mockStudents: StudentRow[] = [
 ];
 
 export default function BatchDetailPage() {
-    const selectedDate = "Jan 4, 2026";
+    const params = useParams<{ id: string }>();
+    const batchId = params.id;
+    const queryClient = useQueryClient();
+    const { data, isLoading } = useGetBatchId(batchId);
+    const [showEditModal, setShowEditModal] = useState(false);
 
+    const batch = data?.status === 200 ? data.data.data : null;
+
+    const selectedDate = "Jan 4, 2026";
     const totalStudents = 21;
     const presentStudents = 18;
     const avgProgress = 84;
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-bg-primary flex">
+                <SidebarNav activeIndex={1} />
+                <main className="flex-1 flex items-center justify-center">
+                    <Spinner size="lg" />
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-bg-primary flex">
@@ -74,13 +97,15 @@ export default function BatchDetailPage() {
                 <div className="flex items-start justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-text-primary">
-                            Batch Management
+                            {batch?.batch_name ?? "Batch Management"}
                         </h1>
                         <p className="text-text-secondary mt-1">
                             Manage attendance and track student progress.
                         </p>
                     </div>
-                    <Button variant="primary">Edit Batch</Button>
+                    <Button variant="primary" onClick={() => setShowEditModal(true)}>
+                        Edit Batch
+                    </Button>
                 </div>
 
                 {/* Filters & Summary (left-aligned block like design) */}
@@ -174,7 +199,18 @@ export default function BatchDetailPage() {
                     </table>
                 </div>
             </main>
+
+            {/* Edit Batch Modal */}
+            <CreateBatchModal
+                open={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                batch={batch}
+                onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: getGetBatchIdQueryKey(batchId) });
+                }}
+            />
         </div>
     );
 }
+
 
