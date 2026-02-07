@@ -15,9 +15,9 @@ export type PostBatchBody = {
   batch_end_date: string;
   estimated_end_date: string;
   /** @nullable */
-  current_course_id: string | null;
+  current_course_id?: string | null;
   course_ids: string[];
-  completed_course_ids: string[];
+  completed_course_ids?: string[];
   /** @maxLength 4 */
   batch_code: string;
   description: string;

@@ -1100,9 +1100,7 @@
           "batch_start_date",
           "batch_end_date",
           "estimated_end_date",
-          "current_course_id",
           "course_ids",
-          "completed_course_ids",
           "batch_code",
           "description"
         ]
@@ -4171,9 +4169,7 @@
                   "batch_start_date",
                   "batch_end_date",
                   "estimated_end_date",
-                  "current_course_id",
                   "course_ids",
-                  "completed_course_ids",
                   "batch_code",
                   "description"
                 ]
