@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Button,
   BellIcon,
@@ -7,7 +8,9 @@ import {
   ClockIcon,
   GridIcon,
   ArrowRightIcon,
+  Spinner,
 } from "@akxr/design-system";
+import { useGetUser, useGetAdminUsers, useGetBatch } from "@akxr/api";
 import { SidebarNav } from "../../../../components/SidebarNav";
 
 // Stat Card Component
@@ -201,15 +204,30 @@ const ScheduledClassCard = ({
 
 // Main Page Component
 export default function AdminDashboard() {
-  // Mock data - replace with actual API data
-  const userName = "Sarah";
-  const stats = {
-    totalStudents: 115,
-    studentGrowth: "+12% from last month",
-    activeBatches: 8,
-    avgAttendance: "92%",
-  };
+  // Real API data
+  const { data: userData, isLoading: isLoadingUser } = useGetUser();
+  const { data: usersData } = useGetAdminUsers();
+  const { data: batchesData } = useGetBatch();
 
+  const user = userData?.status === 200 ? userData.data.data : null;
+  const userName = user?.full_name?.split(" ")[0] ?? "Admin";
+
+  // Compute stats from real data
+  const totalStudents = useMemo(() => {
+    if (usersData?.status === 200 && Array.isArray(usersData.data?.data)) {
+      return usersData.data.data.filter((u) => u.role === "STUDENT").length;
+    }
+    return 0;
+  }, [usersData]);
+
+  const activeBatches = useMemo(() => {
+    if (batchesData?.status === 200 && Array.isArray(batchesData.data?.data)) {
+      return batchesData.data.data.length;
+    }
+    return 0;
+  }, [batchesData]);
+
+  // Dummy data — no backend API available for these
   const pendingRequests = [
     {
       id: 1,
@@ -263,7 +281,22 @@ export default function AdminDashboard() {
     },
   ];
 
-  const selectedDate = "Jan 4, 2026";
+  const selectedDate = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex">
+        <SidebarNav activeIndex={0} />
+        <main className="flex-1 flex items-center justify-center">
+          <Spinner size="lg" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg-primary flex">
@@ -286,13 +319,12 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <StatCard
             title="Total Students"
-            value={stats.totalStudents}
-            subtitle="across all batched"
-            badge={{ text: stats.studentGrowth, variant: "success" }}
+            value={totalStudents}
+            subtitle="across all batches"
           />
           <StatCard
             title="Active Batches"
-            value={stats.activeBatches}
+            value={activeBatches}
             subtitle="Currently running"
           />
         </div>
