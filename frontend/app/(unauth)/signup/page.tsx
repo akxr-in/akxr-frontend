@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Input, Select, GithubIcon } from "@akxr/design-system";
-import { useForm, Controller } from "react-hook-form";
+import { Button, Input, GithubIcon } from "@akxr/design-system";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -23,17 +23,9 @@ const signupSchema = z.object({
         .string()
         .min(1, "Password is required")
         .min(8, "Password must be at least 8 characters"),
-    role: z.string().min(1, "Please select a role"),
 });
 
 type SignupFormData = z.infer<typeof signupSchema>;
-
-const roleOptions = [
-    { value: "developer", label: "Developer" },
-    { value: "designer", label: "Designer" },
-    { value: "manager", label: "Project Manager" },
-    { value: "other", label: "Other" },
-];
 
 // Required asterisk component
 const RequiredAsterisk = () => (
@@ -47,13 +39,9 @@ export default function SignupPage() {
     const {
         register,
         handleSubmit,
-        control,
         formState: { errors },
     } = useForm<SignupFormData>({
         resolver: zodResolver(signupSchema),
-        defaultValues: {
-            role: "",
-        },
     });
 
     const onSubmit = async (data: SignupFormData) => {
@@ -164,26 +152,6 @@ export default function SignupPage() {
                             {...register("password")}
                             error={errors.password?.message}
                             showPasswordToggle
-                        />
-                    </div>
-
-                    {/* Role Select */}
-                    <div>
-                        <label className="text-sm font-medium text-text-primary flex items-center mb-2">
-                            Role
-                            <RequiredAsterisk />
-                        </label>
-                        <Controller
-                            name="role"
-                            control={control}
-                            render={({ field }) => (
-                                <Select
-                                    placeholder="Select your role"
-                                    options={roleOptions}
-                                    {...field}
-                                    error={errors.role?.message}
-                                />
-                            )}
                         />
                     </div>
 
