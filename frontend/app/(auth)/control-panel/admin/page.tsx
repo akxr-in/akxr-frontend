@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   BellIcon,
@@ -10,7 +10,7 @@ import {
   ArrowRightIcon,
   Spinner,
 } from "@akxr/design-system";
-import { useGetUser, useGetAdminUsers, useGetBatch } from "@akxr/api";
+import { useGetUser, useGetAdminUsers, useGetBatch, useGetMeeting } from "@akxr/api";
 import { SidebarNav } from "../../../../components/SidebarNav";
 
 // Stat Card Component
@@ -208,6 +208,7 @@ export default function AdminDashboard() {
   const { data: userData, isLoading: isLoadingUser } = useGetUser();
   const { data: usersData } = useGetAdminUsers();
   const { data: batchesData } = useGetBatch();
+  const { data: meetingsData } = useGetMeeting();
 
   const user = userData?.status === 200 ? userData.data.data : null;
   const userName = user?.full_name?.split(" ")[0] ?? "Admin";
@@ -226,6 +227,80 @@ export default function AdminDashboard() {
     }
     return 0;
   }, [batchesData]);
+
+  // Build batch name lookup: batch_id → batch_name
+  const batchNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (batchesData?.status === 200 && Array.isArray(batchesData.data?.data)) {
+      for (const b of batchesData.data.data) {
+        map.set(b.id, b.batch_name);
+      }
+    }
+    return map;
+  }, [batchesData]);
+
+  // Build scheduled classes from real meetings, sorted by start time
+  const scheduledClasses = useMemo(() => {
+    if (meetingsData?.status === 200 && Array.isArray(meetingsData.data?.data)) {
+      const now = new Date();
+      const meetings = meetingsData.data.data as Record<string, unknown>[];
+
+      return meetings
+        .filter((m) => {
+          // If the API has a status field, skip ENDED/CANCELLED; otherwise show all
+          const status = m.status as string | undefined;
+          if (status === "ENDED" || status === "CANCELLED") return false;
+          return true;
+        })
+        .sort(
+          (a, b) =>
+            new Date(a.scheduled_start_time as string).getTime() -
+            new Date(b.scheduled_start_time as string).getTime()
+        )
+        .map((m) => {
+          const start = new Date(m.scheduled_start_time as string);
+          // Use scheduled_end_time if available, otherwise fall back to duration_minutes
+          const end = m.scheduled_end_time
+            ? new Date(m.scheduled_end_time as string)
+            : new Date(
+              start.getTime() +
+              ((m.duration_minutes as number) || 60) * 60_000
+            );
+
+          const isLive =
+            (m.status as string) === "STARTED" ||
+            (start <= now && end > now);
+
+          // Calculate time remaining for upcoming meetings
+          let timeRemaining: string | undefined;
+          if (!isLive && start > now) {
+            const diffMs = start.getTime() - now.getTime();
+            const diffHrs = Math.floor(diffMs / 3_600_000);
+            const diffMins = Math.floor((diffMs % 3_600_000) / 60_000);
+            timeRemaining =
+              diffHrs > 0 ? `${diffHrs}hr ${diffMins}min` : `${diffMins}min`;
+          }
+
+          const formatTime = (d: Date) =>
+            d.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+          return {
+            id: m.id as string,
+            title: (m.title as string) || "Untitled Meeting",
+            time: `${formatTime(start)} - ${formatTime(end)}`,
+            batchName:
+              batchNameMap.get(m.batch_id as string) ?? "Unknown Batch",
+            isLive,
+            timeRemaining,
+          };
+        });
+    }
+    return [];
+  }, [meetingsData, batchNameMap]);
 
   // Dummy data — no backend API available for these
   const pendingRequests = [
@@ -257,35 +332,18 @@ export default function AdminDashboard() {
     },
   ];
 
-  const scheduledClasses = [
-    {
-      id: 1,
-      title: "React Advanced Patterns",
-      time: "2:00 PM - 4:00 PM",
-      batchName: "Full Stack - Q1 2024",
-      isLive: true,
-    },
-    {
-      id: 2,
-      title: "React Advanced Patterns",
-      time: "2:00 PM - 4:00 PM",
-      batchName: "Full Stack - Q1 2024",
-      timeRemaining: "1hr 24min",
-    },
-    {
-      id: 3,
-      title: "React Advanced Patterns",
-      time: "2:00 PM - 4:00 PM",
-      batchName: "Full Stack - Q1 2024",
-      timeRemaining: "1hr 24min",
-    },
-  ];
-
   const selectedDate = new Date().toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+
+  const INITIAL_CLASSES_SHOWN = 3;
+  const [showAllClasses, setShowAllClasses] = useState(false);
+  const visibleClasses = showAllClasses
+    ? scheduledClasses
+    : scheduledClasses.slice(0, INITIAL_CLASSES_SHOWN);
+  const hasMoreClasses = scheduledClasses.length > INITIAL_CLASSES_SHOWN;
 
   if (isLoadingUser) {
     return (
@@ -330,7 +388,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Pending Requests */}
-        <section className="mb-8">
+        {/* <section className="mb-8">
           <h2 className="text-xl font-semibold text-text-primary mb-4">
             Pending requests
           </h2>
@@ -359,7 +417,7 @@ export default function AdminDashboard() {
               />
             ))}
           </div>
-        </section>
+        </section> */}
 
         {/* Scheduled Classes */}
         <section>
@@ -373,18 +431,34 @@ export default function AdminDashboard() {
             </button>
           </div>
           <div className="bg-bg-card border border-border-default rounded-lg px-5">
-            {scheduledClasses.map((classItem) => (
-              <ScheduledClassCard
-                key={classItem.id}
-                title={classItem.title}
-                time={classItem.time}
-                batchName={classItem.batchName}
-                isLive={classItem.isLive}
-                timeRemaining={classItem.timeRemaining}
-                onJoin={() => console.log("Join class", classItem.id)}
-              />
-            ))}
+            {scheduledClasses.length === 0 ? (
+              <div className="py-8 text-center text-text-muted text-sm">
+                No upcoming or live classes
+              </div>
+            ) : (
+              visibleClasses.map((classItem) => (
+                <ScheduledClassCard
+                  key={classItem.id}
+                  title={classItem.title}
+                  time={classItem.time}
+                  batchName={classItem.batchName}
+                  isLive={classItem.isLive}
+                  timeRemaining={classItem.timeRemaining}
+                  onJoin={() => console.log("Join class", classItem.id)}
+                />
+              ))
+            )}
           </div>
+          {hasMoreClasses && (
+            <button
+              onClick={() => setShowAllClasses((prev) => !prev)}
+              className="mt-3 w-full py-2.5 text-sm font-medium text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+            >
+              {showAllClasses
+                ? "Show less"
+                : `View ${scheduledClasses.length - INITIAL_CLASSES_SHOWN} more classes`}
+            </button>
+          )}
         </section>
       </main>
     </div>
