@@ -14,6 +14,12 @@ export type BatchStatus = "to_be_started" | "ongoing" | "completed";
 
 export interface BatchCardProps {
   batch: GetBatch200DataItem;
+  /** @default "View details" */
+  actionLabel?: string;
+  /** Disable the action button */
+  actionDisabled?: boolean;
+  onAction?: () => void;
+  /** @deprecated Use onAction instead */
   onViewDetails?: () => void;
 }
 
@@ -56,7 +62,7 @@ function calculateCourseProgress(
   return Math.round((completedCourseIds.length / courseIds.length) * 100);
 }
 
-export const BatchCard = ({ batch, onViewDetails }: BatchCardProps) => {
+export const BatchCard = ({ batch, actionLabel = "View details", actionDisabled, onAction, onViewDetails }: BatchCardProps) => {
   const status = getBatchStatus(batch.batch_start_date, batch.batch_end_date);
   const name = batch.batch_name;
   const courseProgress = calculateCourseProgress(
@@ -171,14 +177,15 @@ export const BatchCard = ({ batch, onViewDetails }: BatchCardProps) => {
         )}
       </div>
 
-      {/* View Details Button */}
+      {/* Action Button */}
       <Button
         variant="outline"
         size="sm"
         className="w-full mt-5"
-        onClick={onViewDetails}
+        onClick={onAction ?? onViewDetails}
+        disabled={actionDisabled}
       >
-        View details
+        {actionLabel}
       </Button>
     </div>
   );
