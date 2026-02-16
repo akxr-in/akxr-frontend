@@ -14,6 +14,7 @@ export interface HeroCourseProgressProps {
     courseName: string;
     totalModules: number;
     completedModules: number;
+    hideImage?: boolean;
 }
 
 export function HeroCourseProgress({
@@ -22,6 +23,7 @@ export function HeroCourseProgress({
     courseName,
     totalModules,
     completedModules,
+    hideImage = false,
 }: HeroCourseProgressProps) {
     const progressPercent =
         totalModules > 0
@@ -76,9 +78,10 @@ export function HeroCourseProgress({
             </div>
 
             {/* Right: decorative code image */}
-            <div className="hidden md:flex w-[45%] bg-gradient-to-br from-bg-elevated to-bg-primary items-center justify-center relative overflow-hidden">
-                <pre className="text-[11px] leading-relaxed text-text-muted/60 font-mono p-6 select-none whitespace-pre-wrap">
-                    {`import { render } from 'react-dom';
+            {!hideImage && (
+                <div className="hidden md:flex w-[45%] bg-gradient-to-br from-bg-elevated to-bg-primary items-center justify-center relative overflow-hidden">
+                    <pre className="text-[11px] leading-relaxed text-text-muted/60 font-mono p-6 select-none whitespace-pre-wrap">
+                        {`import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router';
 
 const App = () => (
@@ -95,8 +98,9 @@ const App = () => (
 render(
   document.getElementById('root')
 );`}
-                </pre>
-            </div>
+                    </pre>
+                </div>
+            )}
         </div>
     );
 }
