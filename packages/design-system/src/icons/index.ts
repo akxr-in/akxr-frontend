@@ -10,4 +10,6 @@ export { ArrowRightIcon, ArrowLeftIcon, ArrowUpIcon, ArrowDownIcon } from "./Arr
 export { UsersIcon, UserIcon } from "./UsersIcon";
 export { CheckIcon, CheckCircleIcon } from "./CheckIcon";
 export { PlusIcon, PlusCircleIcon } from "./PlusIcon";
+export { BookIcon } from "./BookIcon";
+export { LockIcon } from "./LockIcon";
 export type { IconProps } from "./GithubIcon";
