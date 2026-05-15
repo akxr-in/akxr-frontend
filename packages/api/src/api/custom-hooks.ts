@@ -1,0 +1,274 @@
+/**
+ * Custom hooks for endpoints added after initial orval codegen.
+ * Follows the same customFetch + React Query pattern as generated hooks.
+ */
+import { useQuery } from '@tanstack/react-query'
+import type { UseQueryOptions, UseQueryResult } from '@tanstack/react-query'
+import { customFetch } from './custom-fetch'
+
+const BASE = 'http://localhost:3000'
+
+// ── shared types ──────────────────────────────────────────────────────────────
+
+export interface Meeting {
+  id: string
+  batch_id: string
+  title: string
+  description: string | null
+  scheduled_start_time: string
+  scheduled_end_time: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface BatchWithStats {
+  id: string
+  batch_name: string
+  batch_code: string
+  total_classes: number
+  mentor_ids: string[]
+  mentor_names: string[]
+  batch_start_date: string
+  batch_end_date: string | null
+  estimated_end_date: string | null
+  course_ids: string[]
+  current_course_id: string | null
+  description: string
+  meetings: Meeting[]
+  meetings_count: number
+  completed_meetings_count: number
+  student_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface AttendanceRecord {
+  id: string
+  user_id: string
+  meeting_summary_id: string
+  batch_id: string
+  status: 'PRESENT' | 'PARTIALLY_PRESENT' | 'ABSENT'
+  first_joined_at: string | null
+  last_left_at: string | null
+  total_time_in_meeting_seconds: number
+  created_at: string
+}
+
+export interface AttendanceWithMeeting {
+  attendance: AttendanceRecord
+  meeting: Meeting | null
+}
+
+export interface MentorBatch {
+  id: string
+  batch_name: string
+  batch_code: string
+  total_classes: number
+  mentor_ids: string[]
+  batch_start_date: string
+  batch_end_date: string | null
+  estimated_end_date: string | null
+  course_ids: string[]
+  current_course_id: string | null
+  description: string
+  student_count: number
+  meetings_count: number
+  completed_meetings_count: number
+  avg_attendance_pct: number
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminDashboard {
+  total_students: number
+  total_mentors: number
+  total_courses: number
+  total_batches: number
+  total_active_batches: number
+}
+
+// ── GET /user/batches ─────────────────────────────────────────────────────────
+
+export interface GetUserBatches200 {
+  data: BatchWithStats[]
+  message: string
+}
+
+export type GetUserBatchesResponse = { data: GetUserBatches200; status: 200; headers: Headers }
+
+export const getUserBatches = (): Promise<GetUserBatchesResponse> =>
+  customFetch<GetUserBatchesResponse>(`${BASE}/user/batches`, { method: 'GET' })
+
+export const getUserBatchesQueryKey = () => ['getUserBatches'] as const
+
+export function useGetUserBatches<TData = GetUserBatchesResponse, TError = unknown>(
+  options?: UseQueryOptions<GetUserBatchesResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getUserBatchesQueryKey(),
+    queryFn: getUserBatches,
+    ...options,
+  })
+}
+
+// ── GET /user/attendance ──────────────────────────────────────────────────────
+
+export interface GetUserAttendance200 {
+  data: AttendanceWithMeeting[]
+  message: string
+}
+
+export type GetUserAttendanceResponse = { data: GetUserAttendance200; status: 200; headers: Headers }
+
+export const getUserAttendance = (): Promise<GetUserAttendanceResponse> =>
+  customFetch<GetUserAttendanceResponse>(`${BASE}/user/attendance`, { method: 'GET' })
+
+export const getUserAttendanceQueryKey = () => ['getUserAttendance'] as const
+
+export function useGetUserAttendance<TData = GetUserAttendanceResponse, TError = unknown>(
+  options?: UseQueryOptions<GetUserAttendanceResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getUserAttendanceQueryKey(),
+    queryFn: getUserAttendance,
+    ...options,
+  })
+}
+
+// ── GET /batch/mentor ─────────────────────────────────────────────────────────
+
+export interface GetMentorBatches200 {
+  data: MentorBatch[]
+  message: string
+}
+
+export type GetMentorBatchesResponse = { data: GetMentorBatches200; status: 200; headers: Headers }
+
+export const getMentorBatches = (): Promise<GetMentorBatchesResponse> =>
+  customFetch<GetMentorBatchesResponse>(`${BASE}/batch/mentor`, { method: 'GET' })
+
+export const getMentorBatchesQueryKey = () => ['getMentorBatches'] as const
+
+export function useGetMentorBatches<TData = GetMentorBatchesResponse, TError = unknown>(
+  options?: UseQueryOptions<GetMentorBatchesResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getMentorBatchesQueryKey(),
+    queryFn: getMentorBatches,
+    ...options,
+  })
+}
+
+// ── GET /admin/dashboard ──────────────────────────────────────────────────────
+
+export interface GetAdminDashboard200 {
+  data: AdminDashboard
+  message: string
+}
+
+export type GetAdminDashboardResponse = { data: GetAdminDashboard200; status: 200; headers: Headers }
+
+export const getAdminDashboard = (): Promise<GetAdminDashboardResponse> =>
+  customFetch<GetAdminDashboardResponse>(`${BASE}/admin/dashboard`, { method: 'GET' })
+
+export const getAdminDashboardQueryKey = () => ['getAdminDashboard'] as const
+
+export function useGetAdminDashboard<TData = GetAdminDashboardResponse, TError = unknown>(
+  options?: UseQueryOptions<GetAdminDashboardResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getAdminDashboardQueryKey(),
+    queryFn: getAdminDashboard,
+    ...options,
+  })
+}
+
+// ── GET /batch (all) — typed alias ───────────────────────────────────────────
+
+export interface AdminBatch {
+  id: string
+  batch_name: string
+  batch_code: string
+  total_classes: number
+  mentor_ids: string[]
+  batch_start_date: string
+  batch_end_date: string
+  estimated_end_date: string
+  course_ids: string[]
+  current_course_id: string | null
+  description: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminCourse {
+  id: string
+  name: string
+  description: string
+  time_allotted_in_weeks: number
+  lesson_ids: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminUser {
+  id: string
+  username: string
+  full_name: string
+  email: string
+  role: 'STUDENT' | 'MENTOR' | 'ADMIN'
+  profile_status: string
+  batch_ids: string[]
+  created_at: string
+}
+
+export interface GetAdminBatches200 { data: AdminBatch[]; message: string }
+export type GetAdminBatchesResponse = { data: GetAdminBatches200; status: 200; headers: Headers }
+
+export const getAdminBatches = (): Promise<GetAdminBatchesResponse> =>
+  customFetch<GetAdminBatchesResponse>(`${BASE}/batch`, { method: 'GET' })
+
+export const getAdminBatchesQueryKey = () => ['getAdminBatches'] as const
+
+export function useGetAdminBatches<TData = GetAdminBatchesResponse, TError = unknown>(
+  options?: UseQueryOptions<GetAdminBatchesResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getAdminBatchesQueryKey(),
+    queryFn: getAdminBatches,
+    ...options,
+  })
+}
+
+export interface GetAdminCoursesResponse { data: { data: AdminCourse[]; message: string }; status: 200; headers: Headers }
+export const getAdminCourses = (): Promise<GetAdminCoursesResponse> =>
+  customFetch<GetAdminCoursesResponse>(`${BASE}/admin/courses`, { method: 'GET' })
+
+export const getAdminCoursesQueryKey = () => ['getAdminCourses'] as const
+
+export function useGetAdminCourses<TData = GetAdminCoursesResponse, TError = unknown>(
+  options?: UseQueryOptions<GetAdminCoursesResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getAdminCoursesQueryKey(),
+    queryFn: getAdminCourses,
+    ...options,
+  })
+}
+
+export interface GetAdminUsersResponse { data: { data: AdminUser[]; message: string }; status: 200; headers: Headers }
+export const getAdminUsers = (): Promise<GetAdminUsersResponse> =>
+  customFetch<GetAdminUsersResponse>(`${BASE}/admin/users`, { method: 'GET' })
+
+export const getAdminUsersQueryKey = () => ['getAdminUsers'] as const
+
+export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown>(
+  options?: UseQueryOptions<GetAdminUsersResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getAdminUsersQueryKey(),
+    queryFn: getAdminUsers,
+    ...options,
+  })
+}
