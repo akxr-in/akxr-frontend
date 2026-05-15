@@ -32,7 +32,8 @@ function clearTokens() {
 // Handles: absolute URLs (http://localhost:3000/path) and relative URLs (/path).
 function resolveUrl(url: string): string {
   const base = getBaseUrl().replace(/\/$/, '');
-  // Replace absolute origin (e.g. http://localhost:3000) with configured base
+  // Relative path → prepend base. Absolute URL → swap origin with base.
+  if (!url.startsWith('http')) return `${base}${url}`;
   return url.replace(/^https?:\/\/[^/]+/, base);
 }
 
