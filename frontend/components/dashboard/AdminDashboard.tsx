@@ -553,7 +553,8 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
   const dashData: AdminDashboardData | null = dashRes?.data?.data ?? null;
   const batches: AdminBatch[] = batchesRes?.data?.data ?? [];
   const courses: AdminCourse[] = coursesRes?.data?.data ?? [];
-  const allUsers: AdminUser[] = (usersRes?.data?.data as unknown as AdminUser[]) ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allUsers: AdminUser[] = ((usersRes?.data as any)?.data as unknown as AdminUser[]) ?? [];
   const mentors: AdminUser[] = allUsers.filter((u) => u.role === "MENTOR");
 
   const getMentorName = (id: string) =>
