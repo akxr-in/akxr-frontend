@@ -9,7 +9,7 @@ import {
     LockIcon,
     EyeIcon,
 } from "@akxr/design-system";
-import type { GetAdminCourses200DataItem } from "@akxr/api";
+import type { AdminCourse } from "@akxr/api";
 
 export type CourseStatus = "completed" | "ongoing" | "locked";
 
@@ -23,7 +23,7 @@ const statusConfig: Record<
 };
 
 export interface CourseCardProps {
-    course: GetAdminCourses200DataItem;
+    course: AdminCourse;
     status: CourseStatus;
     mentorName: string;
     courseName: string;
@@ -31,7 +31,7 @@ export interface CourseCardProps {
 
 export function CourseCard({ course, status, mentorName, courseName }: CourseCardProps) {
     const { label, variant } = statusConfig[status];
-    const totalModules = course.weekly_content.length || course.lesson_ids.length;
+    const totalModules = course.lesson_ids.length;
 
     const completedModules =
         status === "ongoing" ? Math.floor(totalModules / 2) : totalModules;

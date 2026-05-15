@@ -8,7 +8,7 @@ import {
     useGetAdminCourses,
     useGetAdminUsers,
 } from "@akxr/api";
-import type { GetAdminCourses200DataItem } from "@akxr/api";
+import type { AdminCourse } from "@akxr/api";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { CourseCard } from "../../../../../components/CourseCard";
 import { HeroCourseProgress } from "../../../../../components/HeroCourseProgress";
@@ -33,7 +33,7 @@ export default function StudentLmsPage() {
 
     // Build course map: id → full course object
     const courseMap = useMemo(() => {
-        const map = new Map<string, GetAdminCourses200DataItem>();
+        const map = new Map<string, AdminCourse>();
         if (
             coursesData?.status === 200 &&
             Array.isArray(coursesData.data?.data)
@@ -78,7 +78,7 @@ export default function StudentLmsPage() {
         if (!batch?.course_ids) return [];
         return batch.course_ids
             .map((id) => courseMap.get(id))
-            .filter(Boolean) as GetAdminCourses200DataItem[];
+            .filter(Boolean) as AdminCourse[];
     }, [batch, courseMap]);
 
     // Current course (hero)
@@ -97,8 +97,7 @@ export default function StudentLmsPage() {
 
     // Hero module counts
     const heroTotalModules = currentCourse
-        ? currentCourse.weekly_content.length ||
-        currentCourse.lesson_ids.length
+        ? currentCourse.lesson_ids.length
         : 0;
     const heroCompletedModules =
         currentCourse && heroTotalModules > 0

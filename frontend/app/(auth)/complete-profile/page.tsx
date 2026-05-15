@@ -16,6 +16,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { usePostUserCompleteProfile, type PostUserCompleteProfileBody } from "@akxr/api";
 import { toast } from "../../providers";
+import { RequiredAsterisk } from "@/components/ui/RequiredAsterisk";
 
 const profileSchema = z.object({
     internship: z.string().optional(),
@@ -65,9 +66,6 @@ const availableSkills = [
     "AWS",
     "Git",
 ];
-
-// Required asterisk component
-const RequiredAsterisk = () => <span className="text-error ml-1">*</span>;
 
 export default function CompleteProfilePage() {
     const router = useRouter();

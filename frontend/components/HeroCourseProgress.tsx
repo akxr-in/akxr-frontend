@@ -6,10 +6,10 @@ import {
     ClockIcon,
     BookIcon,
 } from "@akxr/design-system";
-import type { GetAdminCourses200DataItem } from "@akxr/api";
+import type { AdminCourse } from "@akxr/api";
 
 export interface HeroCourseProgressProps {
-    course: GetAdminCourses200DataItem;
+    course: AdminCourse;
     mentorName: string;
     courseName: string;
     totalModules: number;

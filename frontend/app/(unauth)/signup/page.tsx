@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { usePostUserAuthSignup, type PostUserAuthSignupBody, getUserGithubLogin } from "@akxr/api";
 import { toast } from "../../providers";
 import { setAuthTokens } from "@/lib/utils";
+import { RequiredAsterisk } from "@/components/ui/RequiredAsterisk";
 
 const signupSchema = z.object({
     fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -27,10 +28,6 @@ const signupSchema = z.object({
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
-// Required asterisk component
-const RequiredAsterisk = () => (
-    <span className="text-error ml-1">*</span>
-);
 
 export default function SignupPage() {
     const router = useRouter();
