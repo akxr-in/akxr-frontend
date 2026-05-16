@@ -55,8 +55,10 @@ function getMeetingState(
   const now = new Date();
   const end = new Date(scheduledEnd);
   const start = new Date(scheduledStart);
-  if (end < now) return "done";
+  // Check today first — a meeting that started today stays "today" even if
+  // it runs past its scheduled end (mentor may extend it).
   if (start.toDateString() === now.toDateString()) return "today";
+  if (end < now) return "done";
   return "upcoming";
 }
 
