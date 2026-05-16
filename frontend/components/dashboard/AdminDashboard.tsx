@@ -330,6 +330,32 @@ function ApprovalInbox() {
   );
 }
 
+function downloadBatchesCsv(batches: AdminBatch[], getMentorName: (id: string) => string) {
+  const escape = (v: unknown) => {
+    const s = v === null || v === undefined ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = ["batch_code", "batch_name", "mentor", "start_date", "end_date", "total_classes"];
+  const rows = batches.map((b) => [
+    b.batch_code,
+    b.batch_name,
+    b.mentor_ids[0] ? getMentorName(b.mentor_ids[0]) : "",
+    b.batch_start_date ?? "",
+    b.batch_end_date ?? "",
+    b.total_classes,
+  ]);
+  const csv = [header, ...rows].map((r) => r.map(escape).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `batches-${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function OverviewScreen({
   onNewCourse,
   firstName,
@@ -345,6 +371,15 @@ function OverviewScreen({
   batches: AdminBatch[];
   getMentorName: (id: string) => string;
 }) {
+  const handleExport = () => {
+    if (batches.length === 0) {
+      toast.error("No batches to export");
+      return;
+    }
+    downloadBatchesCsv(batches, getMentorName);
+    toast.success(`Exported ${batches.length} batch${batches.length === 1 ? "" : "es"}`);
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -353,7 +388,7 @@ function OverviewScreen({
           <p className="text-text-muted text-[13.5px] mt-0.5">{new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button"
+          <button type="button" onClick={handleExport}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
