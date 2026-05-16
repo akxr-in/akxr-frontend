@@ -57,6 +57,10 @@ export default function BatchDetailPage() {
     const currentRole = currentUserData?.status === 200 ? currentUserData.data.data.role : undefined;
     const isMentor = currentRole === "MENTOR";
 
+    useEffect(() => {
+        if (currentRole === "MENTOR") router.push("/");
+    }, [currentRole, router]);
+
     const { data: adminUsersData } = useGetAdminUsers({ query: { enabled: currentRole === "ADMIN" } });
     const { data: batchStudentsData } = useGetBatchStudents(batchId, { enabled: currentRole === "MENTOR" });
     const { mutateAsync: updateAttendance } = useUpdateMeetingAttendance();
