@@ -13,6 +13,7 @@ import {
 } from "@akxr/design-system";
 import { useGetUser, useGetAdminUsers, useGetBatch, useGetMeeting } from "@akxr/api";
 import { SidebarNav } from "../../../../components/SidebarNav";
+import { formatTime as fmtTimeUtil, formatDateLong } from "../../../../lib/format";
 
 // Stat Card Component
 interface StatCardProps {
@@ -284,12 +285,7 @@ export default function AdminDashboard() {
               diffHrs > 0 ? `${diffHrs}hr ${diffMins}min` : `${diffMins}min`;
           }
 
-          const formatTime = (d: Date) =>
-            d.toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            });
+          const formatTime = (d: Date) => fmtTimeUtil(d);
 
           return {
             id: m.id as string,
@@ -336,11 +332,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  const selectedDate = new Date().toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const selectedDate = formatDateLong(new Date());
 
   const INITIAL_CLASSES_SHOWN = 3;
   const [showAllClasses, setShowAllClasses] = useState(false);

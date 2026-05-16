@@ -13,6 +13,7 @@ import {
   type BatchWithStats,
   type AttendanceWithMeeting,
 } from "@akxr/api";
+import { formatDate as fmtDateUtil } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,8 +46,7 @@ interface BatchInfo {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const fmtDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBD";
+const fmtDate = (iso: string | null | undefined) => fmtDateUtil(iso);
 
 function getMeetingState(
   scheduledStart: string,

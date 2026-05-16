@@ -34,6 +34,7 @@ import {
 } from "@akxr/api";
 import { useGetAdminUsers, getGetAdminUsersQueryKey } from "@akxr/api";
 import toast from "react-hot-toast";
+import { formatDate as fmtDateUtil, formatWeekday } from "@/lib/format";
 
 import { useRouter } from "next/navigation";
 
@@ -41,8 +42,7 @@ import { useRouter } from "next/navigation";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const fmtDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBD";
+const fmtDate = (iso: string | null | undefined) => fmtDateUtil(iso);
 
 type AuditRole = "mentor" | "admin" | "system";
 
@@ -393,7 +393,7 @@ function OverviewScreen({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[30px] font-semibold tracking-[-0.028em] text-white">The org at a glance, {firstName}.</h1>
-          <p className="text-text-muted text-[13.5px] mt-0.5">{new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}</p>
+          <p className="text-text-muted text-[13.5px] mt-0.5">{formatWeekday(new Date())}</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={handleExport}
@@ -566,8 +566,8 @@ function CatalogScreen({
                         <p className="text-[12.5px] text-text-primary mt-0.5">{course.title}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.modules.length}M</span>
-                        <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{batchCount}B</span>
+                        <span title={`${course.modules.length} module${course.modules.length === 1 ? "" : "s"}`} className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.modules.length} {course.modules.length === 1 ? "module" : "modules"}</span>
+                        <span title={`${batchCount} batch${batchCount === 1 ? "" : "es"}`} className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{batchCount} {batchCount === 1 ? "batch" : "batches"}</span>
                       </div>
                     </button>
                     <button

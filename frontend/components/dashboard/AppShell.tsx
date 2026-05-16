@@ -60,10 +60,11 @@ export function AppShell({
           {/* Bell icon */}
           <button
             type="button"
-            className="text-text-muted hover:text-text-secondary transition-colors"
+            className="text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus:text-text-primary"
             aria-label="Notifications"
+            title="Notifications"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
@@ -87,14 +88,16 @@ export function AppShell({
       </header>
 
       {/* Subnav */}
-      <nav className="flex items-center gap-0.5 px-5 border-b border-border-default bg-bg-primary flex-shrink-0">
+      <nav role="tablist" aria-label="Dashboard sections" className="flex items-center gap-0.5 px-5 border-b border-border-default bg-bg-primary flex-shrink-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              'px-3 py-2.5 text-[12.5px] font-medium border-b-[1.5px] -mb-px transition-colors',
+              'px-3 py-2.5 text-[12.5px] font-medium border-b-2 -mb-px transition-colors focus:outline-none focus:text-text-primary',
               activeTab === tab.id
                 ? 'text-text-primary border-brand'
                 : 'text-text-muted border-transparent hover:text-text-secondary'

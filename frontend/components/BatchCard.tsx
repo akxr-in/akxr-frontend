@@ -9,6 +9,7 @@ import {
   ProgressBar,
 } from "@akxr/design-system";
 import type { GetBatch200DataItem } from "@akxr/api";
+import { formatDateLong } from "../lib/format";
 
 export type BatchStatus = "to_be_started" | "ongoing" | "completed";
 
@@ -27,14 +28,7 @@ export interface BatchCardProps {
   mentorDisplayName?: string;
 }
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+const formatDate = (dateString: string) => formatDateLong(dateString);
 
 function getBatchStatus(
   startDate: string,

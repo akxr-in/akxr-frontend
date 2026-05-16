@@ -31,26 +31,34 @@ function Field({
   placeholder,
   value,
   onChange,
+  autoComplete,
+  required,
 }: {
   label: string;
   type?: string;
   placeholder?: string;
   value: string;
   onChange: (v: string) => void;
+  autoComplete?: string;
+  required?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
+  const id = `field-${label.toLowerCase().replace(/\s+/g, '-')}`;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: 11.5, color: '#a3a3a3', fontWeight: 500, letterSpacing: '-0.003em' }}>
+      <label htmlFor={id} style={{ fontSize: 11.5, color: '#a3a3a3', fontWeight: 500, letterSpacing: '-0.003em' }}>
         {label}
       </label>
       <input
+        id={id}
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        autoComplete={autoComplete}
+        required={required}
         style={{ ...inputStyle, ...(focused ? inputFocusStyle : {}) }}
       />
     </div>
@@ -63,17 +71,22 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
 
   const handleGitHub = async () => {
+    if (isGithubLoading) return;
+    setIsGithubLoading(true);
     try {
       const response = await getUserGithubLogin();
       if (response?.status === 200 && response?.data?.data?.auth_url) {
         window.location.href = response.data.data.auth_url;
       } else {
         toast.error("Failed to initiate GitHub login");
+        setIsGithubLoading(false);
       }
     } catch {
       toast.error("Failed to initiate GitHub login");
+      setIsGithubLoading(false);
     }
   };
 
@@ -154,6 +167,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleGitHub}
+            disabled={isGithubLoading || loginMutation.isPending}
             style={{
               width: '100%',
               display: 'flex',
@@ -166,25 +180,30 @@ export default function LoginPage() {
               letterSpacing: '-0.003em',
               borderRadius: 4,
               border: '1px solid #fafafa',
-              background: '#fafafa',
+              background: isGithubLoading ? '#d4d4d4' : '#fafafa',
               color: '#0a0a0a',
-              cursor: 'pointer',
-              transition: 'background .12s, border-color .12s',
+              cursor: isGithubLoading ? 'not-allowed' : 'pointer',
+              opacity: isGithubLoading ? 0.7 : 1,
+              transition: 'background .12s, border-color .12s, opacity .12s',
               fontFamily: 'inherit',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#d4d4d4';
-              e.currentTarget.style.borderColor = '#d4d4d4';
+              if (!isGithubLoading) {
+                e.currentTarget.style.background = '#d4d4d4';
+                e.currentTarget.style.borderColor = '#d4d4d4';
+              }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#fafafa';
-              e.currentTarget.style.borderColor = '#fafafa';
+              if (!isGithubLoading) {
+                e.currentTarget.style.background = '#fafafa';
+                e.currentTarget.style.borderColor = '#fafafa';
+              }
             }}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
             </svg>
-            Continue with GitHub
+            {isGithubLoading ? "Redirecting to GitHub…" : "Continue with GitHub"}
           </button>
 
           {/* Divider */}
@@ -198,8 +217,8 @@ export default function LoginPage() {
 
           {/* Email form */}
           <form onSubmit={handleEmail} style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
-            <Field label="Email" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
-            <Field label="Password" type="password" placeholder="••••••••" value={password} onChange={setPassword} />
+            <Field label="Email" type="email" placeholder="you@example.com" value={email} onChange={setEmail} autoComplete="email" required />
+            <Field label="Password" type="password" placeholder="••••••••" value={password} onChange={setPassword} autoComplete="current-password" required />
 
             <button
               type="submit"
@@ -239,9 +258,7 @@ export default function LoginPage() {
 
           {/* Terms */}
           <p style={{ marginTop: 28, fontSize: 11.5, color: '#737373', lineHeight: 1.55 }}>
-            By continuing you accept the Akxr{' '}
-            <u style={{ cursor: 'pointer' }}>terms</u> and{' '}
-            <u style={{ cursor: 'pointer' }}>privacy</u> policy.
+            By continuing you accept the Akxr terms and privacy policy.
             Your role (student · mentor · admin) is set by an admin from your domain.
           </p>
         </div>

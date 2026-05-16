@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Spinner } from "@akxr/design-system";
 import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { BatchCard } from "../../../../../components/BatchCard";
 import { CrudBatchModal } from "../../../../../components/CrudBatchModal";
@@ -59,8 +60,9 @@ export default function BatchManagementPage() {
         try {
             await doDelete(batch.id);
             queryClient.invalidateQueries({ queryKey: getGetBatchQueryKey() });
-        } catch {
-            alert("Failed to delete batch");
+            toast.success(`Deleted ${batch.batch_name}`);
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Failed to delete batch");
         } finally {
             setDeletingId(null);
             setConfirmDeleteBatch(null);
@@ -102,8 +104,11 @@ export default function BatchManagementPage() {
                 {!isLoading && !error && (
                     <>
                         {batchData.length === 0 ? (
-                            <div className="text-center py-12">
-                                <p className="text-text-muted">No batches found. Create your first batch to get started.</p>
+                            <div className="text-center py-16 flex flex-col items-center gap-4">
+                                <p className="text-text-muted">No batches yet. Create your first batch to get started.</p>
+                                <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+                                    Add new batch
+                                </Button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

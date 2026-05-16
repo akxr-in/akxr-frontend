@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Spinner } from "@akxr/design-system";
-import { useGetBatch, useEnrollInBatch, useGetUser, getGetUserQueryKey } from "@akxr/api";
+import { useGetBatch, useEnrollInBatch, useGetUser, getGetUserQueryKey, getGetBatchQueryKey } from "@akxr/api";
 import type { GetBatch200DataItem } from "@akxr/api";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { BatchCard } from "../../../../../components/BatchCard";
@@ -80,10 +80,23 @@ export default function StudentEnrollPage() {
                 {!isLoading && !error && (
                     <>
                         {batches.length === 0 ? (
-                            <div className="text-center py-16">
+                            <div className="text-center py-16 flex flex-col items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                                        <path d="M16 2v4M8 2v4M3 10h18" />
+                                    </svg>
+                                </div>
                                 <p className="text-text-muted">
-                                    No batches available right now. Check back later!
+                                    No open batches right now. New batches appear here as soon as an admin opens enrollment.
                                 </p>
+                                <button
+                                    type="button"
+                                    onClick={() => queryClient.invalidateQueries({ queryKey: getGetBatchQueryKey() })}
+                                    className="text-[12.5px] text-brand hover:opacity-80 transition-opacity"
+                                >
+                                    Check again
+                                </button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

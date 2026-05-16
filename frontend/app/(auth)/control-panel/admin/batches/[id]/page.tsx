@@ -12,9 +12,11 @@ import {
 } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
 import { ScheduleClassModal } from "../../../../../../components/ScheduleClassModal";
+import { formatDate, formatDateLong } from "../../../../../../lib/format";
 
 type DisplayStatus = "present" | "absent" | "partial";
 
@@ -80,7 +82,7 @@ export default function BatchDetailPage() {
 
     const sessionOptions: DropdownOption<string>[] = meetings.map((m) => {
         const date = new Date(m.scheduled_start_time);
-        const label = `${m.title} — ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+        const label = `${m.title} — ${formatDateLong(date)}`;
         return { value: m.id, label: <span className="text-sm text-text-secondary">{label}</span> };
     });
 
@@ -88,9 +90,7 @@ export default function BatchDetailPage() {
     const activeSession = meetings.find((m) => m.id === activeSessionId);
 
     const selectedDate = activeSession
-        ? new Date(activeSession.scheduled_start_time).toLocaleDateString("en-US", {
-            month: "short", day: "numeric", year: "numeric",
-        })
+        ? formatDateLong(activeSession.scheduled_start_time)
         : "No sessions";
 
     // Clear overrides when session changes so stale overrides don't bleed across sessions
@@ -160,14 +160,14 @@ export default function BatchDetailPage() {
                 userId: studentId,
                 status: API_STATUS_MAP[status],
             });
-        } catch {
+        } catch (e) {
             // revert optimistic update on failure
             setAttendanceOverrides((prev) => {
                 const next = { ...prev };
                 delete next[studentId];
                 return next;
             });
-            alert("Failed to update attendance");
+            toast.error(e instanceof Error ? e.message : "Failed to update attendance");
         }
     };
 
@@ -187,6 +187,33 @@ export default function BatchDetailPage() {
             <SidebarNav activeIndex={1} />
 
             <main className="flex-1 p-8 overflow-auto">
+                <nav aria-label="Breadcrumb" className="mb-3">
+                    <ol className="flex items-center gap-1.5 text-[12px] text-text-muted">
+                        <li>
+                            <button
+                                type="button"
+                                onClick={() => router.push("/")}
+                                className="hover:text-text-secondary transition-colors"
+                            >
+                                Control Panel
+                            </button>
+                        </li>
+                        <li aria-hidden="true">/</li>
+                        <li>
+                            <button
+                                type="button"
+                                onClick={() => router.push("/control-panel/admin/batches")}
+                                className="hover:text-text-secondary transition-colors"
+                            >
+                                Batches
+                            </button>
+                        </li>
+                        <li aria-hidden="true">/</li>
+                        <li aria-current="page" className="text-text-secondary truncate max-w-[300px]">
+                            {batch?.batch_name ?? "Batch"}
+                        </li>
+                    </ol>
+                </nav>
                 <div className="flex items-start justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-text-primary">
@@ -282,7 +309,7 @@ export default function BatchDetailPage() {
 
                 <div className="rounded-lg overflow-hidden border border-border-default">
                     <table className="w-full text-sm">
-                        <thead>
+                        <thead className="sticky top-0 z-10">
                             <tr className="bg-bg-secondary">
                                 <th className="px-6 py-3.5 text-left text-xs font-medium text-primary">
                                     Name of student <SortIcon />
@@ -297,15 +324,34 @@ export default function BatchDetailPage() {
                         </thead>
                         <tbody className="bg-bg-primary">
                             {isLoadingParticipants ? (
-                                <tr>
-                                    <td colSpan={3} className="px-6 py-8 text-center">
-                                        <Spinner size="md" />
-                                    </td>
-                                </tr>
+                                Array.from({ length: 4 }).map((_, i) => (
+                                    <tr key={`skel-${i}`} className="border-t border-border-default">
+                                        <td className="px-6 py-4"><div className="h-4 w-40 rounded bg-bg-elevated animate-pulse" /></td>
+                                        <td className="px-6 py-4"><div className="h-6 w-24 rounded bg-bg-elevated animate-pulse" /></td>
+                                        <td className="px-6 py-4 text-right"><div className="h-4 w-48 ml-auto rounded bg-bg-elevated animate-pulse" /></td>
+                                    </tr>
+                                ))
                             ) : filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} className="px-6 py-8 text-center text-text-muted">
-                                        {searchQuery ? "No students match the search." : "No students in this batch."}
+                                    <td colSpan={3} className="px-6 py-10 text-center text-text-muted">
+                                        {searchQuery ? (
+                                            <p>No students match &ldquo;{searchQuery}&rdquo;.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <p>No students in this batch yet.</p>
+                                                <p className="text-[12px]">
+                                                    Students self-enroll from their dashboard, or assign them from{" "}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => router.push("/")}
+                                                        className="text-brand hover:opacity-80 transition-opacity"
+                                                    >
+                                                        People
+                                                    </button>
+                                                    .
+                                                </p>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ) : (

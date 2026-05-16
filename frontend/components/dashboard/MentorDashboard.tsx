@@ -23,6 +23,7 @@ import toast from "react-hot-toast";
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { getGetBatchRequestsMyQueryKey } from "@akxr/api";
+import { formatDate as fmtDateUtil, formatDateLong, formatTime } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -124,7 +125,7 @@ function ChangeModal({ batchCode, currentEndDate, onClose }: ChangeModalProps) {
                 <input
                   type="text"
                   readOnly
-                  value={currentEndDate ? new Date(currentEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                  value={currentEndDate ? formatDateLong(currentEndDate) : '—'}
                   className="w-full bg-bg-elevated border border-border-default rounded-md px-3 py-2 text-[13px] text-text-muted"
                 />
               </div>
@@ -218,8 +219,7 @@ function BatchesScreen({
     ? Math.round(batches.reduce((acc, b) => acc + b.avg_attendance_pct, 0) / batches.length)
     : 0;
 
-  const fmtDate = (iso: string | null | undefined) =>
-    iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
+  const fmtDate = (iso: string | null | undefined) => fmtDateUtil(iso);
 
   const batchNameMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -255,7 +255,7 @@ function BatchesScreen({
           const mins = Math.floor((diff % 3_600_000) / 60_000);
           timeRemaining = hrs > 0 ? `${hrs}hr ${mins}min` : `${mins}min`;
         }
-        const fmt = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        const fmt = (d: Date) => formatTime(d);
         return {
           id: m.id as string,
           rtkRoomId: (m.realtime_kit_room_id as string | undefined) ?? '',
@@ -370,7 +370,10 @@ function BatchesScreen({
           <p className="text-[13px] font-semibold text-white">My batches</p>
         </div>
         {batches.length === 0 ? (
-          <div className="p-8 text-center text-text-muted text-[13px]">No batches assigned yet.</div>
+          <div className="p-10 text-center text-text-muted text-[13px] flex flex-col items-center gap-2">
+            <p>No batches assigned to you yet.</p>
+            <p className="text-[11.5px] text-text-muted">An admin will add you as a mentor once your first batch is ready.</p>
+          </div>
         ) : (
           <table className="w-full">
             <thead>
@@ -541,7 +544,7 @@ function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
           >
             {meetings.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.title} ({new Date(m.scheduled_start_time).toLocaleDateString()})
+                {m.title} ({fmtDateUtil(m.scheduled_start_time)})
               </option>
             ))}
           </select>
@@ -595,14 +598,18 @@ function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
                           const key = `${attendee.user_id}:${s}`;
                           const isActive = attendee.status === s;
                           const isThisPending = pendingKey === key;
-                          const label = s === 'PRESENT' ? 'P' : s === 'PARTIALLY_PRESENT' ? 'PP' : 'A';
+                          const label = s === 'PRESENT' ? 'Present' : s === 'PARTIALLY_PRESENT' ? 'Partial' : 'Absent';
+                          const tooltip = s === 'PARTIALLY_PRESENT' ? 'Partially present' : label;
                           return (
                             <button
                               key={s}
                               type="button"
                               disabled={isUpdating || isActive}
                               onClick={() => handleMark(attendee.user_id, s)}
-                              className={`px-2 py-1 rounded text-[10px] font-mono uppercase border transition-colors ${
+                              aria-label={`Mark ${attendee.username ?? 'student'} ${tooltip.toLowerCase()}`}
+                              aria-pressed={isActive}
+                              title={tooltip}
+                              className={`px-2.5 py-1 rounded text-[10.5px] font-medium border transition-colors ${
                                 isActive
                                   ? 'border-brand text-brand bg-brand/10 cursor-default'
                                   : 'border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary disabled:opacity-50'
