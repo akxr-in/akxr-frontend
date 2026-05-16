@@ -76,10 +76,10 @@ function ChangeModal({ batchCode, currentEndDate, onClose }: ChangeModalProps) {
         }
       });
       queryClient.invalidateQueries({ queryKey: getGetBatchRequestsMyQueryKey() });
+      toast.success('Change request submitted');
       onClose();
     } catch (e) {
-      console.error(e);
-      alert('Failed to submit request');
+      toast.error(e instanceof Error ? e.message : 'Failed to submit request');
     }
   };
 
@@ -193,7 +193,6 @@ function ChangeModal({ batchCode, currentEndDate, onClose }: ChangeModalProps) {
 
 function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; batches: MentorBatch[]; isLoading: boolean }) {
   const router = useRouter();
-  const [showModal, setShowModal] = useState(false);
   const [showChangeModal, setShowChangeModal] = useState(false);
 
   // GET /meeting is admin-only — fetch per-batch instead (mentor has access to GET /batch/:id/meetings)
@@ -443,13 +442,6 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
         </div>
       )}
 
-      {showModal && firstBatch && (
-        <ChangeModal
-          batchCode={firstBatch.batch_code}
-          currentEndDate={firstBatch.batch_end_date}
-          onClose={() => setShowModal(false)}
-        />
-      )}
       {showChangeModal && firstBatch && (
         <ChangeModal
           batchCode={firstBatch.batch_code}
