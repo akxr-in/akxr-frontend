@@ -261,10 +261,10 @@ export default function BatchDetailPage() {
                                             />
                                         </td>
                                         <td className="px-6 py-4 text-text-secondary">
-                                            Yes (mock)
+                                            {activeSessionId && participantIds.has(student.id) ? "Yes" : "No"}
                                         </td>
                                         <td className="px-6 py-4 text-text-muted text-right">
-                                            Mock%
+                                            —
                                         </td>
                                     </tr>
                                 ))

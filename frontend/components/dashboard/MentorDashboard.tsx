@@ -5,7 +5,14 @@ import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
 import type { UserDataResponseData } from "@akxr/api";
-import { useGetMentorBatches, type MentorBatch } from "@akxr/api";
+import {
+  useGetMentorBatches,
+  useGetMeeting,
+  useGetMeetingIdAttendance,
+  useGetBatchRequestsMy,
+  usePostBatchRequests,
+  type MentorBatch
+} from "@akxr/api";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -42,6 +49,27 @@ interface ChangeModalProps {
 function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
   const [changeType, setChangeType] = useState<ChangeType>('date');
   const [reason, setReason] = useState('');
+  const [proposedDate, setProposedDate] = useState('');
+  
+  const { mutateAsync: createRequest } = usePostBatchRequests();
+
+  const handleSubmit = async () => {
+    try {
+      await createRequest({
+        data: {
+          batch_code: batchCode,
+          change_type: changeType,
+          reason,
+          proposed_value: changeType === 'date' ? proposedDate : undefined
+        }
+      });
+      onClose();
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to submit request');
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -93,6 +121,8 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
                 </label>
                 <input
                   type="date"
+                  value={proposedDate}
+                  onChange={(e) => setProposedDate(e.target.value)}
                   className="w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
                 />
               </div>
@@ -132,6 +162,7 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
           </button>
           <button
             type="button"
+            onClick={handleSubmit}
             className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
             style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
           >
@@ -290,27 +321,104 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
 }
 
 function AttendanceScreen() {
+  const { data: meetingsRes, isLoading: meetingsLoading } = useGetMeeting();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const meetings: any[] = (meetingsRes as any)?.data?.data || [];
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string>("");
+
+  const { data: attendanceRes, isLoading: attendanceLoading } = useGetMeetingIdAttendance(
+    selectedMeetingId,
+    { query: { enabled: !!selectedMeetingId } }
+  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const attendanceData: any = (attendanceRes as any)?.data?.data;
+
+  // Set default selected meeting once loaded
+  if (meetings.length > 0 && !selectedMeetingId) {
+    setSelectedMeetingId(meetings[0].id);
+  }
+
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">Mark attendance</h2>
-        <p className="text-text-muted text-[13px] mt-0.5">Session roster will appear once loaded from backend</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">Mark attendance</h2>
+          <p className="text-text-muted text-[13px] mt-0.5">Session roster for your batches</p>
+        </div>
+        {meetings.length > 0 && (
+          <select
+            value={selectedMeetingId}
+            onChange={(e) => setSelectedMeetingId(e.target.value)}
+            className="bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[13px] text-text-primary outline-none focus:border-border-focus transition-colors"
+          >
+            {meetings.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.title} ({new Date(m.scheduled_start_time).toLocaleDateString()})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
-      <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
-          <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
-        </svg>
-        <p className="text-[13px] text-text-muted">
-          No session data available — attendance will appear after sessions are recorded.
-        </p>
-      </div>
+      {meetingsLoading ? (
+        <div className="flex justify-center p-8 text-text-muted">Loading meetings...</div>
+      ) : meetings.length === 0 ? (
+        <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
+            <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-[13px] text-text-muted">
+            No meetings available.
+          </p>
+        </div>
+      ) : attendanceLoading ? (
+        <div className="flex justify-center p-8 text-text-muted">Loading attendance...</div>
+      ) : attendanceData ? (
+        <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-default">
+            <p className="text-[13px] font-semibold text-white">Attendees</p>
+          </div>
+          {attendanceData.attendees?.length === 0 ? (
+            <div className="p-8 text-center text-text-muted text-[13px]">No attendees recorded yet.</div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border-default">
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Student</th>
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Status</th>
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Time in Meeting</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {attendanceData.attendees.map((attendee: any, i: number) => (
+                  <tr key={attendee.user_id} className={`hover:bg-bg-primary transition-colors ${i < attendanceData.attendees.length - 1 ? 'border-b border-border-default' : ''}`}>
+                    <td className="px-3.5 py-3 text-[12.5px] text-text-primary">{attendee.username}</td>
+                    <td className="px-3.5 py-3 text-[12.5px]">
+                      <span className={`px-2 py-1 rounded-full text-[10px] uppercase tracking-wider font-mono ${attendee.status === 'PRESENT' ? 'bg-green-500/10 text-green-500' : attendee.status === 'ABSENT' ? 'bg-red-500/10 text-red-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                        {attendee.status}
+                      </span>
+                    </td>
+                    <td className="px-3.5 py-3 text-[12.5px] text-text-muted">{Math.round((attendee.total_time_seconds || 0) / 60)} mins</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ) : (
+        <div className="p-8 text-center text-text-muted">Failed to load attendance.</div>
+      )}
     </div>
   );
 }
 
 function RequestsScreen() {
   const [showModal, setShowModal] = useState(false);
+  const { data: requestsRes, isLoading } = useGetBatchRequestsMy();
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const requests = (requestsRes?.data as any)?.data || [];
 
   return (
     <div className="space-y-5">
@@ -332,15 +440,45 @@ function RequestsScreen() {
         </button>
       </div>
 
-      <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
-          <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
-        </svg>
-        <p className="text-[13px] text-text-muted">No requests submitted yet.</p>
-      </div>
+      {isLoading ? (
+        <div className="p-8 text-center text-text-muted">Loading requests...</div>
+      ) : requests.length === 0 ? (
+        <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
+            <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-[13px] text-text-muted">No requests submitted yet.</p>
+        </div>
+      ) : (
+        <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-default">
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Batch Code</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Type</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Reason</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {requests.map((req: any, i: number) => (
+                <tr key={req.id} className={`hover:bg-bg-primary transition-colors ${i < requests.length - 1 ? 'border-b border-border-default' : ''}`}>
+                  <td className="px-3.5 py-3 text-[12.5px] text-brand font-mono">{req.batch_code}</td>
+                  <td className="px-3.5 py-3 text-[12.5px] text-text-primary capitalize">{req.change_type}</td>
+                  <td className="px-3.5 py-3 text-[12.5px] text-text-muted truncate max-w-xs">{req.reason}</td>
+                  <td className="px-3.5 py-3">
+                    <RequestStatusBadge status={req.status as RequestStatus} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showModal && (
-        <ChangeModal batchCode="—" onClose={() => setShowModal(false)} />
+        <ChangeModal batchCode="" onClose={() => setShowModal(false)} />
       )}
     </div>
   );

@@ -30,6 +30,10 @@ import type {
   GetAdminCourses500,
   GetAdminUsers200,
   GetAdminUsers403,
+  PostAdminCourses201,
+  PostAdminCourses400,
+  PostAdminCourses403,
+  PostAdminCoursesBody,
   PostAdminUpgradeRole200,
   PostAdminUpgradeRole400,
   PostAdminUpgradeRole403,
@@ -367,3 +371,95 @@ export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCou
 
 
 
+/**
+ * Create a new course (Admin only)
+ */
+export type postAdminCoursesResponse201 = {
+  data: PostAdminCourses201
+  status: 201
+}
+
+export type postAdminCoursesResponse400 = {
+  data: PostAdminCourses400
+  status: 400
+}
+
+export type postAdminCoursesResponse403 = {
+  data: PostAdminCourses403
+  status: 403
+}
+    
+export type postAdminCoursesResponseSuccess = (postAdminCoursesResponse201) & {
+  headers: Headers;
+};
+export type postAdminCoursesResponseError = (postAdminCoursesResponse400 | postAdminCoursesResponse403) & {
+  headers: Headers;
+};
+
+export type postAdminCoursesResponse = (postAdminCoursesResponseSuccess | postAdminCoursesResponseError)
+
+export const getPostAdminCoursesUrl = () => {
+
+
+  
+
+  return `/admin/courses`
+}
+
+export const postAdminCourses = async (postAdminCoursesBody: PostAdminCoursesBody, options?: RequestInit): Promise<postAdminCoursesResponse> => {
+  
+  return customFetch<postAdminCoursesResponse>(getPostAdminCoursesUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postAdminCoursesBody,)
+  }
+);}
+
+
+
+
+export const getPostAdminCoursesMutationOptions = <TError = PostAdminCourses400 | PostAdminCourses403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminCourses>>, TError,{data: PostAdminCoursesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAdminCourses>>, TError,{data: PostAdminCoursesBody}, TContext> => {
+
+const mutationKey = ['postAdminCourses'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAdminCourses>>, {data: PostAdminCoursesBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAdminCourses(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAdminCoursesMutationResult = NonNullable<Awaited<ReturnType<typeof postAdminCourses>>>
+    export type PostAdminCoursesMutationBody = PostAdminCoursesBody
+    export type PostAdminCoursesMutationError = PostAdminCourses400 | PostAdminCourses403
+
+    export const usePostAdminCourses = <TError = PostAdminCourses400 | PostAdminCourses403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminCourses>>, TError,{data: PostAdminCoursesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAdminCourses>>,
+        TError,
+        {data: PostAdminCoursesBody},
+        TContext
+      > => {
+      return useMutation(getPostAdminCoursesMutationOptions(options), queryClient);
+    }
+    

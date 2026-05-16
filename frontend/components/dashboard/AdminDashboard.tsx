@@ -10,6 +10,10 @@ import {
   useGetAdminDashboard,
   useGetAdminBatches,
   useGetAdminCourses,
+  usePostAdminCourses,
+  usePostBatch,
+  usePostAdminUpgradeRole,
+  usePatchBatchId,
   type AdminDashboard as AdminDashboardData,
   type AdminBatch,
   type AdminCourse,
@@ -48,8 +52,52 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
     batchCode: "", batchSize: "", startsOn: "", mentor: "",
   });
 
+  const { mutateAsync: createCourse } = usePostAdminCourses();
+  const { mutateAsync: createBatch } = usePostBatch();
+
   const update = (field: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handlePublish = async () => {
+    try {
+      const courseRes = await createCourse({
+        data: {
+          name: form.title,
+          description: form.description,
+          time_allotted_in_weeks: parseInt(form.weeks, 10),
+        }
+      });
+      // The openapi structure returns an object with a data property which contains the course
+      // Let's grab the id safely
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const courseId = (courseRes.data as any).id;
+
+      if (!courseId) {
+        throw new Error("Course creation failed: no ID returned");
+      }
+
+      await createBatch({
+        data: {
+          batch_name: `${form.title} - ${form.batchCode}`,
+          batch_code: form.batchCode,
+          description: form.description,
+          total_classes: parseInt(form.weeks, 10) * parseInt(form.sessionsPerWeek, 10),
+          batch_start_date: new Date(form.startsOn).toISOString(),
+          batch_end_date: new Date(new Date(form.startsOn).getTime() + parseInt(form.weeks, 10) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          estimated_end_date: new Date(new Date(form.startsOn).getTime() + parseInt(form.weeks, 10) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          mentor_ids: form.mentor ? [form.mentor] : [],
+          course_ids: [courseId],
+        }
+      });
+
+      onClose();
+      // ideally reload page or invalidate queries, but doing a simple location.reload for now
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to create course and batch");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -171,7 +219,7 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
                 Next: batch
               </button>
             ) : (
-              <button type="button" onClick={onClose}
+              <button type="button" onClick={handlePublish}
                 className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
                 style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
                 Publish course
@@ -302,6 +350,26 @@ function CatalogScreen({
     courses[0]?.id ?? null
   );
 
+  const { mutateAsync: patchBatch } = usePatchBatchId();
+
+  const handleEditBatch = async (batchId: string, currentName: string) => {
+    const newName = window.prompt("Enter new batch name:", currentName);
+    if (!newName || newName === currentName) return;
+
+    try {
+      await patchBatch({
+        id: batchId,
+        data: {
+          batch_name: newName,
+        }
+      });
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to edit batch");
+    }
+  };
+
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) ?? null;
   const courseBatches = selectedCourseId
     ? batches.filter((b) => b.course_ids.includes(selectedCourseId))
@@ -393,7 +461,7 @@ function CatalogScreen({
                     </td>
                     <td className="px-3.5 py-3 text-[12.5px] text-text-primary">{batch.total_classes}</td>
                     <td className="px-3.5 py-3">
-                      <button type="button" className="text-[11.5px] text-text-muted hover:text-text-secondary transition-colors">Edit</button>
+                      <button type="button" onClick={() => handleEditBatch(batch.id, batch.batch_name)} className="text-[11.5px] text-text-muted hover:text-text-secondary transition-colors">Edit</button>
                     </td>
                   </tr>
                 ))}
@@ -407,12 +475,31 @@ function CatalogScreen({
 }
 
 function PeopleScreen({
+  allUsers,
   mentors,
   batches,
 }: {
+  allUsers: AdminUser[];
   mentors: AdminUser[];
   batches: AdminBatch[];
 }) {
+  const { mutateAsync: upgradeRole } = usePostAdminUpgradeRole();
+
+  const handleRoleChange = async (userId: string, newRole: "ADMIN" | "MENTOR" | "STUDENT") => {
+    try {
+      await upgradeRole({
+        data: {
+          user_id: userId,
+          new_role: newRole,
+        }
+      });
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to upgrade role");
+    }
+  };
+
   return (
     <div className="space-y-5">
       <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">People & roles</h2>
@@ -478,12 +565,48 @@ function PeopleScreen({
         )}
       </div>
 
-      {/* Pending role changes */}
+      {/* User roles */}
       <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border-default">
-          <p className="text-[13px] font-semibold text-white">Pending role changes</p>
+          <p className="text-[13px] font-semibold text-white">User roles management</p>
         </div>
-        <div className="p-8 text-center text-text-muted text-[13px]">No pending role changes.</div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-default">
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">User</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Email</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Current Role</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Change Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allUsers.map((user, i) => (
+                <tr key={user.id} className={`hover:bg-bg-primary transition-colors ${i < allUsers.length - 1 ? "border-b border-border-default" : ""}`}>
+                  <td className="px-3.5 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar name={user.full_name} size="sm" />
+                      <span className="text-[12.5px] text-text-primary">{user.full_name}</span>
+                    </div>
+                  </td>
+                  <td className="px-3.5 py-3 text-[12.5px] text-text-muted">{user.email}</td>
+                  <td className="px-3.5 py-3 text-[12.5px] font-mono text-brand">{user.role}</td>
+                  <td className="px-3.5 py-3">
+                    <select
+                      className="bg-bg-primary border border-border-default rounded-md px-2 py-1 text-[12px] text-text-primary outline-none focus:border-border-focus transition-colors"
+                      value={user.role}
+                      onChange={(e) => handleRoleChange(user.id, e.target.value as "ADMIN" | "MENTOR" | "STUDENT")}
+                    >
+                      <option value="STUDENT">Student</option>
+                      <option value="MENTOR">Mentor</option>
+                      <option value="ADMIN">Admin</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -588,7 +711,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           />
         )}
         {activeTab === "people" && (
-          <PeopleScreen mentors={mentors} batches={batches} />
+          <PeopleScreen allUsers={allUsers} mentors={mentors} batches={batches} />
         )}
         {activeTab === "audit" && <AuditLogScreen />}
       </AppShell>
