@@ -106,8 +106,7 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
       queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
       onClose();
     } catch (e) {
-      console.error(e);
-      alert("Failed to create course and batch");
+      toast.error(e instanceof Error ? e.message : "Failed to create course and batch");
     }
   };
 
@@ -582,9 +581,9 @@ function PeopleScreen({
     try {
       await assignBatch({ userId, batchId });
       queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
+      toast.success("Student assigned to batch");
     } catch (e) {
-      console.error(e);
-      alert("Failed to assign batch");
+      toast.error(e instanceof Error ? e.message : "Failed to assign batch");
     } finally {
       setAssigningStudent(null);
     }
@@ -601,8 +600,7 @@ function PeopleScreen({
       await patchBatch({ id: batch.id, data: { mentor_ids: newMentorIds } });
       queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
     } catch (e) {
-      console.error(e);
-      alert("Failed to update batch assignment");
+      toast.error(e instanceof Error ? e.message : "Failed to update batch assignment");
     } finally {
       setTogglingCell(null);
     }
@@ -614,9 +612,9 @@ function PeopleScreen({
       await doDeleteUser(user.id);
       queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
       queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
+      toast.success(`Deleted ${user.full_name ?? user.username ?? "user"}`);
     } catch (e) {
-      console.error(e);
-      alert("Failed to delete user");
+      toast.error(e instanceof Error ? e.message : "Failed to delete user");
     } finally {
       setDeletingUserId(null);
       setConfirmDeleteUser(null);
@@ -628,9 +626,9 @@ function PeopleScreen({
       await upgradeRole({ data: { user_id: userId, new_role: newRole } });
       queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
       queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
+      toast.success(`Role updated to ${newRole}`);
     } catch (e) {
-      console.error(e);
-      alert("Failed to upgrade role");
+      toast.error(e instanceof Error ? e.message : "Failed to upgrade role");
     }
   };
 
