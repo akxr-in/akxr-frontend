@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "./AppShell";
@@ -339,17 +339,18 @@ function AttendanceScreen() {
   const meetings: any[] = (meetingsRes as any)?.data?.data || [];
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>("");
 
+  useEffect(() => {
+    if (meetings.length > 0 && !selectedMeetingId) {
+      setSelectedMeetingId(meetings[0].id);
+    }
+  }, [meetings, selectedMeetingId]);
+
   const { data: attendanceRes, isLoading: attendanceLoading } = useGetMeetingIdAttendance(
     selectedMeetingId,
     { query: { enabled: !!selectedMeetingId } }
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const attendanceData: any = (attendanceRes as any)?.data?.data;
-
-  // Set default selected meeting once loaded
-  if (meetings.length > 0 && !selectedMeetingId) {
-    setSelectedMeetingId(meetings[0].id);
-  }
 
   return (
     <div className="space-y-5">
