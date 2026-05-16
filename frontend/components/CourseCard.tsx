@@ -31,7 +31,7 @@ export interface CourseCardProps {
 
 export function CourseCard({ course, status, mentorName, courseName }: CourseCardProps) {
     const { label, variant } = statusConfig[status];
-    const totalModules = course.lesson_ids.length;
+    const totalModules = course.modules.length;
 
     const completedModules =
         status === "ongoing" ? Math.floor(totalModules / 2) : totalModules;
@@ -63,7 +63,7 @@ export function CourseCard({ course, status, mentorName, courseName }: CourseCar
                 </div>
 
                 <h3 className="text-base font-semibold text-text-primary">
-                    {course.name}
+                    {course.title}
                 </h3>
                 <p className="text-text-muted text-sm mt-0.5">
                     {courseName} &bull; by {mentorName}
@@ -90,9 +90,9 @@ export function CourseCard({ course, status, mentorName, courseName }: CourseCar
                                 </span>
                                 <span className="flex items-center gap-1">
                                     <ClockIcon size={14} />
-                                    {course.time_allotted_in_weeks > 0
-                                        ? `${course.time_allotted_in_weeks}h remaining`
-                                        : "6h remaining"}
+                                    {totalModules - completedModules > 0
+                                        ? `${totalModules - completedModules} module${totalModules - completedModules === 1 ? "" : "s"} left`
+                                        : "Last module"}
                                 </span>
                             </div>
                         </div>

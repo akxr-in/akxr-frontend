@@ -152,6 +152,7 @@ interface OverviewScreenProps {
   isLoading: boolean;
   onOpenBatch: () => void;
   onJoinLive: (rtkRoomId: string) => void;
+  onGoToLMS: () => void;
 }
 
 function OverviewScreen({
@@ -161,6 +162,7 @@ function OverviewScreen({
   isLoading,
   onOpenBatch,
   onJoinLive,
+  onGoToLMS,
 }: OverviewScreenProps) {
   if (isLoading) return <LoadingState />;
 
@@ -210,6 +212,14 @@ function OverviewScreen({
                 Join live session
               </button>
             )}
+            <button
+              type="button"
+              onClick={onGoToLMS}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
+              style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+            >
+              Continue Learning (LMS)
+            </button>
             <button
               type="button"
               onClick={onOpenBatch}
@@ -533,6 +543,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           isLoading={isLoading}
           onOpenBatch={() => setActiveTab("batch")}
           onJoinLive={handleJoinLive}
+          onGoToLMS={() => router.push("/lms/student")}
         />
       )}
       {activeTab === "batch" && (

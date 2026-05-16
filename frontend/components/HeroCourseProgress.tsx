@@ -39,7 +39,7 @@ export function HeroCourseProgress({
                         Course Progress
                     </span>
                     <h2 className="text-xl font-bold text-text-primary mt-1">
-                        {course.name}
+                        {course.title}
                     </h2>
                     <p className="text-text-muted text-sm mt-0.5">
                         {courseName} &bull; by {mentorName}
@@ -65,9 +65,9 @@ export function HeroCourseProgress({
                         </span>
                         <span className="flex items-center gap-1">
                             <ClockIcon size={14} />
-                            {course.time_allotted_in_weeks > 0
-                                ? `${course.time_allotted_in_weeks * 60} min remaining`
-                                : "45 min remaining"}
+                            {totalModules - completedModules > 0
+                                ? `${totalModules - completedModules} module${totalModules - completedModules === 1 ? "" : "s"} left`
+                                : "Last module"}
                         </span>
                     </div>
 

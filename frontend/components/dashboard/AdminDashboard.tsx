@@ -34,6 +34,8 @@ import {
 import { useGetAdminUsers, getGetAdminUsersQueryKey } from "@akxr/api";
 import toast from "react-hot-toast";
 
+import { useRouter } from "next/navigation";
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -75,11 +77,11 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
   const handlePublish = async () => {
     try {
       const courseRes = await createCourse({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: {
-          name: form.title,
+          title: form.title,
           description: form.description,
-          time_allotted_in_weeks: parseInt(form.weeks, 10),
-        }
+        } as any,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const courseId = (courseRes.data as any).data?.id;
@@ -492,7 +494,7 @@ function CatalogScreen({
       await doDeleteCourse(confirmDeleteCourse.id);
       queryClient.invalidateQueries({ queryKey: getAdminCoursesQueryKey() });
       queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
-      toast.success(`Deleted course "${confirmDeleteCourse.name}"`);
+      toast.success(`Deleted course "${confirmDeleteCourse.title}"`);
       if (selectedCourseId === confirmDeleteCourse.id) {
         setSelectedCourseId(courses.find((c) => c.id !== confirmDeleteCourse.id)?.id ?? null);
       }
@@ -540,16 +542,16 @@ function CatalogScreen({
                       className="w-full text-left"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-[12.5px] text-text-primary mt-0.5">{course.name}</p>
+                        <p className="text-[12.5px] text-text-primary mt-0.5">{course.title}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.time_allotted_in_weeks}w</span>
+                        <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.modules.length}M</span>
                         <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{batchCount}B</span>
                       </div>
                     </button>
                     <button
                       type="button"
-                      aria-label={`Delete ${course.name}`}
+                      aria-label={`Delete ${course.title}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         setConfirmDeleteCourse(course);
@@ -571,7 +573,7 @@ function CatalogScreen({
         <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border-default">
             <p className="text-[13px] font-semibold text-white">
-              Batches{selectedCourse ? ` — ${selectedCourse.name}` : ""}
+              Batches{selectedCourse ? ` — ${selectedCourse.title}` : ""}
             </p>
           </div>
           {courseBatches.length === 0 ? (
@@ -635,7 +637,7 @@ function CatalogScreen({
             </div>
             <div className="p-5 space-y-3">
               <p className="text-[13px] text-text-secondary">
-                Permanently delete <span className="font-semibold text-white">{confirmDeleteCourse.name}</span>? This action cannot be undone.
+                Permanently delete <span className="font-semibold text-white">{confirmDeleteCourse.title}</span>? This action cannot be undone.
               </p>
               {linkedBatchCount > 0 && (
                 <p className="text-[12px] text-error border border-error/40 bg-error/10 rounded-md px-3 py-2">
@@ -987,7 +989,7 @@ function AuditLogScreen() {
 
       <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
         <div className="flex items-start gap-3.5 px-4 py-3 border-b border-border-default">
-          <span className="flex-shrink-0">
+          <span className="shrink-0">
             <span className="w-2 h-2 rounded-full inline-block mr-2" style={{ backgroundColor: auditDotColor.system }} />
           </span>
           <p className="text-[12px] text-text-muted">Audit log not yet available from backend.</p>
@@ -1013,6 +1015,7 @@ const ADMIN_TABS = [
 ];
 
 export function AdminDashboard({ user }: AdminDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const firstName = user.full_name.split(" ")[0];
@@ -1027,7 +1030,9 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
   const courses: AdminCourse[] = coursesRes?.data?.data ?? [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allUsers: AdminUser[] = ((usersRes?.data as any)?.data as unknown as AdminUser[]) ?? [];
-  const mentors: AdminUser[] = allUsers.filter((u) => u.role === "MENTOR");
+  const mentors: AdminUser[] = allUsers.filter(
+    (u) => u.role === "MENTOR" || u.role === "MENTOR_EDITOR"
+  );
 
   const getMentorName = (id: string) =>
     allUsers.find((u) => u.id === id)?.full_name ?? "—";
@@ -1043,7 +1048,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       >
         {activeTab === "overview" && (
           <OverviewScreen
-            onNewCourse={() => setShowCreateModal(true)}
+            onNewCourse={() => router.push("/lms/admin")}
             firstName={firstName}
             dashData={dashData}
             dashLoading={dashLoading}
@@ -1053,7 +1058,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
         )}
         {activeTab === "catalog" && (
           <CatalogScreen
-            onNewCourse={() => setShowCreateModal(true)}
+            onNewCourse={() => router.push("/lms/admin")}
             courses={courses}
             batches={batches}
             getMentorName={getMentorName}

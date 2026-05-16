@@ -12,5 +12,6 @@ export type PostAdminUpgradeRoleBodyNewRole = typeof PostAdminUpgradeRoleBodyNew
 export const PostAdminUpgradeRoleBodyNewRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

@@ -12,5 +12,6 @@ export type UsersListResponseDataItemRole = typeof UsersListResponseDataItemRole
 export const UsersListResponseDataItemRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

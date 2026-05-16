@@ -12,5 +12,6 @@ export type GetMeetingIdParticipants200DataItemRole = typeof GetMeetingIdPartici
 export const GetMeetingIdParticipants200DataItemRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

@@ -126,7 +126,7 @@ export function CrudBatchModal({ open, onClose, onSuccess, batch }: CreateBatchM
             : [];
     const courseOptions = allCourses.map((c) => ({
         value: c.id,
-        label: c.name,
+        label: c.title,
     }));
 
     // Close on overlay click

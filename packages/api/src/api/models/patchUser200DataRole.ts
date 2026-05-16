@@ -12,5 +12,6 @@ export type PatchUser200DataRole = typeof PatchUser200DataRole[keyof typeof Patc
 export const PatchUser200DataRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

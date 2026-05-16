@@ -12,5 +12,6 @@ export type UserResponseRole = typeof UserResponseRole[keyof typeof UserResponse
 export const UserResponseRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

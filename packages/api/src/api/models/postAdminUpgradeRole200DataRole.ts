@@ -12,5 +12,6 @@ export type PostAdminUpgradeRole200DataRole = typeof PostAdminUpgradeRole200Data
 export const PostAdminUpgradeRole200DataRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

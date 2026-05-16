@@ -96,7 +96,7 @@ export default function StudentLmsPage() {
     const isLoading = isLoadingUser || isLoadingBatch || isLoadingCourses;
 
     // Hero module counts — lesson-level completion is not tracked by the backend yet
-    const heroTotalModules = currentCourse ? currentCourse.lesson_ids.length : 0;
+    const heroTotalModules = currentCourse ? currentCourse.modules.length : 0;
     const heroCompletedModules = 0;
 
     const batchName = batch?.batch_name ?? "Course";
