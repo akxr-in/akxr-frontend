@@ -49,5 +49,7 @@ export {
   getAdminBatches, getAdminBatchesQueryKey, useGetAdminBatches,
   getAdminCourses, getAdminCoursesQueryKey, useGetAdminCourses,
   updateMeetingAttendance, useUpdateMeetingAttendance,
+  assignStudentToBatch, useAssignStudentToBatch,
+  deleteBatch, useDeleteBatch,
   type AttendanceStatus,
 } from './api/custom-hooks';

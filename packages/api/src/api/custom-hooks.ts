@@ -273,6 +273,31 @@ export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown
   })
 }
 
+// ── DELETE /batch/:id ─────────────────────────────────────────────────────────
+
+export const deleteBatch = (id: string): Promise<void> =>
+  customFetch<void>(`${BASE}/batch/${id}`, { method: 'DELETE' })
+
+export const useDeleteBatch = (): UseMutationResult<void, Error, string> =>
+  useMutation({ mutationFn: (id: string) => deleteBatch(id) })
+
+// ── Assign student to batch ──────────────────────────────────────────────────
+
+export const assignStudentToBatch = (userId: string, batchId: string): Promise<void> =>
+  customFetch<void>(`/admin/users/${userId}/assign-batch`, {
+    method: 'POST',
+    body: JSON.stringify({ batch_id: batchId }),
+  })
+
+export const useAssignStudentToBatch = (): UseMutationResult<
+  void,
+  Error,
+  { userId: string; batchId: string }
+> =>
+  useMutation({
+    mutationFn: ({ userId, batchId }) => assignStudentToBatch(userId, batchId),
+  })
+
 // ── Attendance override ───────────────────────────────────────────────────────
 
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'PARTIALLY_PRESENT'
