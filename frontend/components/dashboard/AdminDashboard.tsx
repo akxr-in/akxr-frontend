@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CrudBatchModal } from "../CrudBatchModal";
+import { ScheduleClassModal } from "../ScheduleClassModal";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -373,6 +374,8 @@ function OverviewScreen({
   batches: AdminBatch[];
   getMentorName: (id: string) => string;
 }) {
+  const [schedulingBatchId, setSchedulingBatchId] = useState<string | null>(null);
+
   const handleExport = () => {
     if (batches.length === 0) {
       toast.error("No batches to export");
@@ -434,6 +437,7 @@ function OverviewScreen({
                   <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Start</th>
                   <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">End</th>
                   <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Sessions</th>
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -447,6 +451,9 @@ function OverviewScreen({
                     <td className="px-3.5 py-2.5 font-mono text-[11px] text-text-muted">{fmtDate(batch.batch_start_date)}</td>
                     <td className="px-3.5 py-2.5 font-mono text-[11px] text-text-muted">{fmtDate(batch.batch_end_date)}</td>
                     <td className="px-3.5 py-2.5 text-[12px] text-text-secondary">{batch.total_classes}</td>
+                    <td className="px-3.5 py-2.5">
+                      <button type="button" onClick={() => setSchedulingBatchId(batch.id)} className="text-[11.5px] text-brand hover:opacity-80 transition-opacity">Schedule class</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -457,6 +464,16 @@ function OverviewScreen({
         {/* Approval inbox */}
         <ApprovalInbox />
       </div>
+
+      <ScheduleClassModal
+        open={!!schedulingBatchId}
+        batchId={schedulingBatchId ?? ""}
+        onClose={() => setSchedulingBatchId(null)}
+        onSuccess={() => {
+          toast.success("Class scheduled");
+          setSchedulingBatchId(null);
+        }}
+      />
     </div>
   );
 }
@@ -478,6 +495,7 @@ function CatalogScreen({
   );
   const [editingBatch, setEditingBatch] = useState<AdminBatch | null>(null);
   const [confirmDeleteCourse, setConfirmDeleteCourse] = useState<AdminCourse | null>(null);
+  const [schedulingBatchId, setSchedulingBatchId] = useState<string | null>(null);
   const { mutateAsync: doDeleteCourse, isPending: isDeletingCourse } = useDeleteAdminCourse();
 
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) ?? null;
@@ -609,7 +627,10 @@ function CatalogScreen({
                     </td>
                     <td className="px-3.5 py-3 text-[12.5px] text-text-primary">{batch.total_classes}</td>
                     <td className="px-3.5 py-3">
-                      <button type="button" onClick={() => setEditingBatch(batch)} className="text-[11.5px] text-text-muted hover:text-text-secondary transition-colors">Edit</button>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setSchedulingBatchId(batch.id)} className="text-[11.5px] text-brand hover:opacity-80 transition-opacity">Schedule class</button>
+                        <button type="button" onClick={() => setEditingBatch(batch)} className="text-[11.5px] text-text-muted hover:text-text-secondary transition-colors">Edit</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -626,6 +647,16 @@ function CatalogScreen({
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
           setEditingBatch(null);
+        }}
+      />
+
+      <ScheduleClassModal
+        open={!!schedulingBatchId}
+        batchId={schedulingBatchId ?? ""}
+        onClose={() => setSchedulingBatchId(null)}
+        onSuccess={() => {
+          toast.success("Class scheduled");
+          setSchedulingBatchId(null);
         }}
       />
 
