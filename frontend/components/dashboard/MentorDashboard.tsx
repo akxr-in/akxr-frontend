@@ -552,18 +552,25 @@ function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
       </div>
 
       {meetingsLoading ? (
-        <div className="flex justify-center p-8 text-text-muted">Loading meetings...</div>
+        <div className="flex items-center justify-center gap-2 p-8 text-text-muted text-[13px]">
+          <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+          Loading meetings…
+        </div>
       ) : meetings.length === 0 ? (
         <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted" aria-hidden="true">
             <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-[13px] text-text-muted">
-            No meetings available.
+          <p className="text-[13px] text-text-secondary">No meetings to mark yet</p>
+          <p className="text-[11.5px] text-text-muted max-w-xs">
+            Schedule a class from your batch list — attendance will appear here once students join.
           </p>
         </div>
       ) : attendanceLoading ? (
-        <div className="flex justify-center p-8 text-text-muted">Loading attendance...</div>
+        <div className="flex items-center justify-center gap-2 p-8 text-text-muted text-[13px]">
+          <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+          Loading attendance…
+        </div>
       ) : attendanceData ? (
         <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border-default">
@@ -663,7 +670,10 @@ function RequestsScreen({ batches }: { batches: MentorBatch[] }) {
       </div>
 
       {isLoading ? (
-        <div className="p-8 text-center text-text-muted">Loading requests...</div>
+        <div className="flex items-center justify-center gap-2 p-8 text-text-muted text-[13px]">
+          <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+          Loading requests…
+        </div>
       ) : requests.length === 0 ? (
         <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted">

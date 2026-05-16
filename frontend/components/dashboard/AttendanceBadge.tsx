@@ -4,6 +4,13 @@ interface AttendanceBadgeProps {
   status: AttStatus;
 }
 
+const statusTooltip: Record<AttStatus, string> = {
+  present: 'Present for the full session',
+  partial: 'Joined but missed part of the session',
+  absent: 'Did not join the session',
+  live: 'Session is happening right now',
+};
+
 const statusConfig: Record<AttStatus, {
   bg: string;
   text: string;
@@ -46,12 +53,15 @@ export function AttendanceBadge({ status }: AttendanceBadgeProps) {
 
   return (
     <span
+      title={statusTooltip[status]}
+      aria-label={statusTooltip[status]}
       className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border"
       style={{ backgroundColor: cfg.bg, color: cfg.text, borderColor: cfg.border }}
     >
       <span
         className={status === 'live' ? 'w-1.5 h-1.5 rounded-full animate-pulse' : 'w-1.5 h-1.5 rounded-full'}
         style={{ backgroundColor: cfg.dotColor }}
+        aria-hidden="true"
       />
       {cfg.label}
     </span>

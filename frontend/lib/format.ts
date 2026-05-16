@@ -42,4 +42,15 @@ export function formatWeekday(input: string | Date | null | undefined): string {
     return d.toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
 }
 
+/** Calendar tile parts — month abbrev on top, day number below. */
+export function formatCalendarTile(input: string | Date | null | undefined): { month: string; day: string } {
+    if (!input) return { month: "—", day: "—" };
+    const d = input instanceof Date ? input : new Date(input);
+    if (isNaN(d.getTime())) return { month: "—", day: "—" };
+    return {
+        month: d.toLocaleDateString(LOCALE, { month: "short" }).toUpperCase(),
+        day: d.toLocaleDateString(LOCALE, { day: "numeric" }),
+    };
+}
+
 void TZ_NOTE;

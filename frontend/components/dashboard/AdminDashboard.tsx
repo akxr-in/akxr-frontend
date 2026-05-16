@@ -44,13 +44,6 @@ import { useRouter } from "next/navigation";
 
 const fmtDate = (iso: string | null | undefined) => fmtDateUtil(iso);
 
-type AuditRole = "mentor" | "admin" | "system";
-
-const auditDotColor: Record<AuditRole, string> = {
-  mentor: "#678DE5",
-  admin: "#C9963A",
-  system: "#737373",
-};
 
 // ---------------------------------------------------------------------------
 // Create course modal
@@ -287,7 +280,10 @@ function ApprovalInbox() {
         )}
       </div>
       {isLoading ? (
-        <div className="p-8 text-center text-text-muted text-[13px]">Loading…</div>
+        <div className="p-8 text-center text-text-muted text-[13px] flex items-center justify-center gap-2">
+          <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+          Loading requests…
+        </div>
       ) : pending.length === 0 ? (
         <div className="p-8 text-center text-text-muted text-[13px]">No pending requests.</div>
       ) : (
@@ -997,37 +993,21 @@ function PeopleScreen({
   );
 }
 
-type AuditFilter = "all" | AuditRole;
-
 function AuditLogScreen() {
-  const [filter, setFilter] = useState<AuditFilter>("all");
-  const filters: AuditFilter[] = ["all", "admin", "mentor", "system"];
-
   return (
     <div className="space-y-5">
       <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">Audit log</h2>
-
-      <div className="flex items-center gap-1.5">
-        {filters.map((f) => (
-          <button key={f} type="button" onClick={() => setFilter(f)}
-            className="px-3 py-1.5 rounded-md font-mono text-[10.5px] uppercase tracking-[0.07em] border transition-colors"
-            style={
-              filter === f
-                ? { background: "rgba(201,150,58,0.15)", color: "#C9963A", borderColor: "rgba(201,150,58,0.3)" }
-                : { background: "transparent", color: "#737373", borderColor: "#333" }
-            }>
-            {f}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
-        <div className="flex items-start gap-3.5 px-4 py-3 border-b border-border-default">
-          <span className="shrink-0">
-            <span className="w-2 h-2 rounded-full inline-block mr-2" style={{ backgroundColor: auditDotColor.system }} />
-          </span>
-          <p className="text-[12px] text-text-muted">Audit log not yet available from backend.</p>
+      <div className="bg-bg-secondary border border-border-default rounded-lg p-12 flex flex-col items-center justify-center text-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-text-muted" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
         </div>
+        <p className="text-[13px] text-text-secondary">Audit log coming soon</p>
+        <p className="text-[11.5px] text-text-muted max-w-xs">
+          Role changes, batch edits, and meeting lifecycle events will appear here once tracking lands on the backend.
+        </p>
       </div>
     </div>
   );

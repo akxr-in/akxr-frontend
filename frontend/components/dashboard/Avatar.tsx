@@ -21,6 +21,9 @@ function getInitials(name: string): string {
 export function Avatar({ name, size = 'md' }: AvatarProps) {
   return (
     <div
+      title={name}
+      aria-label={name}
+      role="img"
       className={`${sizeMap[size]} bg-bg-elevated border border-border-default rounded-full flex items-center justify-center text-text-secondary font-medium flex-shrink-0`}
     >
       {getInitials(name)}

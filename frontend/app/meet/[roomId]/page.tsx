@@ -53,6 +53,16 @@ function MeetingRoom({
     }
   }, [joinedParticipants]);
 
+  // Allow ESC to cancel the "Confirm end" state.
+  useEffect(() => {
+    if (!confirmEnd) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !ending) setConfirmEnd(false);
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [confirmEnd, ending]);
+
   const handleLeave = () => {
     meeting.leaveRoom();
     window.history.back();
@@ -83,16 +93,21 @@ function MeetingRoom({
   };
 
   if (ended) {
+    const totalSeen = joinedUserIds.size;
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 max-w-sm px-6">
           <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-green-400">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-green-400" aria-hidden="true">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-white">Class ended</h2>
-          <p className="text-[#888] text-sm">Attendance has been recorded automatically.</p>
+          <p className="text-[#888] text-sm">
+            {totalSeen > 0
+              ? `Attendance recorded for ${totalSeen} participant${totalSeen === 1 ? "" : "s"}.`
+              : "Attendance has been recorded."}
+          </p>
           <button
             type="button"
             onClick={() => window.history.back()}
@@ -113,9 +128,11 @@ function MeetingRoom({
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse block" />
           <span className="text-white font-medium text-sm">Live class</span>
         </div>
-        <div className="flex gap-1 bg-[#111] rounded-lg p-1">
+        <div className="hidden md:flex gap-1 bg-[#111] rounded-lg p-1" role="tablist" aria-label="Sidebar panel">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "people"}
             onClick={() => setActiveTab("people")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
               activeTab === "people" ? "bg-[#2a2a2a] text-white" : "text-[#666] hover:text-white"
@@ -125,6 +142,8 @@ function MeetingRoom({
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === "chat"}
             onClick={() => setActiveTab("chat")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
               activeTab === "chat" ? "bg-[#2a2a2a] text-white" : "text-[#666] hover:text-white"
@@ -155,8 +174,8 @@ function MeetingRoom({
           <RtkParticipantsAudio meeting={meeting} style={{ display: "none" }} />
         </div>
 
-        {/* Sidebar */}
-        <aside className="w-72 border-l border-[#2a2a2a] bg-[#1a1a1a] overflow-hidden flex flex-col">
+        {/* Sidebar — hides on small screens so the video grid stays usable on mobile */}
+        <aside className="hidden md:flex w-72 border-l border-[#2a2a2a] bg-[#1a1a1a] overflow-hidden flex-col">
           {activeTab === "chat" ? (
             <RtkChat
               meeting={meeting}

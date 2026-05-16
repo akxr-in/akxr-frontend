@@ -19,7 +19,10 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <Spinner size="lg" />
+        <div className="flex flex-col items-center gap-3 text-text-muted">
+          <Spinner size="lg" />
+          <p className="text-[13px]">Loading your dashboard…</p>
+        </div>
       </div>
     );
   }

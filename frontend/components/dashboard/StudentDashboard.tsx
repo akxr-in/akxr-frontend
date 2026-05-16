@@ -13,7 +13,7 @@ import {
   type BatchWithStats,
   type AttendanceWithMeeting,
 } from "@akxr/api";
-import { formatDate as fmtDateUtil } from "@/lib/format";
+import { formatDate as fmtDateUtil, formatCalendarTile } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,6 +24,7 @@ type SessionState = "done" | "today" | "upcoming";
 interface SessionEntry {
   idx: number;
   date: string;
+  isoStart: string;
   title: string;
   state: SessionState;
   myAtt: AttStatus | null;
@@ -97,6 +98,7 @@ function deriveSessions(
     return {
       idx: i + 1,
       date: fmtDate(meeting.scheduled_start_time),
+      isoStart: meeting.scheduled_start_time,
       title: meeting.title,
       state,
       myAtt,
@@ -317,14 +319,16 @@ function OverviewScreen({
             {upcomingPreview.length === 0 ? (
               <p className="px-2 py-4 text-[12px] text-text-muted text-center">No upcoming sessions.</p>
             ) : (
-              upcomingPreview.map((session) => (
+              upcomingPreview.map((session) => {
+                const tile = formatCalendarTile(session.isoStart);
+                return (
                 <div
                   key={session.idx}
                   className="flex items-start gap-2.5 px-2 py-2 rounded-md hover:bg-bg-elevated transition-colors"
                 >
                   <div className="w-8 text-center flex-shrink-0">
-                    <p className="font-mono text-[9px] text-text-muted">{session.date.split(" ")[0].toUpperCase()}</p>
-                    <p className="text-[12px] font-semibold text-text-primary">{session.date.split(" ")[1]}</p>
+                    <p className="font-mono text-[9px] text-text-muted">{tile.month}</p>
+                    <p className="text-[12px] font-semibold text-text-primary">{tile.day}</p>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] text-text-secondary leading-snug truncate">{session.title}</p>
@@ -336,7 +340,8 @@ function OverviewScreen({
                     )}
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
