@@ -20,6 +20,8 @@ export { env } from './lib/env';
 // generated admin module already exports those names. Import directly from
 // '@akxr/api/src/api/custom-hooks' if you need the typed variants.
 export type {
+  BatchStudent,
+  GetBatchStudentsResponse,
   Meeting,
   BatchWithStats,
   AttendanceRecord,
@@ -55,5 +57,7 @@ export {
   updateMeetingAttendance, useUpdateMeetingAttendance,
   assignStudentToBatch, useAssignStudentToBatch,
   deleteBatch, useDeleteBatch,
+  deleteAdminUser, useDeleteAdminUser,
+  getBatchStudents, getBatchStudentsQueryKey, useGetBatchStudents,
   type AttendanceStatus,
 } from './api/custom-hooks';

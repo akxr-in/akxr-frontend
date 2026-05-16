@@ -273,6 +273,46 @@ export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown
   })
 }
 
+// ── GET /batch/:id/students ───────────────────────────────────────────────────
+
+export interface BatchStudent {
+  id: string
+  username: string
+  full_name: string
+  email: string
+  role: 'STUDENT' | 'MENTOR' | 'ADMIN'
+  profile_status: string
+  batch_ids: string[]
+  created_at: string
+}
+
+export interface GetBatchStudentsResponse { data: { data: BatchStudent[]; message: string }; status: 200; headers: Headers }
+
+export const getBatchStudents = (batchId: string): Promise<GetBatchStudentsResponse> =>
+  customFetch<GetBatchStudentsResponse>(`/batch/${batchId}/students`, { method: 'GET' })
+
+export const getBatchStudentsQueryKey = (batchId: string) => ['getBatchStudents', batchId] as const
+
+export function useGetBatchStudents<TData = GetBatchStudentsResponse, TError = unknown>(
+  batchId: string,
+  options?: UseQueryOptions<GetBatchStudentsResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getBatchStudentsQueryKey(batchId),
+    queryFn: () => getBatchStudents(batchId),
+    enabled: !!batchId,
+    ...options,
+  })
+}
+
+// ── DELETE /admin/users/:userId ──────────────────────────────────────────────
+
+export const deleteAdminUser = (userId: string): Promise<void> =>
+  customFetch<void>(`/admin/users/${userId}`, { method: 'DELETE' })
+
+export const useDeleteAdminUser = (): UseMutationResult<void, Error, string> =>
+  useMutation({ mutationFn: (userId: string) => deleteAdminUser(userId) })
+
 // ── DELETE /batch/:id ─────────────────────────────────────────────────────────
 
 export const deleteBatch = (id: string): Promise<void> =>

@@ -17,6 +17,7 @@ import {
   usePostAdminUpgradeRole,
   usePatchBatchId,
   useAssignStudentToBatch,
+  useDeleteAdminUser,
   getAdminBatchesQueryKey,
   getAdminCoursesQueryKey,
   getAdminDashboardQueryKey,
@@ -485,8 +486,11 @@ function PeopleScreen({
   const { mutateAsync: upgradeRole } = usePostAdminUpgradeRole();
   const { mutateAsync: patchBatch } = usePatchBatchId();
   const { mutateAsync: assignBatch, isPending: isAssigning } = useAssignStudentToBatch();
+  const { mutateAsync: doDeleteUser } = useDeleteAdminUser();
   const [togglingCell, setTogglingCell] = useState<string | null>(null);
   const [assigningStudent, setAssigningStudent] = useState<string | null>(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<AdminUser | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const students = allUsers.filter((u) => u.role === "STUDENT");
 
@@ -519,6 +523,21 @@ function PeopleScreen({
       alert("Failed to update batch assignment");
     } finally {
       setTogglingCell(null);
+    }
+  };
+
+  const handleDeleteUser = async (user: AdminUser) => {
+    setDeletingUserId(user.id);
+    try {
+      await doDeleteUser(user.id);
+      queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete user");
+    } finally {
+      setDeletingUserId(null);
+      setConfirmDeleteUser(null);
     }
   };
 
@@ -624,6 +643,7 @@ function PeopleScreen({
                 <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Email</th>
                 <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Current Role</th>
                 <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Change Role</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -648,12 +668,53 @@ function PeopleScreen({
                       <option value="ADMIN">Admin</option>
                     </select>
                   </td>
+                  <td className="px-3.5 py-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteUser(user)}
+                      className="p-1.5 rounded text-error/60 hover:text-error hover:bg-error/10 transition-colors"
+                      title="Delete user"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Delete user confirmation dialog */}
+      {confirmDeleteUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-bg-card border border-border-default rounded-2xl w-full max-w-sm mx-4 p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-text-primary mb-2">Delete user?</h2>
+            <p className="text-text-secondary text-sm mb-6">
+              <span className="font-semibold text-text-primary">{confirmDeleteUser.full_name}</span> will be permanently deleted. This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={deletingUserId === confirmDeleteUser.id}
+                onClick={() => handleDeleteUser(confirmDeleteUser)}
+                className="flex-1 py-2 px-4 rounded-lg bg-error text-white text-sm font-medium hover:bg-error/90 transition-colors disabled:opacity-50"
+              >
+                {deletingUserId === confirmDeleteUser.id ? "Deleting…" : "Delete"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteUser(null)}
+                className="flex-1 py-2 px-4 rounded-lg border border-border-default text-text-primary text-sm font-medium hover:bg-bg-primary transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Student batch enrollment */}
       <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">

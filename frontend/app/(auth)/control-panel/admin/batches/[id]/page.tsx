@@ -6,7 +6,7 @@ import { Button, Input, Spinner, Chip, Dropdown } from "@akxr/design-system";
 import type { DropdownOption } from "@akxr/design-system";
 import {
     useGetBatchId, useGetBatchIdMeetings, useGetMeetingIdParticipants,
-    useGetAdminUsers, getGetBatchIdQueryKey,
+    useGetAdminUsers, useGetBatchStudents, useGetUser, getGetBatchIdQueryKey,
     useUpdateMeetingAttendance,
     type AttendanceStatus as ApiAttendanceStatus,
 } from "@akxr/api";
@@ -50,7 +50,12 @@ export default function BatchDetailPage() {
 
     const { data, isLoading } = useGetBatchId(batchId);
     const { data: meetingsData } = useGetBatchIdMeetings(batchId);
-    const { data: usersData } = useGetAdminUsers();
+    const { data: currentUserData } = useGetUser();
+    const currentRole = currentUserData?.status === 200 ? currentUserData.data.data.role : undefined;
+    const isMentor = currentRole === "MENTOR";
+
+    const { data: adminUsersData } = useGetAdminUsers({ query: { enabled: !isMentor } });
+    const { data: batchStudentsData } = useGetBatchStudents(batchId, { enabled: isMentor });
     const { mutateAsync: updateAttendance } = useUpdateMeetingAttendance();
 
     const [showEditModal, setShowEditModal] = useState(false);
@@ -86,13 +91,19 @@ export default function BatchDetailPage() {
     }, [activeSessionId]);
 
     const batchStudents = useMemo(() => {
-        if (usersData?.status === 200 && Array.isArray(usersData.data?.data)) {
-            return usersData.data.data.filter(
+        if (isMentor) {
+            if (batchStudentsData?.status === 200 && Array.isArray(batchStudentsData.data?.data)) {
+                return batchStudentsData.data.data.filter((u) => u.role === "STUDENT");
+            }
+            return [];
+        }
+        if (adminUsersData?.status === 200 && Array.isArray(adminUsersData.data?.data)) {
+            return adminUsersData.data.data.filter(
                 (u) => u.batch_ids?.includes(batchId) && u.role === "STUDENT"
             );
         }
         return [];
-    }, [usersData, batchId]);
+    }, [isMentor, batchStudentsData, adminUsersData, batchId]);
 
     const { data: participantsData, isLoading: isLoadingParticipants } =
         useGetMeetingIdParticipants(activeSessionId, {
@@ -177,9 +188,11 @@ export default function BatchDetailPage() {
                             Manage attendance and track student progress.
                         </p>
                     </div>
-                    <Button variant="primary" onClick={() => setShowEditModal(true)}>
-                        Edit Batch
-                    </Button>
+                    {!isMentor && (
+                        <Button variant="primary" onClick={() => setShowEditModal(true)}>
+                            Edit Batch
+                        </Button>
+                    )}
                 </div>
 
                 <section className="mb-6 max-w-2xl">
