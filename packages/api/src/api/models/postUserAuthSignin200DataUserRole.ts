@@ -12,5 +12,6 @@ export type PostUserAuthSignin200DataUserRole = typeof PostUserAuthSignin200Data
 export const PostUserAuthSignin200DataUserRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

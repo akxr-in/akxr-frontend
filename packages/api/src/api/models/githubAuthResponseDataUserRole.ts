@@ -12,5 +12,6 @@ export type GithubAuthResponseDataUserRole = typeof GithubAuthResponseDataUserRo
 export const GithubAuthResponseDataUserRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

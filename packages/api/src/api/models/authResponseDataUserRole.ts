@@ -12,5 +12,6 @@ export type AuthResponseDataUserRole = typeof AuthResponseDataUserRole[keyof typ
 export const AuthResponseDataUserRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

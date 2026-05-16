@@ -12,5 +12,6 @@ export type PostUserCompleteProfile200DataRole = typeof PostUserCompleteProfile2
 export const PostUserCompleteProfile200DataRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;
