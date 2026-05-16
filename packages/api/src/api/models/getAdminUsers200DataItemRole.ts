@@ -12,5 +12,6 @@ export type GetAdminUsers200DataItemRole = typeof GetAdminUsers200DataItemRole[k
 export const GetAdminUsers200DataItemRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

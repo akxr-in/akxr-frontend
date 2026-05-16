@@ -12,5 +12,5 @@ export type AttendanceResponseStatus = typeof AttendanceResponseStatus[keyof typ
 export const AttendanceResponseStatus = {
   PRESENT: 'PRESENT',
   ABSENT: 'ABSENT',
-  JOINED_LATE: 'JOINED_LATE',
+  PARTIALLY_PRESENT: 'PARTIALLY_PRESENT',
 } as const;

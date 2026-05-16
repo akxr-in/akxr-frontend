@@ -204,10 +204,28 @@ export interface AdminBatch {
 
 export interface AdminCourse {
   id: string
-  name: string
+  title: string
   description: string
-  time_allotted_in_weeks: number
-  lesson_ids: string[]
+  status: 'DRAFT' | 'PUBLISHED'
+  modules: {
+    id: string
+    title: string
+    sequence_order: number
+    lectures: {
+      id: string
+      title: string
+      sequence_order: number
+      video_url: string | null
+      text_content: string | null
+      assignment_reference: string | null
+      module_id: string
+      created_at: string
+      updated_at: string
+    }[]
+    course_id: string
+    created_at: string
+    updated_at: string
+  }[]
   created_at: string
   updated_at: string
 }
@@ -217,7 +235,7 @@ export interface AdminUser {
   username: string
   full_name: string
   email: string
-  role: 'STUDENT' | 'MENTOR' | 'ADMIN'
+  role: 'STUDENT' | 'MENTOR' | 'MENTOR_EDITOR' | 'ADMIN'
   profile_status: string
   batch_ids: string[]
   created_at: string

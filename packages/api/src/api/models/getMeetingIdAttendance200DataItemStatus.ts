@@ -12,5 +12,5 @@ export type GetMeetingIdAttendance200DataItemStatus = typeof GetMeetingIdAttenda
 export const GetMeetingIdAttendance200DataItemStatus = {
   PRESENT: 'PRESENT',
   ABSENT: 'ABSENT',
-  JOINED_LATE: 'JOINED_LATE',
+  PARTIALLY_PRESENT: 'PARTIALLY_PRESENT',
 } as const;

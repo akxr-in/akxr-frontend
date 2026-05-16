@@ -12,5 +12,6 @@ export type GetUser200DataRole = typeof GetUser200DataRole[keyof typeof GetUser2
 export const GetUser200DataRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

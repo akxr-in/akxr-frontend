@@ -28,6 +28,13 @@ import type {
   GetBatch200,
   GetBatchId200,
   GetBatchId404,
+  GetBatchIdMeetings200,
+  GetBatchIdMeetings404,
+  PatchBatchId200,
+  PatchBatchId400,
+  PatchBatchId403,
+  PatchBatchId404,
+  PatchBatchIdBody,
   PostBatch201,
   PostBatch400,
   PostBatchBody
@@ -338,6 +345,217 @@ export function useGetBatchId<TData = Awaited<ReturnType<typeof getBatchId>>, TE
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetBatchIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Update a batch (Admin only)
+ */
+export type patchBatchIdResponse200 = {
+  data: PatchBatchId200
+  status: 200
+}
+
+export type patchBatchIdResponse400 = {
+  data: PatchBatchId400
+  status: 400
+}
+
+export type patchBatchIdResponse403 = {
+  data: PatchBatchId403
+  status: 403
+}
+
+export type patchBatchIdResponse404 = {
+  data: PatchBatchId404
+  status: 404
+}
+    
+export type patchBatchIdResponseSuccess = (patchBatchIdResponse200) & {
+  headers: Headers;
+};
+export type patchBatchIdResponseError = (patchBatchIdResponse400 | patchBatchIdResponse403 | patchBatchIdResponse404) & {
+  headers: Headers;
+};
+
+export type patchBatchIdResponse = (patchBatchIdResponseSuccess | patchBatchIdResponseError)
+
+export const getPatchBatchIdUrl = (id: string,) => {
+
+
+  
+
+  return `http://localhost:3000/batch/${id}`
+}
+
+export const patchBatchId = async (id: string,
+    patchBatchIdBody: PatchBatchIdBody, options?: RequestInit): Promise<patchBatchIdResponse> => {
+  
+  return customFetch<patchBatchIdResponse>(getPatchBatchIdUrl(id),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      patchBatchIdBody,)
+  }
+);}
+
+
+
+
+export const getPatchBatchIdMutationOptions = <TError = PatchBatchId400 | PatchBatchId403 | PatchBatchId404,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchBatchId>>, TError,{id: string;data: PatchBatchIdBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchBatchId>>, TError,{id: string;data: PatchBatchIdBody}, TContext> => {
+
+const mutationKey = ['patchBatchId'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchBatchId>>, {id: string;data: PatchBatchIdBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  patchBatchId(id,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchBatchIdMutationResult = NonNullable<Awaited<ReturnType<typeof patchBatchId>>>
+    export type PatchBatchIdMutationBody = PatchBatchIdBody
+    export type PatchBatchIdMutationError = PatchBatchId400 | PatchBatchId403 | PatchBatchId404
+
+    export const usePatchBatchId = <TError = PatchBatchId400 | PatchBatchId403 | PatchBatchId404,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchBatchId>>, TError,{id: string;data: PatchBatchIdBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchBatchId>>,
+        TError,
+        {id: string;data: PatchBatchIdBody},
+        TContext
+      > => {
+      return useMutation(getPatchBatchIdMutationOptions(options), queryClient);
+    }
+    /**
+ * Get all meetings for a batch
+ */
+export type getBatchIdMeetingsResponse200 = {
+  data: GetBatchIdMeetings200
+  status: 200
+}
+
+export type getBatchIdMeetingsResponse404 = {
+  data: GetBatchIdMeetings404
+  status: 404
+}
+    
+export type getBatchIdMeetingsResponseSuccess = (getBatchIdMeetingsResponse200) & {
+  headers: Headers;
+};
+export type getBatchIdMeetingsResponseError = (getBatchIdMeetingsResponse404) & {
+  headers: Headers;
+};
+
+export type getBatchIdMeetingsResponse = (getBatchIdMeetingsResponseSuccess | getBatchIdMeetingsResponseError)
+
+export const getGetBatchIdMeetingsUrl = (id: string,) => {
+
+
+  
+
+  return `http://localhost:3000/batch/${id}/meetings`
+}
+
+export const getBatchIdMeetings = async (id: string, options?: RequestInit): Promise<getBatchIdMeetingsResponse> => {
+  
+  return customFetch<getBatchIdMeetingsResponse>(getGetBatchIdMeetingsUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetBatchIdMeetingsQueryKey = (id: string,) => {
+    return [
+    `http://localhost:3000/batch/${id}/meetings`
+    ] as const;
+    }
+
+    
+export const getGetBatchIdMeetingsQueryOptions = <TData = Awaited<ReturnType<typeof getBatchIdMeetings>>, TError = GetBatchIdMeetings404>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBatchIdMeetings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBatchIdMeetingsQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBatchIdMeetings>>> = ({ signal }) => getBatchIdMeetings(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBatchIdMeetings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetBatchIdMeetingsQueryResult = NonNullable<Awaited<ReturnType<typeof getBatchIdMeetings>>>
+export type GetBatchIdMeetingsQueryError = GetBatchIdMeetings404
+
+
+export function useGetBatchIdMeetings<TData = Awaited<ReturnType<typeof getBatchIdMeetings>>, TError = GetBatchIdMeetings404>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBatchIdMeetings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBatchIdMeetings>>,
+          TError,
+          Awaited<ReturnType<typeof getBatchIdMeetings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBatchIdMeetings<TData = Awaited<ReturnType<typeof getBatchIdMeetings>>, TError = GetBatchIdMeetings404>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBatchIdMeetings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBatchIdMeetings>>,
+          TError,
+          Awaited<ReturnType<typeof getBatchIdMeetings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBatchIdMeetings<TData = Awaited<ReturnType<typeof getBatchIdMeetings>>, TError = GetBatchIdMeetings404>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBatchIdMeetings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetBatchIdMeetings<TData = Awaited<ReturnType<typeof getBatchIdMeetings>>, TError = GetBatchIdMeetings404>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBatchIdMeetings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBatchIdMeetingsQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

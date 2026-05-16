@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -142,6 +143,7 @@ interface OverviewScreenProps {
   sessions: SessionEntry[];
   isLoading: boolean;
   onOpenBatch: () => void;
+  onGoToLMS: () => void;
 }
 
 function OverviewScreen({
@@ -150,6 +152,7 @@ function OverviewScreen({
   sessions,
   isLoading,
   onOpenBatch,
+  onGoToLMS,
 }: OverviewScreenProps) {
   if (isLoading) return <LoadingState />;
 
@@ -198,6 +201,14 @@ function OverviewScreen({
                 Join live session
               </button>
             )}
+            <button
+              type="button"
+              onClick={onGoToLMS}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
+              style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+            >
+              Continue Learning (LMS)
+            </button>
             <button
               type="button"
               onClick={onOpenBatch}
@@ -455,6 +466,7 @@ const STUDENT_TABS = [
 ];
 
 export function StudentDashboard({ user }: StudentDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const firstName = user.full_name.split(" ")[0];
 
@@ -515,6 +527,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           sessions={sessions}
           isLoading={isLoading}
           onOpenBatch={() => setActiveTab("batch")}
+          onGoToLMS={() => router.push("/lms/student")}
         />
       )}
       {activeTab === "batch" && (

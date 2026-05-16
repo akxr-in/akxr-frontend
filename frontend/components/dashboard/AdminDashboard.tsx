@@ -17,6 +17,8 @@ import {
 } from "@akxr/api";
 import { useGetAdminUsers } from "@akxr/api";
 
+import { useRouter } from "next/navigation";
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -339,11 +341,11 @@ function CatalogScreen({
                     className={`w-full text-left pl-3.5 pr-4 py-3 border-b border-border-default border-l-2 hover:bg-bg-primary transition-colors ${isActive ? "border-l-brand bg-bg-primary" : "border-l-transparent"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="text-[12.5px] text-text-primary mt-0.5">{course.name}</p>
+                        <p className="text-[12.5px] text-text-primary mt-0.5">{course.title}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.time_allotted_in_weeks}w</span>
+                      <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.modules.length}M</span>
                       <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{batchCount}B</span>
                     </div>
                   </button>
@@ -357,7 +359,7 @@ function CatalogScreen({
         <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-border-default">
             <p className="text-[13px] font-semibold text-white">
-              Batches{selectedCourse ? ` — ${selectedCourse.name}` : ""}
+              Batches{selectedCourse ? ` — ${selectedCourse.title}` : ""}
             </p>
           </div>
           {courseBatches.length === 0 ? (
@@ -515,7 +517,7 @@ function AuditLogScreen() {
 
       <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
         <div className="flex items-start gap-3.5 px-4 py-3 border-b border-border-default">
-          <span className="flex-shrink-0">
+          <span className="shrink-0">
             <span className="w-2 h-2 rounded-full inline-block mr-2" style={{ backgroundColor: auditDotColor.system }} />
           </span>
           <p className="text-[12px] text-text-muted">Audit log not yet available from backend.</p>
@@ -541,6 +543,7 @@ const ADMIN_TABS = [
 ];
 
 export function AdminDashboard({ user }: AdminDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const firstName = user.full_name.split(" ")[0];
@@ -555,7 +558,9 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
   const courses: AdminCourse[] = coursesRes?.data?.data ?? [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allUsers: AdminUser[] = ((usersRes?.data as any)?.data as unknown as AdminUser[]) ?? [];
-  const mentors: AdminUser[] = allUsers.filter((u) => u.role === "MENTOR");
+  const mentors: AdminUser[] = allUsers.filter(
+    (u) => u.role === "MENTOR" || u.role === "MENTOR_EDITOR"
+  );
 
   const getMentorName = (id: string) =>
     allUsers.find((u) => u.id === id)?.full_name ?? "—";
@@ -571,7 +576,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       >
         {activeTab === "overview" && (
           <OverviewScreen
-            onNewCourse={() => setShowCreateModal(true)}
+            onNewCourse={() => router.push("/lms/admin")}
             firstName={firstName}
             dashData={dashData}
             dashLoading={dashLoading}
@@ -581,7 +586,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
         )}
         {activeTab === "catalog" && (
           <CatalogScreen
-            onNewCourse={() => setShowCreateModal(true)}
+            onNewCourse={() => router.push("/lms/admin")}
             courses={courses}
             batches={batches}
             getMentorName={getMentorName}

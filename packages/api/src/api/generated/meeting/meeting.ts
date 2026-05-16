@@ -25,6 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetMeeting200,
+  GetMeeting400,
   GetMeetingId200,
   GetMeetingId404,
   GetMeetingIdAttendance200,
@@ -49,6 +51,120 @@ import { customFetch } from '../../custom-fetch';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * Get all meetings for the current user. Admins see all meetings, students see meetings for their batches, mentors see meetings for batches they mentor or belong to.
+ */
+export type getMeetingResponse200 = {
+  data: GetMeeting200
+  status: 200
+}
+
+export type getMeetingResponse400 = {
+  data: GetMeeting400
+  status: 400
+}
+    
+export type getMeetingResponseSuccess = (getMeetingResponse200) & {
+  headers: Headers;
+};
+export type getMeetingResponseError = (getMeetingResponse400) & {
+  headers: Headers;
+};
+
+export type getMeetingResponse = (getMeetingResponseSuccess | getMeetingResponseError)
+
+export const getGetMeetingUrl = () => {
+
+
+  
+
+  return `http://localhost:3000/meeting`
+}
+
+export const getMeeting = async ( options?: RequestInit): Promise<getMeetingResponse> => {
+  
+  return customFetch<getMeetingResponse>(getGetMeetingUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetMeetingQueryKey = () => {
+    return [
+    `http://localhost:3000/meeting`
+    ] as const;
+    }
+
+    
+export const getGetMeetingQueryOptions = <TData = Awaited<ReturnType<typeof getMeeting>>, TError = GetMeeting400>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeetingQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMeeting>>> = ({ signal }) => getMeeting({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMeetingQueryResult = NonNullable<Awaited<ReturnType<typeof getMeeting>>>
+export type GetMeetingQueryError = GetMeeting400
+
+
+export function useGetMeeting<TData = Awaited<ReturnType<typeof getMeeting>>, TError = GetMeeting400>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMeeting>>,
+          TError,
+          Awaited<ReturnType<typeof getMeeting>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMeeting<TData = Awaited<ReturnType<typeof getMeeting>>, TError = GetMeeting400>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMeeting>>,
+          TError,
+          Awaited<ReturnType<typeof getMeeting>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMeeting<TData = Awaited<ReturnType<typeof getMeeting>>, TError = GetMeeting400>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetMeeting<TData = Awaited<ReturnType<typeof getMeeting>>, TError = GetMeeting400>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMeeting>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMeetingQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 
 
 

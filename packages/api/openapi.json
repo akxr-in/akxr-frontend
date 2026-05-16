@@ -179,6 +179,7 @@
             "enum": [
               "STUDENT",
               "MENTOR",
+              "MENTOR_EDITOR",
               "ADMIN"
             ]
           }
@@ -221,6 +222,7 @@
             "enum": [
               "STUDENT",
               "MENTOR",
+              "MENTOR_EDITOR",
               "ADMIN"
             ]
           },
@@ -314,6 +316,7 @@
                     "enum": [
                       "STUDENT",
                       "MENTOR",
+                      "MENTOR_EDITOR",
                       "ADMIN"
                     ]
                   },
@@ -429,6 +432,7 @@
                     "enum": [
                       "STUDENT",
                       "MENTOR",
+                      "MENTOR_EDITOR",
                       "ADMIN"
                     ]
                   },
@@ -596,6 +600,7 @@
                 "enum": [
                   "STUDENT",
                   "MENTOR",
+                  "MENTOR_EDITOR",
                   "ADMIN"
                 ]
               },
@@ -697,6 +702,7 @@
                   "enum": [
                     "STUDENT",
                     "MENTOR",
+                    "MENTOR_EDITOR",
                     "ADMIN"
                   ]
                 },
@@ -794,6 +800,7 @@
                 "enum": [
                   "STUDENT",
                   "MENTOR",
+                  "MENTOR_EDITOR",
                   "ADMIN"
                 ]
               }
@@ -1100,13 +1107,145 @@
           "batch_start_date",
           "batch_end_date",
           "estimated_end_date",
-          "current_course_id",
           "course_ids",
-          "completed_course_ids",
           "batch_code",
-          "description",
-          "image_url",
-          "meeting_id"
+          "description"
+        ]
+      },
+      "UpdateBatchRequest": {
+        "type": "object",
+        "properties": {
+          "total_classes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "batch_name": {
+            "type": "string"
+          },
+          "mentor_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "batch_start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "batch_end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "estimated_end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "current_course_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "course_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "completed_course_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "batch_code": {
+            "type": "string",
+            "maxLength": 4
+          },
+          "description": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "meeting_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateBatchRequestRequest": {
+        "type": "object",
+        "properties": {
+          "batch_code": {
+            "type": "string"
+          },
+          "change_type": {
+            "type": "string",
+            "enum": [
+              "date",
+              "reschedule",
+              "size"
+            ]
+          },
+          "proposed_value": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_code",
+          "change_type",
+          "reason"
+        ]
+      },
+      "BatchRequestResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batch_code": {
+            "type": "string"
+          },
+          "mentor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "change_type": {
+            "type": "string"
+          },
+          "proposed_value": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "batch_code",
+          "mentor_id",
+          "change_type",
+          "reason",
+          "status",
+          "created_at",
+          "updated_at"
         ]
       },
       "BatchResponse": {
@@ -1283,6 +1422,80 @@
           "message"
         ]
       },
+      "BatchMeetingsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "batch_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "scheduled_start_time": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "duration_minutes": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "SCHEDULED",
+                    "STARTED",
+                    "ENDED",
+                    "CANCELLED"
+                  ]
+                },
+                "actual_start_time": {
+                  "type": "string",
+                  "nullable": true,
+                  "format": "date-time"
+                },
+                "actual_end_time": {
+                  "type": "string",
+                  "nullable": true,
+                  "format": "date-time"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "description",
+                "batch_id",
+                "scheduled_start_time",
+                "duration_minutes",
+                "status",
+                "created_at"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
       "BatchesListResponse": {
         "type": "object",
         "properties": {
@@ -1367,6 +1580,216 @@
                 "completed_course_ids",
                 "meeting_id",
                 "created_at"
+              ]
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "data",
+          "message"
+        ]
+      },
+      "CreateCourseRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED"
+            ]
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "sequence_order": {
+                  "type": "integer"
+                },
+                "lectures": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "sequence_order": {
+                        "type": "integer"
+                      },
+                      "video_url": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri"
+                      },
+                      "text_content": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "assignment_reference": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "title"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "title"
+              ]
+            }
+          }
+        },
+        "required": [
+          "title",
+          "description"
+        ]
+      },
+      "CourseResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "lesson_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "time_allotted_in_weeks": {
+            "type": "integer"
+          },
+          "weekly_content": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "week_number": {
+                  "type": "integer"
+                },
+                "lesson_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "week_number",
+                "lesson_ids"
+              ]
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "lesson_ids",
+          "time_allotted_in_weeks",
+          "weekly_content",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CoursesListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "lesson_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "time_allotted_in_weeks": {
+                  "type": "integer"
+                },
+                "weekly_content": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "week_number": {
+                        "type": "integer"
+                      },
+                      "lesson_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "week_number",
+                      "lesson_ids"
+                    ]
+                  }
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "description",
+                "lesson_ids",
+                "time_allotted_in_weeks",
+                "weekly_content",
+                "created_at",
+                "updated_at"
               ]
             }
           },
@@ -1576,6 +1999,7 @@
                               "enum": [
                                 "STUDENT",
                                 "MENTOR",
+                                "MENTOR_EDITOR",
                                 "ADMIN"
                               ]
                             },
@@ -1753,6 +2177,7 @@
                               "enum": [
                                 "STUDENT",
                                 "MENTOR",
+                                "MENTOR_EDITOR",
                                 "ADMIN"
                               ]
                             },
@@ -2015,153 +2440,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "GitHub authentication successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "user": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "string",
-                              "format": "uuid"
-                            },
-                            "email": {
-                              "type": "string",
-                              "format": "email"
-                            },
-                            "username": {
-                              "type": "string"
-                            },
-                            "full_name": {
-                              "type": "string"
-                            },
-                            "role": {
-                              "type": "string",
-                              "enum": [
-                                "STUDENT",
-                                "MENTOR",
-                                "ADMIN"
-                              ]
-                            },
-                            "profile_status": {
-                              "type": "string",
-                              "enum": [
-                                "AUTHENTICATED",
-                                "PROFILE_CREATED"
-                              ]
-                            },
-                            "skills": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "linkedin_url": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "github_url": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "x_url": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "zulip_username": {
-                              "type": "string",
-                              "nullable": true
-                            },
-                            "did_internship": {
-                              "type": "boolean"
-                            },
-                            "college_year": {
-                              "type": "integer",
-                              "nullable": true,
-                              "minimum": 1,
-                              "maximum": 5
-                            },
-                            "batch_ids": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "created_at": {
-                              "type": "string",
-                              "format": "date-time"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "email",
-                            "username",
-                            "full_name",
-                            "role",
-                            "profile_status",
-                            "skills",
-                            "did_internship",
-                            "batch_ids",
-                            "created_at"
-                          ]
-                        },
-                        "access_token": {
-                          "type": "string"
-                        },
-                        "refresh_token": {
-                          "type": "string"
-                        },
-                        "is_new_user": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "user",
-                        "access_token",
-                        "refresh_token",
-                        "is_new_user"
-                      ]
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "message"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error",
-                    "message"
-                  ]
-                }
-              }
-            }
+          "302": {
+            "description": "Redirects to the frontend auth callback URL with tokens or error information encoded in the URL fragment"
           }
         }
       }
@@ -2207,6 +2487,7 @@
                           "enum": [
                             "STUDENT",
                             "MENTOR",
+                            "MENTOR_EDITOR",
                             "ADMIN"
                           ]
                         },
@@ -2397,6 +2678,7 @@
                           "enum": [
                             "STUDENT",
                             "MENTOR",
+                            "MENTOR_EDITOR",
                             "ADMIN"
                           ]
                         },
@@ -2589,6 +2871,7 @@
                           "enum": [
                             "STUDENT",
                             "MENTOR",
+                            "MENTOR_EDITOR",
                             "ADMIN"
                           ]
                         },
@@ -2717,6 +3000,7 @@
                     "enum": [
                       "STUDENT",
                       "MENTOR",
+                      "MENTOR_EDITOR",
                       "ADMIN"
                     ]
                   }
@@ -2756,6 +3040,7 @@
                           "enum": [
                             "STUDENT",
                             "MENTOR",
+                            "MENTOR_EDITOR",
                             "ADMIN"
                           ]
                         }
@@ -2869,6 +3154,7 @@
                             "enum": [
                               "STUDENT",
                               "MENTOR",
+                              "MENTOR_EDITOR",
                               "ADMIN"
                             ]
                           },
@@ -2972,7 +3258,481 @@
         }
       }
     },
+    "/admin/courses": {
+      "get": {
+        "description": "Get all courses (Admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "lesson_ids": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "time_allotted_in_weeks": {
+                            "type": "integer"
+                          },
+                          "weekly_content": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "week_number": {
+                                  "type": "integer"
+                                },
+                                "lesson_ids": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "week_number",
+                                "lesson_ids"
+                              ]
+                            }
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "description",
+                          "lesson_ids",
+                          "time_allotted_in_weeks",
+                          "weekly_content",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new course (Admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "DRAFT",
+                      "PUBLISHED"
+                    ]
+                  },
+                  "modules": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "sequence_order": {
+                          "type": "integer"
+                        },
+                        "lectures": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string"
+                              },
+                              "sequence_order": {
+                                "type": "integer"
+                              },
+                              "video_url": {
+                                "type": "string",
+                                "nullable": true,
+                                "format": "uri"
+                              },
+                              "text_content": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "assignment_reference": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            },
+                            "required": [
+                              "title"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "title"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "title",
+                  "description"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Course created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "lesson_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "time_allotted_in_weeks": {
+                          "type": "integer"
+                        },
+                        "weekly_content": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "week_number": {
+                                "type": "integer"
+                              },
+                              "lesson_ids": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "week_number",
+                              "lesson_ids"
+                            ]
+                          }
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "description",
+                        "lesson_ids",
+                        "time_allotted_in_weeks",
+                        "weekly_content",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/meeting": {
+      "get": {
+        "description": "Get all meetings for the current user. Admins see all meetings, students see meetings for their batches, mentors see meetings for batches they mentor or belong to.",
+        "tags": [
+          "Meeting"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of meetings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "batch_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scheduled_start_time": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "duration_minutes": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "SCHEDULED",
+                              "STARTED",
+                              "ENDED",
+                              "CANCELLED"
+                            ]
+                          },
+                          "actual_start_time": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "actual_end_time": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "batch_id",
+                          "scheduled_start_time",
+                          "duration_minutes",
+                          "status",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "description": "Create a new meeting",
         "tags": [
@@ -3303,6 +4063,7 @@
                             "enum": [
                               "STUDENT",
                               "MENTOR",
+                              "MENTOR_EDITOR",
                               "ADMIN"
                             ]
                           },
@@ -4033,13 +4794,9 @@
                   "batch_start_date",
                   "batch_end_date",
                   "estimated_end_date",
-                  "current_course_id",
                   "course_ids",
-                  "completed_course_ids",
                   "batch_code",
-                  "description",
-                  "image_url",
-                  "meeting_id"
+                  "description"
                 ]
               }
             }
@@ -4426,6 +5183,613 @@
                   },
                   "required": [
                     "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "description": "Update a batch (Admin only)",
+        "tags": [
+          "Batch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "total_classes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "batch_name": {
+                    "type": "string"
+                  },
+                  "mentor_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "batch_start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "batch_end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "estimated_end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "current_course_id": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "course_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "completed_course_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "batch_code": {
+                    "type": "string",
+                    "maxLength": 4
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "image_url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "meeting_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "batch_name": {
+                          "type": "string"
+                        },
+                        "batch_code": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "total_classes": {
+                          "type": "integer"
+                        },
+                        "batch_start_date": {
+                          "type": "string"
+                        },
+                        "batch_end_date": {
+                          "type": "string"
+                        },
+                        "estimated_end_date": {
+                          "type": "string"
+                        },
+                        "mentor_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "course_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "current_course_id": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "completed_course_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "meeting_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "batch_name",
+                        "batch_code",
+                        "description",
+                        "image_url",
+                        "total_classes",
+                        "batch_start_date",
+                        "batch_end_date",
+                        "estimated_end_date",
+                        "mentor_ids",
+                        "course_ids",
+                        "current_course_id",
+                        "completed_course_ids",
+                        "meeting_id",
+                        "created_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch/{id}/meetings": {
+      "get": {
+        "description": "Get all meetings for a batch",
+        "tags": [
+          "Batch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of meetings for the batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "batch_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scheduled_start_time": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "duration_minutes": {
+                            "type": "integer"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "SCHEDULED",
+                              "STARTED",
+                              "ENDED",
+                              "CANCELLED"
+                            ]
+                          },
+                          "actual_start_time": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "actual_end_time": {
+                            "type": "string",
+                            "nullable": true,
+                            "format": "date-time"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "description",
+                          "batch_id",
+                          "scheduled_start_time",
+                          "duration_minutes",
+                          "status",
+                          "created_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Batch not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch-requests": {
+      "post": {
+        "description": "Create a new batch change request",
+        "tags": [
+          "BatchRequest"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "batch_code": {
+                    "type": "string"
+                  },
+                  "change_type": {
+                    "type": "string",
+                    "enum": [
+                      "date",
+                      "reschedule",
+                      "size"
+                    ]
+                  },
+                  "proposed_value": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "batch_code",
+                  "change_type",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Request created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "batch_code": {
+                          "type": "string"
+                        },
+                        "mentor_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "change_type": {
+                          "type": "string"
+                        },
+                        "proposed_value": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "reason": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "batch_code",
+                        "mentor_id",
+                        "change_type",
+                        "reason",
+                        "status",
+                        "created_at",
+                        "updated_at"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch-requests/my": {
+      "get": {
+        "description": "Get batch requests for current user",
+        "tags": [
+          "BatchRequest"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "batch_code": {
+                            "type": "string"
+                          },
+                          "mentor_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "change_type": {
+                            "type": "string"
+                          },
+                          "proposed_value": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "batch_code",
+                          "mentor_id",
+                          "change_type",
+                          "reason",
+                          "status",
+                          "created_at",
+                          "updated_at"
+                        ]
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data",
                     "message"
                   ]
                 }

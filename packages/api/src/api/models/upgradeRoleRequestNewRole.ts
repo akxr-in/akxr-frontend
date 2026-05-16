@@ -12,5 +12,6 @@ export type UpgradeRoleRequestNewRole = typeof UpgradeRoleRequestNewRole[keyof t
 export const UpgradeRoleRequestNewRole = {
   STUDENT: 'STUDENT',
   MENTOR: 'MENTOR',
+  MENTOR_EDITOR: 'MENTOR_EDITOR',
   ADMIN: 'ADMIN',
 } as const;

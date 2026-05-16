@@ -25,8 +25,15 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetAdminCourses200,
+  GetAdminCourses403,
+  GetAdminCourses500,
   GetAdminUsers200,
   GetAdminUsers403,
+  PostAdminCourses201,
+  PostAdminCourses400,
+  PostAdminCourses403,
+  PostAdminCoursesBody,
   PostAdminUpgradeRole200,
   PostAdminUpgradeRole400,
   PostAdminUpgradeRole403,
@@ -245,3 +252,214 @@ export function useGetAdminUsers<TData = Awaited<ReturnType<typeof getAdminUsers
 
 
 
+/**
+ * Get all courses (Admin only)
+ */
+export type getAdminCoursesResponse200 = {
+  data: GetAdminCourses200
+  status: 200
+}
+
+export type getAdminCoursesResponse403 = {
+  data: GetAdminCourses403
+  status: 403
+}
+
+export type getAdminCoursesResponse500 = {
+  data: GetAdminCourses500
+  status: 500
+}
+    
+export type getAdminCoursesResponseSuccess = (getAdminCoursesResponse200) & {
+  headers: Headers;
+};
+export type getAdminCoursesResponseError = (getAdminCoursesResponse403 | getAdminCoursesResponse500) & {
+  headers: Headers;
+};
+
+export type getAdminCoursesResponse = (getAdminCoursesResponseSuccess | getAdminCoursesResponseError)
+
+export const getGetAdminCoursesUrl = () => {
+
+
+  
+
+  return `http://localhost:3000/admin/courses`
+}
+
+export const getAdminCourses = async ( options?: RequestInit): Promise<getAdminCoursesResponse> => {
+  
+  return customFetch<getAdminCoursesResponse>(getGetAdminCoursesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetAdminCoursesQueryKey = () => {
+    return [
+    `http://localhost:3000/admin/courses`
+    ] as const;
+    }
+
+    
+export const getGetAdminCoursesQueryOptions = <TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminCoursesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminCourses>>> = ({ signal }) => getAdminCourses({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminCoursesQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminCourses>>>
+export type GetAdminCoursesQueryError = GetAdminCourses403 | GetAdminCourses500
+
+
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminCourses>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminCourses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminCourses>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminCourses>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetAdminCourses<TData = Awaited<ReturnType<typeof getAdminCourses>>, TError = GetAdminCourses403 | GetAdminCourses500>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminCourses>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminCoursesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Create a new course (Admin only)
+ */
+export type postAdminCoursesResponse201 = {
+  data: PostAdminCourses201
+  status: 201
+}
+
+export type postAdminCoursesResponse400 = {
+  data: PostAdminCourses400
+  status: 400
+}
+
+export type postAdminCoursesResponse403 = {
+  data: PostAdminCourses403
+  status: 403
+}
+    
+export type postAdminCoursesResponseSuccess = (postAdminCoursesResponse201) & {
+  headers: Headers;
+};
+export type postAdminCoursesResponseError = (postAdminCoursesResponse400 | postAdminCoursesResponse403) & {
+  headers: Headers;
+};
+
+export type postAdminCoursesResponse = (postAdminCoursesResponseSuccess | postAdminCoursesResponseError)
+
+export const getPostAdminCoursesUrl = () => {
+
+
+  
+
+  return `http://localhost:3000/admin/courses`
+}
+
+export const postAdminCourses = async (postAdminCoursesBody: PostAdminCoursesBody, options?: RequestInit): Promise<postAdminCoursesResponse> => {
+  
+  return customFetch<postAdminCoursesResponse>(getPostAdminCoursesUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postAdminCoursesBody,)
+  }
+);}
+
+
+
+
+export const getPostAdminCoursesMutationOptions = <TError = PostAdminCourses400 | PostAdminCourses403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminCourses>>, TError,{data: PostAdminCoursesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAdminCourses>>, TError,{data: PostAdminCoursesBody}, TContext> => {
+
+const mutationKey = ['postAdminCourses'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAdminCourses>>, {data: PostAdminCoursesBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAdminCourses(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAdminCoursesMutationResult = NonNullable<Awaited<ReturnType<typeof postAdminCourses>>>
+    export type PostAdminCoursesMutationBody = PostAdminCoursesBody
+    export type PostAdminCoursesMutationError = PostAdminCourses400 | PostAdminCourses403
+
+    export const usePostAdminCourses = <TError = PostAdminCourses400 | PostAdminCourses403,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminCourses>>, TError,{data: PostAdminCoursesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAdminCourses>>,
+        TError,
+        {data: PostAdminCoursesBody},
+        TContext
+      > => {
+      return useMutation(getPostAdminCoursesMutationOptions(options), queryClient);
+    }
+    
