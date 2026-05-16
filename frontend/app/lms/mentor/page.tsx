@@ -29,7 +29,7 @@ export default function LMSMentor() {
   const user = userRes?.status === 200 ? userRes.data.data : null;
   const batches: MentorBatch[] = batchesRes?.data?.data ?? [];
   const meetings: GetMeeting200DataItem[] =
-    meetingsRes?.status === 200 ? meetingsRes.data.data.data : [];
+    meetingsRes?.status === 200 ? meetingsRes.data.data : [];
 
   useEffect(() => {
     if (userLoading) return;

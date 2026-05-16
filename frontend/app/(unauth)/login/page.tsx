@@ -120,16 +120,10 @@ export default function LoginPage() {
         className="flex items-center gap-3.5 px-5 py-3 flex-shrink-0"
         style={{ borderBottom: '1px solid #262626', background: '#0a0a0a' }}
       >
-        <div
-          className="w-[22px] h-[22px] rounded-[5px] flex-shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(0,0,0,.25), 0 0 0 1px #262626',
-          }}
-        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/akxr-logo.svg" alt="Akxr" className="h-[22px] w-auto flex-shrink-0" />
         <span className="text-[14px] font-semibold tracking-[-0.01em]" style={{ color: '#fafafa' }}>
-          Akxr
-          <em className="not-italic font-normal ml-1.5" style={{ color: '#a3a3a3' }}>Control Plane</em>
+          <em className="not-italic font-normal" style={{ color: '#a3a3a3' }}>Control Plane</em>
         </span>
         <div className="ml-auto">
           <span

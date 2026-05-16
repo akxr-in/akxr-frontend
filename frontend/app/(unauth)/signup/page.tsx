@@ -82,8 +82,10 @@ export default function SignupPage() {
             <div className="w-full max-w-xl">
                 {/* Header */}
                 <div className="text-center mb-8">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/akxr-logo.svg" alt="Akxr" className="h-8 w-auto mx-auto mb-4" />
                     <h1 className="text-3xl font-bold text-text-primary mb-2">
-                        Welcome to Akxr
+                        Welcome
                     </h1>
                     <p className="text-text-secondary">
                         Already have an account?{" "}

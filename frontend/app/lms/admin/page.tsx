@@ -129,6 +129,9 @@ export default function LMSAdmin() {
 
     createCourseMutation.mutate(
       {
+        // Orval-generated PostAdminCoursesBody is stale (uses old name/time_allotted_in_weeks
+        // shape); the BE Zod schema actually accepts { title, description, status, modules }.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: {
           title: courseForm.title.trim(),
           description: courseForm.description.trim(),
@@ -152,7 +155,7 @@ export default function LMSAdmin() {
                 },
               ]
             : [],
-        },
+        } as any,
       },
       {
         onSuccess: async (res) => {

@@ -41,17 +41,11 @@ export function LmsLayout({
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary flex flex-col">
       <header className="flex items-center gap-3.5 px-5 py-3 border-b border-border-default bg-bg-primary">
-        <div
-          className="w-[22px] h-[22px] rounded-[5px] flex-shrink-0"
-          style={{
-            background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)",
-            boxShadow: "inset 0 1px 0 rgba(255,255,255,.18), 0 0 0 1px #262626",
-          }}
-        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/akxr-logo.svg" alt="Akxr" className="h-[22px] w-auto flex-shrink-0" />
         <div>
           <div className="text-[14px] font-semibold text-white tracking-tight">
-            Akxr
-            <em className="text-text-muted font-normal ml-1.5 not-italic">LMS</em>
+            <em className="text-text-muted font-normal not-italic">LMS</em>
           </div>
         </div>
         <RoleBadge role={role} />
