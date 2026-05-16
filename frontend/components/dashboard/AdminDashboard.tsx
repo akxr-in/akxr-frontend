@@ -76,7 +76,7 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
         }
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const courseId = (courseRes.data as any).id;
+      const courseId = (courseRes.data as any).data?.id;
 
       if (!courseId) {
         throw new Error("Course creation failed: no ID returned");
