@@ -527,7 +527,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           sessions={sessions}
           isLoading={isLoading}
           onOpenBatch={() => setActiveTab("batch")}
-          onGoToLMS={() => router.push("/lms/student")}
+          onGoToLMS={() => router.push(batch ? `/lms/student?batch=${batch.id}` : "/lms/student")}
         />
       )}
       {activeTab === "batch" && (

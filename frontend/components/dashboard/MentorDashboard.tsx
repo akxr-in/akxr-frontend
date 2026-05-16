@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -147,7 +148,17 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
 // Screens
 // ---------------------------------------------------------------------------
 
-function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; batches: MentorBatch[]; isLoading: boolean }) {
+function BatchesScreen({
+  firstName,
+  batches,
+  isLoading,
+  onOpenLms,
+}: {
+  firstName: string;
+  batches: MentorBatch[];
+  isLoading: boolean;
+  onOpenLms: () => void;
+}) {
   const [showModal, setShowModal] = useState(false);
 
   const totalStudents = batches.reduce((acc, b) => acc + b.student_count, 0);
@@ -173,13 +184,22 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
 
   return (
     <div className="space-y-5">
-      <div>
+      <div className="flex items-start justify-between gap-3">
         <h1 className="text-[30px] font-semibold tracking-[-0.028em] text-white">
           Hey, {firstName}.
         </h1>
-        <p className="text-text-secondary text-[14px] mt-0.5">
-          {batches.length} active {batches.length === 1 ? 'batch' : 'batches'}
-        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenLms}
+            className="inline-flex items-center px-3.5 py-1.5 rounded-md text-[12px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
+          >
+            Open LMS
+          </button>
+          <p className="text-text-secondary text-[14px] mt-0.5">
+            {batches.length} active {batches.length === 1 ? 'batch' : 'batches'}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -361,6 +381,7 @@ const MENTOR_TABS = [
 ];
 
 export function MentorDashboard({ user }: MentorDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('batches');
   const firstName = user.full_name.split(' ')[0];
 
@@ -375,7 +396,14 @@ export function MentorDashboard({ user }: MentorDashboardProps) {
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
-      {activeTab === 'batches'    && <BatchesScreen firstName={firstName} batches={batches} isLoading={isLoading} />}
+      {activeTab === 'batches'    && (
+        <BatchesScreen
+          firstName={firstName}
+          batches={batches}
+          isLoading={isLoading}
+          onOpenLms={() => router.push('/lms/mentor')}
+        />
+      )}
       {activeTab === 'attendance' && <AttendanceScreen />}
       {activeTab === 'requests'   && <RequestsScreen />}
     </AppShell>
