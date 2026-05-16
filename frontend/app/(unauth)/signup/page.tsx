@@ -82,8 +82,15 @@ export default function SignupPage() {
             <div className="w-full max-w-xl">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/akxr-logo.svg" alt="Akxr" className="h-8 w-auto mx-auto mb-4" />
+                    <Link
+                        href="/"
+                        aria-label="Akxr — go to home"
+                        title="Go to home"
+                        className="inline-block mb-4 rounded focus:outline-none focus:ring-2 focus:ring-brand"
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/akxr-logo.svg" alt="Akxr" className="h-8 w-auto" />
+                    </Link>
                     <h1 className="text-3xl font-bold text-text-primary mb-2">
                         Welcome
                     </h1>

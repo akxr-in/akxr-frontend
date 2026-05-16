@@ -133,11 +133,19 @@ export default function LoginPage() {
         className="flex items-center gap-3.5 px-5 py-3 flex-shrink-0"
         style={{ borderBottom: '1px solid #262626', background: '#0a0a0a' }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/akxr-logo.svg" alt="Akxr" className="h-[22px] w-auto flex-shrink-0" />
-        <span className="text-[14px] font-semibold tracking-[-0.01em]" style={{ color: '#fafafa' }}>
-          <em className="not-italic font-normal" style={{ color: '#a3a3a3' }}>Control Plane</em>
-        </span>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          aria-label="Akxr — go to home"
+          title="Go to home"
+          className="flex items-center gap-3 -ml-1 px-1 py-0.5 rounded focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/akxr-logo.svg" alt="Akxr" className="h-[22px] w-auto flex-shrink-0" />
+          <span className="text-[14px] font-semibold tracking-[-0.01em]" style={{ color: '#fafafa' }}>
+            <em className="not-italic font-normal" style={{ color: '#a3a3a3' }}>Control Plane</em>
+          </span>
+        </button>
         <div className="ml-auto">
           <span
             className="inline-flex items-center px-2 py-1 rounded-[4px] text-[10px] font-medium tracking-[0.06em] uppercase"

@@ -174,3 +174,30 @@ body {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+/* Cursors
+   Tailwind v4 reset removes the default cursor:pointer from buttons, so
+   every interactive element has to opt back in. Set sensible defaults
+   once here instead of remembering to add `cursor-pointer` on every
+   <button> across the app. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="tab"]:not([aria-disabled="true"]),
+summary,
+label[for],
+select:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"],
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+/* Anchor tags without an href shouldn't show a hand. */
+a:not([href]) {
+  cursor: default;
+}

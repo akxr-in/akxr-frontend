@@ -47,13 +47,20 @@ export function AppShell({
     >
       {/* Topbar */}
       <header className="flex items-center gap-3.5 px-5 py-3 border-b border-border-default bg-bg-primary flex-shrink-0">
-        {/* Brand mark */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/akxr-logo.svg" alt="Akxr" className="h-[22px] w-auto flex-shrink-0" />
-        {/* Brand name */}
-        <span className="text-[14px] font-semibold text-white tracking-tight">
-          <em className="text-text-muted font-normal not-italic">Control Plane</em>
-        </span>
+        {/* Brand mark — clicks back to dashboard root */}
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          aria-label="Akxr — go to dashboard"
+          title="Go to dashboard"
+          className="flex items-center gap-3 -ml-1 px-1 py-0.5 rounded focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/akxr-logo.svg" alt="Akxr" className="h-[22px] w-auto flex-shrink-0" />
+          <span className="text-[14px] font-semibold text-white tracking-tight">
+            <em className="text-text-muted font-normal not-italic">Control Plane</em>
+          </span>
+        </button>
         <RoleBadge role={role} />
         <div className="ml-auto flex items-center gap-3.5 text-text-muted">
           {topbarRight}
