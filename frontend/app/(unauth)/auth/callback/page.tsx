@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { setAuthTokens } from "@/lib/utils";
 import { toast } from "../../../providers";
@@ -9,7 +9,6 @@ import { Spinner } from "@akxr/design-system";
 
 export default function GithubCallbackPage() {
     const router = useRouter();
-    const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
         // Parse hash parameters from URL (format: #access_token=...&refresh_token=...&is_new_user=...&profile_status=...)
@@ -27,31 +26,27 @@ export default function GithubCallbackPage() {
             return;
         }
 
-        // Store tokens in both localStorage and cookies
         setAuthTokens(access_token, refresh_token);
 
         if (is_new_user) {
             toast.success("Account created successfully!");
-            // New users should complete their profile
             router.push("/complete-profile");
         } else {
             toast.success("Login successful!");
-            // Existing users redirect based on profile status
             if (profile_status === "AUTHENTICATED") {
                 router.push("/complete-profile");
             } else {
                 router.push("/");
             }
         }
-
-        setIsProcessing(false);
     }, [router]);
 
     return (
         <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-            <div className="text-center">
-                <Spinner size="lg" className="mx-auto mb-4" />
-                <p className="text-text-secondary">Completing GitHub authentication...</p>
+            <div className="text-center flex flex-col items-center gap-3">
+                <Spinner size="lg" />
+                <p className="text-text-secondary text-sm">Completing GitHub sign-in…</p>
+                <p className="text-text-muted text-[11.5px]">Hold tight, this should only take a second.</p>
             </div>
         </div>
     );

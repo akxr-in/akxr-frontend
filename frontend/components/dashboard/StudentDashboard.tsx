@@ -111,6 +111,15 @@ function deriveSessions(
 // Sub-components
 // ---------------------------------------------------------------------------
 
+function greeting(): string {
+  const hr = new Date().getHours();
+  if (hr < 5) return "You're up late";
+  if (hr < 12) return "Good morning";
+  if (hr < 17) return "Good afternoon";
+  if (hr < 21) return "Good evening";
+  return "Good night";
+}
+
 function ProgressRing({ pct }: { pct: number }) {
   const r = 36;
   const c = 2 * Math.PI * r;
@@ -193,7 +202,7 @@ function OverviewScreen({
             {batchInfo?.code ?? "—"}
           </p>
           <h1 className="text-[30px] font-semibold tracking-[-0.028em] text-white leading-tight mb-1">
-            Good morning, {firstName}.
+            {greeting()}, {firstName}.
           </h1>
           <p className="text-[13.5px] text-text-secondary mb-6">
             {todaySession
