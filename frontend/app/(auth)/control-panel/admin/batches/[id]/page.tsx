@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
+import { ScheduleClassModal } from "../../../../../../components/ScheduleClassModal";
 
 type DisplayStatus = "present" | "absent" | "partial";
 
@@ -61,6 +62,7 @@ export default function BatchDetailPage() {
     const { mutateAsync: updateAttendance } = useUpdateMeetingAttendance();
 
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [selectedSessionId, setSelectedSessionId] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
     const [attendanceOverrides, setAttendanceOverrides] = useState<Record<string, DisplayStatus>>({});
@@ -190,11 +192,16 @@ export default function BatchDetailPage() {
                             Manage attendance and track student progress.
                         </p>
                     </div>
-                    {!isMentor && (
-                        <Button variant="primary" onClick={() => setShowEditModal(true)}>
-                            Edit Batch
+                    <div className="flex items-center gap-3">
+                        <Button variant="secondary" onClick={() => setShowScheduleModal(true)}>
+                            Schedule class
                         </Button>
-                    )}
+                        {!isMentor && (
+                            <Button variant="primary" onClick={() => setShowEditModal(true)}>
+                                Edit Batch
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <section className="mb-6 max-w-2xl">
@@ -335,6 +342,15 @@ export default function BatchDetailPage() {
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: getGetBatchIdQueryKey(batchId) });
                     setShowEditModal(false);
+                }}
+            />
+
+            <ScheduleClassModal
+                open={showScheduleModal}
+                onClose={() => setShowScheduleModal(false)}
+                batchId={batchId}
+                onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: getGetBatchIdQueryKey(batchId) });
                 }}
             />
         </div>
