@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -11,8 +12,10 @@ import {
   useGetMeetingIdAttendance,
   useGetBatchRequestsMy,
   usePostBatchRequests,
+  getMentorBatchesQueryKey,
   type MentorBatch
 } from "@akxr/api";
+import { getGetBatchRequestsMyQueryKey } from "@akxr/api";
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -51,6 +54,7 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
   const [reason, setReason] = useState('');
   const [proposedDate, setProposedDate] = useState('');
   
+  const queryClient = useQueryClient();
   const { mutateAsync: createRequest } = usePostBatchRequests();
 
   const handleSubmit = async () => {
@@ -63,8 +67,8 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
           proposed_value: changeType === 'date' ? proposedDate : undefined
         }
       });
+      queryClient.invalidateQueries({ queryKey: getGetBatchRequestsMyQueryKey() });
       onClose();
-      window.location.reload();
     } catch (e) {
       console.error(e);
       alert('Failed to submit request');

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { CrudBatchModal } from "../CrudBatchModal";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -14,12 +16,15 @@ import {
   usePostBatch,
   usePostAdminUpgradeRole,
   usePatchBatchId,
+  getAdminBatchesQueryKey,
+  getAdminCoursesQueryKey,
+  getAdminDashboardQueryKey,
   type AdminDashboard as AdminDashboardData,
   type AdminBatch,
   type AdminCourse,
   type AdminUser,
 } from "@akxr/api";
-import { useGetAdminUsers } from "@akxr/api";
+import { useGetAdminUsers, getGetAdminUsersQueryKey } from "@akxr/api";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,6 +57,7 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
     batchCode: "", batchSize: "", startsOn: "", mentor: "",
   });
 
+  const queryClient = useQueryClient();
   const { mutateAsync: createCourse } = usePostAdminCourses();
   const { mutateAsync: createBatch } = usePostBatch();
 
@@ -67,8 +73,6 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
           time_allotted_in_weeks: parseInt(form.weeks, 10),
         }
       });
-      // The openapi structure returns an object with a data property which contains the course
-      // Let's grab the id safely
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const courseId = (courseRes.data as any).id;
 
@@ -90,9 +94,10 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
         }
       });
 
+      queryClient.invalidateQueries({ queryKey: getAdminCoursesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
       onClose();
-      // ideally reload page or invalidate queries, but doing a simple location.reload for now
-      window.location.reload();
     } catch (e) {
       console.error(e);
       alert("Failed to create course and batch");
@@ -346,29 +351,11 @@ function CatalogScreen({
   batches: AdminBatch[];
   getMentorName: (id: string) => string;
 }) {
+  const queryClient = useQueryClient();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(
     courses[0]?.id ?? null
   );
-
-  const { mutateAsync: patchBatch } = usePatchBatchId();
-
-  const handleEditBatch = async (batchId: string, currentName: string) => {
-    const newName = window.prompt("Enter new batch name:", currentName);
-    if (!newName || newName === currentName) return;
-
-    try {
-      await patchBatch({
-        id: batchId,
-        data: {
-          batch_name: newName,
-        }
-      });
-      window.location.reload();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to edit batch");
-    }
-  };
+  const [editingBatch, setEditingBatch] = useState<AdminBatch | null>(null);
 
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) ?? null;
   const courseBatches = selectedCourseId
@@ -461,7 +448,7 @@ function CatalogScreen({
                     </td>
                     <td className="px-3.5 py-3 text-[12.5px] text-text-primary">{batch.total_classes}</td>
                     <td className="px-3.5 py-3">
-                      <button type="button" onClick={() => handleEditBatch(batch.id, batch.batch_name)} className="text-[11.5px] text-text-muted hover:text-text-secondary transition-colors">Edit</button>
+                      <button type="button" onClick={() => setEditingBatch(batch)} className="text-[11.5px] text-text-muted hover:text-text-secondary transition-colors">Edit</button>
                     </td>
                   </tr>
                 ))}
@@ -470,6 +457,16 @@ function CatalogScreen({
           )}
         </div>
       </div>
+
+      <CrudBatchModal
+        open={!!editingBatch}
+        batch={editingBatch}
+        onClose={() => setEditingBatch(null)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
+          setEditingBatch(null);
+        }}
+      />
     </div>
   );
 }
@@ -483,17 +480,34 @@ function PeopleScreen({
   mentors: AdminUser[];
   batches: AdminBatch[];
 }) {
+  const queryClient = useQueryClient();
   const { mutateAsync: upgradeRole } = usePostAdminUpgradeRole();
+  const { mutateAsync: patchBatch } = usePatchBatchId();
+  const [togglingCell, setTogglingCell] = useState<string | null>(null);
+
+  const handleToggleAssign = async (batch: AdminBatch, mentorId: string) => {
+    const cellKey = `${batch.id}-${mentorId}`;
+    if (togglingCell === cellKey) return;
+    const newMentorIds = batch.mentor_ids.includes(mentorId)
+      ? batch.mentor_ids.filter((id) => id !== mentorId)
+      : [...batch.mentor_ids, mentorId];
+    setTogglingCell(cellKey);
+    try {
+      await patchBatch({ id: batch.id, data: { mentor_ids: newMentorIds } });
+      queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update batch assignment");
+    } finally {
+      setTogglingCell(null);
+    }
+  };
 
   const handleRoleChange = async (userId: string, newRole: "ADMIN" | "MENTOR" | "STUDENT") => {
     try {
-      await upgradeRole({
-        data: {
-          user_id: userId,
-          new_role: newRole,
-        }
-      });
-      window.location.reload();
+      await upgradeRole({ data: { user_id: userId, new_role: newRole } });
+      queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
     } catch (e) {
       console.error(e);
       alert("Failed to upgrade role");
@@ -538,19 +552,32 @@ function PeopleScreen({
                     </td>
                     {batches.map((batch) => {
                       const isAssigned = batch.mentor_ids.includes(mentor.id);
+                      const cellKey = `${batch.id}-${mentor.id}`;
+                      const isToggling = togglingCell === cellKey;
                       return (
                         <td key={batch.id} className="px-3.5 py-3 text-center">
                           <div
-                            className="w-6 h-6 rounded flex items-center justify-center mx-auto border"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={isAssigned ? "Remove mentor from batch" : "Assign mentor to batch"}
+                            onClick={() => handleToggleAssign(batch, mentor.id)}
+                            onKeyDown={(e) => e.key === "Enter" && handleToggleAssign(batch, mentor.id)}
+                            className="w-6 h-6 rounded flex items-center justify-center mx-auto border cursor-pointer transition-opacity"
                             style={
                               isAssigned
-                                ? { background: "rgba(201,150,58,0.20)", borderColor: "rgba(201,150,58,0.4)" }
-                                : { background: "transparent", borderColor: "#333" }
+                                ? { background: "rgba(201,150,58,0.20)", borderColor: "rgba(201,150,58,0.4)", opacity: isToggling ? 0.5 : 1 }
+                                : { background: "transparent", borderColor: "#333", opacity: isToggling ? 0.5 : 1 }
                             }
                           >
-                            {isAssigned && (
+                            {isAssigned && !isToggling && (
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9963A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                            )}
+                            {isToggling && (
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2" className="animate-spin">
+                                <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                                <path d="M12 2a10 10 0 0 1 10 10" />
                               </svg>
                             )}
                           </div>
