@@ -1,143 +1,282 @@
 "use client";
 
-import React, { useState } from "react";
-import { useGetUser } from "@akxr/api";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import {
+  useGetUser,
+  useGetUserAttendance,
+  useGetUserBatches,
+  type AttendanceWithMeeting,
+  type BatchWithStats,
+} from "@akxr/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EmptyHint, fmtDate, fmtDateTime, LmsLayout, Panel, StatTile } from "@/components/lms/LmsLayout";
 
-// Mock data
-const courses = [
-  { id: "c1", code: "AXR-201", title: "Data Structures & Algorithms", state: "in_progress", progress: 0.64 },
-  { id: "c2", code: "AXR-202", title: "Advanced Backend Engineering", state: "locked", progress: 0 },
-];
+type StudentTab = "home" | "course";
 
-const mockCourse = {
-  id: "course-1",
-  code: "AXR-201",
-  title: "Data Structures & Algorithms",
-  mentor: "Priya S.",
-  modules: [
-    {
-      id: "m1",
-      title: "Introduction",
-      lectures: [
-        { id: "l1", title: "Complexity", dur: "10:00", state: "done" },
-      ]
-    },
-    {
-      id: "m3",
-      title: "Trees",
-      lectures: [
-        { id: "l-3.1", title: "Binary Trees", dur: "20:00", state: "done" },
-        { id: "l-3.2", title: "Binary Search Trees", dur: "15:00", state: "done" },
-        { id: "l-3.3", title: "Trees: traversals & DFS", dur: "49:08", state: "active" },
-      ]
-    }
-  ]
-};
+type SessionState = "done" | "today" | "upcoming";
+
+interface SessionView {
+  id: string;
+  title: string;
+  date: string;
+  dateTime: string;
+  durationLabel: string;
+  state: SessionState;
+  attendance: "PRESENT" | "PARTIALLY_PRESENT" | "ABSENT" | null;
+  description: string;
+}
+
+const EMPTY_BATCHES: BatchWithStats[] = [];
+const EMPTY_ATTENDANCE: AttendanceWithMeeting[] = [];
+
+function deriveSessionState(startIso: string, minutes: number): SessionState {
+  const now = new Date();
+  const start = new Date(startIso);
+  const end = new Date(start.getTime() + minutes * 60_000);
+  if (end < now) return "done";
+  if (start.toDateString() === now.toDateString()) return "today";
+  return "upcoming";
+}
+
+function durationLabel(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
 
 export default function LMSStudent() {
   const router = useRouter();
-  const { data, isLoading } = useGetUser();
-  const [view, setView] = useState("home");
-  const [activeLec, setActiveLec] = useState("l-3.3");
-  
-  if (isLoading) return null;
-  // useGetUser returns success/error union; UI guard handles non-success cases.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const user = (data as any)?.data?.data;
-  if (!user || user.role !== "STUDENT") {
-    router.push("/");
-    return null;
-  }
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<StudentTab>("home");
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
-  const allLectures = mockCourse.modules.flatMap(m => m.lectures.map(l => ({ ...l, mod: m.title })));
-  const lec = allLectures.find(l => l.id === activeLec) || allLectures[0];
+  const { data: userRes, isLoading: userLoading } = useGetUser();
+  const { data: batchesRes, isLoading: batchLoading } = useGetUserBatches();
+  const { data: attendanceRes, isLoading: attendanceLoading } = useGetUserAttendance();
+
+  const user = userRes?.status === 200 ? userRes.data.data : null;
+
+  useEffect(() => {
+    if (userLoading) return;
+    if (!user || user.role !== "STUDENT") router.push("/");
+  }, [user, userLoading, router]);
+
+  const batches: BatchWithStats[] = batchesRes?.data?.data ?? EMPTY_BATCHES;
+  const attendanceRecords: AttendanceWithMeeting[] = attendanceRes?.data?.data ?? EMPTY_ATTENDANCE;
+  const selectedBatchId = searchParams.get("batch");
+  const batch =
+    (selectedBatchId ? batches.find((item) => item.id === selectedBatchId) : undefined) ??
+    batches[0] ??
+    null;
+
+  const sessions = useMemo<SessionView[]>(() => {
+    if (!batch) return [];
+    const attByMeeting = new Map<string, "PRESENT" | "PARTIALLY_PRESENT" | "ABSENT">();
+    for (const record of attendanceRecords) {
+      if (record.meeting && record.attendance.batch_id === batch.id) {
+        attByMeeting.set(record.meeting.id, record.attendance.status);
+      }
+    }
+
+    return [...batch.meetings]
+      .sort(
+        (a, b) =>
+          new Date(a.scheduled_start_time).getTime() - new Date(b.scheduled_start_time).getTime(),
+      )
+      .map((meeting) => {
+        const minutes = Math.max(
+          1,
+          Math.round(
+            (new Date(meeting.scheduled_end_time).getTime() -
+              new Date(meeting.scheduled_start_time).getTime()) /
+              60_000,
+          ),
+        );
+
+        return {
+          id: meeting.id,
+          title: meeting.title,
+          date: fmtDate(meeting.scheduled_start_time),
+          dateTime: fmtDateTime(meeting.scheduled_start_time),
+          durationLabel: durationLabel(minutes),
+          state: deriveSessionState(meeting.scheduled_start_time, minutes),
+          attendance: attByMeeting.get(meeting.id) ?? null,
+          description: meeting.description || "No lecture notes shared for this session yet.",
+        };
+      });
+  }, [attendanceRecords, batch]);
+
+  const resumeSession =
+    sessions.find((s) => s.state === "today") ??
+    sessions.find((s) => s.state === "upcoming") ??
+    sessions[sessions.length - 1] ??
+    null;
+  const effectiveActiveSessionId = activeSessionId ?? resumeSession?.id ?? null;
+  const activeSession = sessions.find((s) => s.id === effectiveActiveSessionId) ?? sessions[0] ?? null;
+  const doneCount = sessions.filter((s) => s.state === "done").length;
+  const progress = sessions.length > 0 ? doneCount / sessions.length : 0;
+  const attendanceRows = sessions.filter((s) => s.state === "done" && s.attendance !== null);
+  const attendanceScore =
+    attendanceRows.length === 0
+      ? 0
+      : attendanceRows.reduce((acc, session) => {
+          if (session.attendance === "PRESENT") return acc + 1;
+          if (session.attendance === "PARTIALLY_PRESENT") return acc + 0.5;
+          return acc;
+        }, 0) / attendanceRows.length;
+  const firstName = user?.full_name.split(" ")[0] ?? "there";
+  const loading = userLoading || batchLoading || attendanceLoading;
+
+  if (!user || user.role !== "STUDENT") return null;
 
   return (
-    <div className="cp" style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--paper)', color: 'var(--ink)' }}>
-      <div className="topbar" style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid var(--line)', background: 'var(--paper)' }}>
-        <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="brand-name" style={{ fontSize: '14px', fontWeight: 600 }}>Axar <em style={{ fontStyle: 'normal', color: 'var(--ink-3)' }}>LMS</em></div>
-        </div>
-        <div style={{ flex: 1 }}/>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={() => setView('home')} style={{ padding: '6px 12px', background: view === 'home' ? 'var(--paper-2)' : 'transparent', border: 'none', borderRadius: 4, cursor: 'pointer', color: 'var(--ink)' }}>My batch</button>
-          <button onClick={() => setView('course')} style={{ padding: '6px 12px', background: view === 'course' ? 'var(--paper-2)' : 'transparent', border: 'none', borderRadius: 4, cursor: 'pointer', color: 'var(--ink)' }}>Course</button>
-        </div>
-      </div>
-
-      {view === 'home' ? (
-        <div style={{ overflow: 'auto', flex: 1, padding: '32px' }}>
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>Cohort 2026 · Backend Track</div>
-            <h2 style={{ fontSize: 32, fontWeight: 600, margin: '8px 0' }}>Welcome back, {user.full_name.split(' ')[0]}.</h2>
-            <p style={{ color: 'var(--ink-3)' }}>Pick up where you left off, or browse your batch.</p>
+    <LmsLayout
+      role="STUDENT"
+      heading={`Welcome back, ${firstName}.`}
+      subtitle="Track your batch progress, continue sessions, and review your attendance from one place."
+      userName={user.full_name}
+      tabs={[
+        { id: "home", label: "My batch" },
+        { id: "course", label: "Session player" },
+      ]}
+      activeTab={activeTab}
+      onTabChange={(id) => setActiveTab(id as StudentTab)}
+    >
+      {loading ? (
+        <div className="h-[45vh] flex items-center justify-center text-text-muted text-[13px]">Loading LMS workspace…</div>
+      ) : !batch ? (
+        <Panel title="No batch assigned yet">
+          <EmptyHint text="You are not assigned to a batch yet. Once admin adds you, your LMS timeline will appear here." />
+        </Panel>
+      ) : activeTab === "home" ? (
+        <div className="space-y-5">
+          <div className="grid grid-cols-4 gap-4">
+            <StatTile label="Batch" value={batch.batch_code} sub={batch.batch_name} />
+            <StatTile label="Progress" value={`${Math.round(progress * 100)}%`} sub={`${doneCount}/${sessions.length} sessions done`} />
+            <StatTile label="Attendance" value={`${Math.round(attendanceScore * 100)}%`} sub={`${attendanceRows.length} recorded sessions`} />
+            <StatTile label="Mentor" value={batch.mentor_names[0] ?? "TBD"} sub={`${fmtDate(batch.batch_start_date)} → ${fmtDate(batch.batch_end_date)}`} />
           </div>
 
-          <div style={{ background: 'var(--ink)', color: 'var(--paper)', borderRadius: 12, padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Continue learning</div>
-              <div style={{ fontSize: 24, fontWeight: 600, marginTop: 8 }}>Trees: traversals & DFS</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>Module 3 · Lecture 3 · AXR-201</div>
-            </div>
-            <button onClick={() => setView('course')} style={{ background: 'var(--paper)', color: 'var(--ink)', padding: '10px 20px', borderRadius: 6, border: 'none', fontWeight: 600, cursor: 'pointer' }}>
-              Resume lecture →
-            </button>
-          </div>
-
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Courses in this batch</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {courses.map(c => (
-              <div key={c.id} style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 16, opacity: c.state === 'locked' ? 0.6 : 1, background: 'var(--card)' }} onClick={() => c.state !== 'locked' && setView('course')}>
-                <div style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.05em' }}>{c.code}</div>
-                <div style={{ fontSize: 18, fontWeight: 600, marginTop: 4 }}>{c.title}</div>
-                <div style={{ marginTop: 16, background: 'var(--paper-2)', height: 4, borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ width: `${c.progress * 100}%`, background: 'var(--ink)', height: '100%' }} />
-                </div>
+          <div className="grid gap-4" style={{ gridTemplateColumns: "1.4fr 1fr" }}>
+            <Panel title="Continue learning" sub={`Batch ${batch.batch_code} · ${batch.batch_name}`}>
+              <div className="p-5">
+                {activeSession ? (
+                  <div className="bg-bg-primary border border-border-default rounded-lg p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">Next session</p>
+                    <h2 className="text-[24px] text-white font-semibold tracking-[-0.02em] mt-2">{activeSession.title}</h2>
+                    <p className="text-[12.5px] text-text-muted mt-2">
+                      {activeSession.dateTime} · {activeSession.durationLabel}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("course")}
+                      className="mt-5 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
+                      style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+                    >
+                      Resume in player
+                    </button>
+                  </div>
+                ) : (
+                  <EmptyHint text="No sessions available in this batch yet." />
+                )}
               </div>
-            ))}
+            </Panel>
+
+            <Panel title="Upcoming sessions" sub="Next 5 on your timeline">
+              <div className="p-3 space-y-1">
+                {sessions.filter((s) => s.state !== "done").slice(0, 5).length === 0 ? (
+                  <EmptyHint text="No upcoming sessions." />
+                ) : (
+                  sessions
+                    .filter((s) => s.state !== "done")
+                    .slice(0, 5)
+                    .map((session) => (
+                      <button
+                        key={session.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveSessionId(session.id);
+                          setActiveTab("course");
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-md border border-transparent hover:border-border-default hover:bg-bg-primary transition-colors"
+                      >
+                        <p className="text-[12px] text-text-secondary truncate">{session.title}</p>
+                        <p className="text-[10.5px] text-text-muted mt-1">
+                          {session.dateTime} · {session.durationLabel}
+                        </p>
+                      </button>
+                    ))
+                )}
+              </div>
+            </Panel>
           </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', flex: 1, minHeight: 0 }}>
-          <div style={{ borderRight: '1px solid var(--line)', background: 'var(--paper)', overflow: 'auto', padding: 16 }}>
-             <div style={{ marginBottom: 16 }}>
-               <div style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.05em' }}>{mockCourse.code}</div>
-               <div style={{ fontSize: 18, fontWeight: 600 }}>{mockCourse.title}</div>
-             </div>
-             {mockCourse.modules.map((mod, mi) => (
-               <div key={mod.id} style={{ marginBottom: 16 }}>
-                 <div style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' }}>{String(mi+1).padStart(2,'0')} · {mod.title}</div>
-                 {mod.lectures.map(l => (
-                   <div key={l.id} onClick={() => setActiveLec(l.id)} style={{ padding: '8px 10px', background: l.id === activeLec ? 'var(--ink)' : 'transparent', color: l.id === activeLec ? 'var(--paper)' : 'var(--ink-2)', borderRadius: 6, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                     <span>{l.title}</span>
-                     <span style={{ opacity: 0.5 }}>{l.dur}</span>
-                   </div>
-                 ))}
-               </div>
-             ))}
-          </div>
-          <div style={{ padding: '32px', overflow: 'auto' }}>
-             <div style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Module 3 · Lecture 3</div>
-             <h2 style={{ fontSize: 28, fontWeight: 600, margin: '8px 0 24px' }}>{lec.title}</h2>
-             <div style={{ background: 'var(--paper-2)', aspectRatio: '16/9', borderRadius: 12, border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
-                Video Player Placeholder
-             </div>
-             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
-                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8, padding: 20 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Notes</h3>
-                  <p style={{ color: 'var(--ink-2)', lineHeight: 1.6, fontSize: 14 }}>A binary tree is recursive by nature: each node has a left subtree and a right subtree. The three classical traversals — preorder, inorder, postorder — differ only in when you visit the node relative to its children.</p>
+        <div className="grid gap-4" style={{ gridTemplateColumns: "320px 1fr" }}>
+          <Panel title={batch.batch_name} sub={`Batch ${batch.batch_code} · Mentor ${batch.mentor_names[0] ?? "TBD"}`}>
+            <div className="p-2 space-y-1 max-h-[70vh] overflow-auto">
+              {sessions.length === 0 ? (
+                <EmptyHint text="No sessions yet." />
+              ) : (
+                sessions.map((session, idx) => {
+                  const selected = session.id === activeSession?.id;
+                  return (
+                    <button
+                      key={session.id}
+                      type="button"
+                      onClick={() => setActiveSessionId(session.id)}
+                      className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
+                        selected
+                          ? "bg-bg-primary border-brand"
+                          : "bg-transparent border-transparent hover:border-border-default hover:bg-bg-primary"
+                      }`}
+                    >
+                      <p className="font-mono text-[10px] text-text-muted">Session {idx + 1}</p>
+                      <p className={`text-[12.5px] mt-1 truncate ${selected ? "text-white" : "text-text-secondary"}`}>
+                        {session.title}
+                      </p>
+                      <p className="text-[10.5px] text-text-muted mt-1">
+                        {session.date} · {session.durationLabel}
+                      </p>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </Panel>
+
+          <div className="space-y-4">
+            <Panel title={activeSession?.title ?? "Select a session"} sub={activeSession ? `${activeSession.dateTime} · ${activeSession.durationLabel}` : undefined}>
+              <div className="p-4">
+                <div className="aspect-video border border-border-default rounded-lg bg-bg-primary flex items-center justify-center">
+                  <span className="text-[12px] text-text-muted">
+                    {activeSession ? "Video player integration placeholder" : "No session selected"}
+                  </span>
                 </div>
-                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8, padding: 20 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Assignment</h3>
-                  <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>axr-201/m3-trees-traversals</div>
-                  <p style={{ color: 'var(--ink-2)', fontSize: 13, marginTop: 8 }}>Implement iterative inorder + a BST validator. CI runs your tests + ours.</p>
-                  <button style={{ marginTop: 16, width: '100%', padding: '10px', background: 'var(--ink)', color: 'var(--paper)', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>Open in GitHub</button>
+              </div>
+            </Panel>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Panel title="Notes" sub="Session summary">
+                <div className="p-4 text-[13px] text-text-secondary leading-6 min-h-[170px]">
+                  {activeSession?.description ?? "Select a session to view notes."}
                 </div>
-             </div>
+              </Panel>
+              <Panel title="My attendance" sub="For this session">
+                <div className="p-4 min-h-[170px]">
+                  {activeSession?.attendance ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border border-border-default bg-bg-primary text-text-secondary">
+                      {activeSession.attendance}
+                    </span>
+                  ) : (
+                    <p className="text-[12.5px] text-text-muted">Attendance will appear once this session is completed.</p>
+                  )}
+                </div>
+              </Panel>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </LmsLayout>
   );
 }

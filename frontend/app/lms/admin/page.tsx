@@ -1,174 +1,582 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useGetUser } from "@akxr/api";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getAdminBatchesQueryKey,
+  getAdminCoursesQueryKey,
+  useGetAdminBatches,
+  useGetAdminCourses,
+  useGetAdminUsers,
+  useGetUser,
+  usePostAdminCourses,
+  usePostBatch,
+  type AdminBatch,
+  type AdminCourse,
+  type AdminUser,
+} from "@akxr/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { EmptyHint, fmtDate, LmsLayout, Panel, StatTile } from "@/components/lms/LmsLayout";
 
-// Mock data based on the design
-const mockCourse = {
-  id: "course-1",
-  code: "AXR-201",
-  title: "Data Structures & Algorithms",
-  mentor: "Priya S.",
-  status: "Draft",
-  modules: [
-    {
-      id: "m1",
-      title: "Introduction to Complexity",
-      lectures: [
-        { id: "l1", title: "Time and Space Complexity", kind: "video" },
-        { id: "l2", title: "Asymptotic Notation", kind: "text" },
-      ]
-    },
-    {
-      id: "m3",
-      title: "Trees",
-      lectures: [
-        { id: "l-3.1", title: "Binary Trees", kind: "video" },
-        { id: "l-3.2", title: "Binary Search Trees", kind: "video" },
-        { id: "l-3.3", title: "Trees: traversals & DFS", kind: "video", dur: "49:08" },
-      ]
-    }
-  ]
+type AdminTab = "catalog" | "create";
+
+interface CreateCourseForm {
+  title: string;
+  description: string;
+  status: "DRAFT" | "PUBLISHED";
+  moduleTitle: string;
+  lectureTitle: string;
+  lectureVideoUrl: string;
+  lectureNotes: string;
+  assignmentRef: string;
+}
+
+interface CreateBatchForm {
+  batch_code: string;
+  batch_name: string;
+  mentor_id: string;
+  batch_start_date: string;
+  batch_end_date: string;
+  estimated_end_date: string;
+  total_classes: number;
+  description: string;
+}
+
+const initialCourseForm: CreateCourseForm = {
+  title: "",
+  description: "",
+  status: "DRAFT",
+  moduleTitle: "",
+  lectureTitle: "",
+  lectureVideoUrl: "",
+  lectureNotes: "",
+  assignmentRef: "",
 };
+
+const initialBatchForm: CreateBatchForm = {
+  batch_code: "",
+  batch_name: "",
+  mentor_id: "",
+  batch_start_date: "",
+  batch_end_date: "",
+  estimated_end_date: "",
+  total_classes: 20,
+  description: "",
+};
+
+const EMPTY_COURSES: AdminCourse[] = [];
+const EMPTY_BATCHES: AdminBatch[] = [];
+const EMPTY_USERS: AdminUser[] = [];
 
 export default function LMSAdmin() {
   const router = useRouter();
-  const { data, isLoading } = useGetUser();
-  
-  if (isLoading) return null;
-  const user = data?.status === 200 ? data.data.data : undefined;
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<AdminTab>(requestedTab === "create" ? "create" : "catalog");
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedLectureKey, setSelectedLectureKey] = useState<string | null>(null);
+  const [courseForm, setCourseForm] = useState<CreateCourseForm>(initialCourseForm);
+  const [batchForm, setBatchForm] = useState<CreateBatchForm>(initialBatchForm);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
-  if (!user || user.role !== "ADMIN") {
-    router.push("/");
-    return null;
+  const { data: userRes, isLoading: userLoading } = useGetUser();
+  const { data: coursesRes, isLoading: coursesLoading } = useGetAdminCourses();
+  const { data: batchesRes } = useGetAdminBatches();
+  const { data: usersRes } = useGetAdminUsers();
+  const createCourseMutation = usePostAdminCourses();
+  const createBatchMutation = usePostBatch();
+
+  const user = userRes?.status === 200 ? userRes.data.data : null;
+
+  useEffect(() => {
+    if (userLoading) return;
+    if (!user || user.role !== "ADMIN") router.push("/");
+  }, [user, userLoading, router]);
+
+  const courses: AdminCourse[] = coursesRes?.data?.data ?? EMPTY_COURSES;
+  const batches: AdminBatch[] = batchesRes?.data?.data ?? EMPTY_BATCHES;
+  const allUsers = (usersRes?.status === 200 ? usersRes.data.data : EMPTY_USERS) as AdminUser[];
+  const mentors = allUsers.filter((item) => item.role === "MENTOR" || item.role === "MENTOR_EDITOR");
+  const effectiveCourseId = selectedCourseId ?? courses[0]?.id ?? null;
+  const selectedCourse = courses.find((course) => course.id === effectiveCourseId) ?? null;
+
+  const selectedLecture = useMemo(() => {
+    if (!selectedCourse) return null;
+    const allLectures = selectedCourse.modules.flatMap((module) =>
+      module.lectures.map((lecture) => ({
+        key: `${module.id}:${lecture.id}`,
+        moduleTitle: module.title,
+        lecture,
+      })),
+    );
+    if (allLectures.length === 0) return null;
+    const fallback = allLectures[0];
+    return allLectures.find((item) => item.key === selectedLectureKey) ?? fallback;
+  }, [selectedCourse, selectedLectureKey]);
+
+  const linkedBatches = selectedCourse
+    ? batches.filter((batch) => batch.course_ids.includes(selectedCourse.id))
+    : [];
+
+  if (!user || user.role !== "ADMIN") return null;
+
+  async function handleCreateCourse(): Promise<void> {
+    if (!courseForm.title.trim() || !courseForm.description.trim()) {
+      setFeedback("Course title and description are required.");
+      return;
+    }
+
+    createCourseMutation.mutate(
+      {
+        data: {
+          title: courseForm.title.trim(),
+          description: courseForm.description.trim(),
+          status: courseForm.status,
+          modules: courseForm.moduleTitle.trim()
+            ? [
+                {
+                  title: courseForm.moduleTitle.trim(),
+                  sequence_order: 1,
+                  lectures: courseForm.lectureTitle.trim()
+                    ? [
+                        {
+                          title: courseForm.lectureTitle.trim(),
+                          sequence_order: 1,
+                          video_url: courseForm.lectureVideoUrl.trim() || null,
+                          text_content: courseForm.lectureNotes.trim() || null,
+                          assignment_reference: courseForm.assignmentRef.trim() || null,
+                        },
+                      ]
+                    : [],
+                },
+              ]
+            : [],
+        },
+      },
+      {
+        onSuccess: async (res) => {
+          if (res.status !== 201) {
+            setFeedback("Could not create course. Please verify your payload.");
+            return;
+          }
+          await queryClient.invalidateQueries({ queryKey: getAdminCoursesQueryKey() });
+          setCourseForm(initialCourseForm);
+          setFeedback("Course created successfully. You can now create a linked batch.");
+        },
+        onError: () => {
+          setFeedback("Course creation failed. Please try again.");
+        },
+      },
+    );
+  }
+
+  function handleCreateBatch(): void {
+    if (!selectedCourse) {
+      setFeedback("Pick a course in the catalog before creating a batch.");
+      return;
+    }
+    if (!batchForm.mentor_id || !batchForm.batch_code.trim() || !batchForm.batch_name.trim()) {
+      setFeedback("Batch code, name, and mentor are required.");
+      return;
+    }
+
+    createBatchMutation.mutate(
+      {
+        data: {
+          total_classes: Number(batchForm.total_classes),
+          batch_name: batchForm.batch_name.trim(),
+          mentor_ids: [batchForm.mentor_id],
+          batch_start_date: batchForm.batch_start_date,
+          batch_end_date: batchForm.batch_end_date,
+          estimated_end_date: batchForm.estimated_end_date || batchForm.batch_end_date,
+          current_course_id: selectedCourse.id,
+          course_ids: [selectedCourse.id],
+          batch_code: batchForm.batch_code.trim().toUpperCase(),
+          description: batchForm.description.trim() || `Batch for ${selectedCourse.title}`,
+        },
+      },
+      {
+        onSuccess: async (res) => {
+          if (res.status !== 201) {
+            setFeedback("Batch creation failed due to validation.");
+            return;
+          }
+          await queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
+          setBatchForm(initialBatchForm);
+          setFeedback("Batch created and connected to the selected course.");
+          setActiveTab("catalog");
+        },
+        onError: () => {
+          setFeedback("Batch creation failed. Please verify dates and mentor.");
+        },
+      },
+    );
   }
 
   return (
-    <div className="cp" style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--paper)', color: 'var(--ink)' }}>
-      <div className="topbar" style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid var(--line)', background: 'var(--paper)' }}>
-        <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="brand-name" style={{ fontSize: '14px', fontWeight: 600 }}>Axar <em style={{ fontStyle: 'normal', color: 'var(--ink-3)' }}>LMS Admin</em></div>
-        </div>
-        <div style={{ flex: 1 }}/>
-        <button className="btn sm" style={{ marginRight: 8 }}>Import JSON</button>
-        <button className="btn primary sm" style={{ marginRight: 16 }}>New course</button>
-        <span className="pill role-admin dot">Admin</span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr 360px', flex: 1, minHeight: 0 }}>
-        {/* Tree */}
-        <div style={{ borderRight: '1px solid var(--line)', background: 'var(--paper)', overflow: 'auto' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Editing</div>
-                <div style={{ fontSize: 17, marginTop: 4, fontWeight: 600 }}>{mockCourse.code} · {mockCourse.title}</div>
-              </div>
-              <span style={{ fontSize: 10, padding: '4px 8px', borderRadius: 4, color: 'var(--warn)', background: 'var(--warn-soft)', border: '1px solid var(--warn)' }}>{mockCourse.status}</span>
-            </div>
+    <LmsLayout
+      role="ADMIN"
+      heading="LMS Control Workspace"
+      subtitle="Manage the course catalog and launch real batches tied to mentors."
+      userName={user.full_name}
+      tabs={[
+        { id: "catalog", label: "Catalog" },
+        { id: "create", label: "Create & connect" },
+      ]}
+      activeTab={activeTab}
+      onTabChange={(id) => setActiveTab(id as AdminTab)}
+    >
+      {activeTab === "catalog" ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-4 gap-4">
+            <StatTile label="Courses" value={courses.length} sub="in LMS catalog" />
+            <StatTile label="Linked batches" value={batches.length} sub="across all courses" />
+            <StatTile label="Mentors" value={mentors.length} sub="eligible for assignment" />
+            <StatTile label="Drafts" value={courses.filter((item) => item.status === "DRAFT").length} sub="pending publish" />
           </div>
-          <div style={{ padding: 8 }}>
-            {mockCourse.modules.map((mod, mi) => (
-              <div key={mod.id} style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px' }}>
-                  <div style={{ fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{String(mi+1).padStart(2,'0')} · {mod.title}</div>
-                  <button style={{ padding: 4, background: 'transparent', border: 'none', color: 'var(--ink-3)', cursor: 'pointer' }}>+</button>
-                </div>
-                {mod.lectures.map((l, li) => {
-                  const active = mi === 1 && li === 2;
-                  return (
-                    <div key={l.id} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '8px 10px', borderRadius: 6,
-                      background: active ? 'var(--ink)' : 'transparent',
-                      color: active ? 'var(--paper)' : 'var(--ink-2)',
-                      fontSize: 12.5, cursor: 'pointer',
-                    }}>
-                      <span style={{ fontSize: 10, opacity: 0.5, width: 24 }}>{mi+1}.{li+1}</span>
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.title}</span>
-                      <span style={{ fontSize: 10, opacity: 0.6 }}>{l.kind === 'video' ? '▶' : '¶'}</span>
+
+          <div className="grid gap-4" style={{ gridTemplateColumns: "320px 1fr 360px" }}>
+            <Panel title="Course tree" sub="Modules and lectures">
+              <div className="max-h-[72vh] overflow-auto p-2">
+                {coursesLoading ? (
+                  <EmptyHint text="Loading courses…" />
+                ) : courses.length === 0 ? (
+                  <EmptyHint text="No courses yet. Create one from the next tab." />
+                ) : (
+                  courses.map((course) => {
+                    const selected = course.id === selectedCourse?.id;
+                    return (
+                      <div key={course.id} className="mb-2 border border-border-default rounded-md overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCourseId(course.id)}
+                          className={`w-full text-left px-3 py-2 border-b border-border-default ${selected ? "bg-bg-primary" : "bg-bg-secondary hover:bg-bg-primary"}`}
+                        >
+                          <p className="text-[12.5px] text-white">{course.title}</p>
+                          <p className="text-[10.5px] text-text-muted mt-1">
+                            {course.modules.length} modules · {course.status}
+                          </p>
+                        </button>
+                        {selected && (
+                          <div className="p-2 space-y-1 bg-bg-secondary">
+                            {course.modules.map((module, moduleIdx) => (
+                              <div key={module.id}>
+                                <p className="font-mono text-[10px] text-text-muted px-1 py-1 uppercase tracking-[0.08em]">
+                                  {String(moduleIdx + 1).padStart(2, "0")} · {module.title}
+                                </p>
+                                {module.lectures.map((lecture) => {
+                                  const key = `${module.id}:${lecture.id}`;
+                                  const active = selectedLecture?.key === key;
+                                  return (
+                                    <button
+                                      key={lecture.id}
+                                      type="button"
+                                      onClick={() => setSelectedLectureKey(key)}
+                                      className={`w-full text-left px-2 py-1.5 rounded-md text-[12px] ${
+                                        active ? "bg-bg-primary text-white" : "text-text-secondary hover:bg-bg-primary"
+                                      }`}
+                                    >
+                                      {lecture.title}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </Panel>
+
+            <Panel
+              title={selectedLecture?.lecture.title ?? "Lecture inspector"}
+              sub={selectedLecture ? `${selectedLecture.moduleTitle} · selected lecture` : "Select a lecture from the tree"}
+            >
+              <div className="p-4 space-y-4">
+                {!selectedLecture ? (
+                  <EmptyHint text="Select a lecture to inspect metadata and content." />
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FieldRead label="Video URL" value={selectedLecture.lecture.video_url || "—"} />
+                      <FieldRead label="Assignment reference" value={selectedLecture.lecture.assignment_reference || "—"} />
                     </div>
-                  );
-                })}
+                    <FieldRead
+                      label="Notes / text content"
+                      value={selectedLecture.lecture.text_content || "No notes attached yet."}
+                      multiline
+                    />
+                    <div className="text-[11px] text-text-muted">
+                      Lecture editing endpoint is not exposed yet in backend. This panel is connected and read-only until patch endpoints are added.
+                    </div>
+                  </>
+                )}
               </div>
-            ))}
-            <button style={{ width: '100%', padding: '8px', background: 'transparent', border: '1px dashed var(--line-2)', borderRadius: 6, color: 'var(--ink-3)', cursor: 'pointer', marginTop: 6 }}>+ Add module</button>
+            </Panel>
+
+            <Panel title="Linked batches" sub={selectedCourse ? `For ${selectedCourse.title}` : "Pick a course"}>
+              <div className="max-h-[72vh] overflow-auto">
+                {linkedBatches.length === 0 ? (
+                  <EmptyHint text="No batches linked to this course yet." />
+                ) : (
+                  linkedBatches.map((batch, idx) => (
+                    <div
+                      key={batch.id}
+                      className={`px-4 py-3 ${idx < linkedBatches.length - 1 ? "border-b border-border-default" : ""}`}
+                    >
+                      <p className="font-mono text-[11px] text-brand">{batch.batch_code}</p>
+                      <p className="text-[12.5px] text-text-secondary mt-1">{batch.batch_name}</p>
+                      <p className="text-[10.5px] text-text-muted mt-1">
+                        {fmtDate(batch.batch_start_date)} → {fmtDate(batch.batch_end_date)}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Panel>
           </div>
         </div>
-
-        {/* Editor */}
-        <div style={{ overflow: 'auto', background: 'var(--paper)' }}>
-          <div style={{ padding: '24px 28px' }}>
-            <div style={{ fontSize: 10.5, color: 'var(--ink-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Module 3 · Lecture 3 · editing</div>
-            <input defaultValue="Trees: traversals & DFS" style={{
-              display: 'block', width: '100%', marginTop: 8,
-              fontSize: 30, fontWeight: 600, letterSpacing: '-0.012em',
-              border: 0, background: 'transparent', outline: 'none', color: 'var(--ink)',
-              padding: '4px 0',
-            }}/>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 18 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Video URL</label>
-                <input defaultValue="https://cdn.axar.in/videos/axr-201/m3-l3-trees.mp4" style={{ padding: '8px 12px', border: '1px solid var(--line)', background: 'var(--paper-2)', color: 'var(--ink)', borderRadius: 4 }}/>
+      ) : (
+        <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <Panel title="Create course" sub="Creates an actual LMS course record">
+            <div className="p-4 space-y-3">
+              <FieldInput label="Course title" value={courseForm.title} onChange={(value) => setCourseForm((prev) => ({ ...prev, title: value }))} />
+              <FieldTextarea
+                label="Description"
+                value={courseForm.description}
+                onChange={(value) => setCourseForm((prev) => ({ ...prev, description: value }))}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  label="Module title"
+                  value={courseForm.moduleTitle}
+                  onChange={(value) => setCourseForm((prev) => ({ ...prev, moduleTitle: value }))}
+                />
+                <FieldInput
+                  label="Lecture title"
+                  value={courseForm.lectureTitle}
+                  onChange={(value) => setCourseForm((prev) => ({ ...prev, lectureTitle: value }))}
+                />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Duration</label>
-                <input defaultValue="49:08" style={{ padding: '8px 12px', border: '1px solid var(--line)', background: 'var(--paper-2)', color: 'var(--ink)', borderRadius: 4 }}/>
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  label="Video URL"
+                  value={courseForm.lectureVideoUrl}
+                  onChange={(value) => setCourseForm((prev) => ({ ...prev, lectureVideoUrl: value }))}
+                />
+                <FieldInput
+                  label="Assignment reference"
+                  value={courseForm.assignmentRef}
+                  onChange={(value) => setCourseForm((prev) => ({ ...prev, assignmentRef: value }))}
+                />
+              </div>
+              <FieldTextarea
+                label="Lecture notes"
+                value={courseForm.lectureNotes}
+                onChange={(value) => setCourseForm((prev) => ({ ...prev, lectureNotes: value }))}
+              />
+              <div className="flex items-center justify-between pt-2">
+                <select
+                  value={courseForm.status}
+                  onChange={(e) =>
+                    setCourseForm((prev) => ({ ...prev, status: e.target.value as "DRAFT" | "PUBLISHED" }))
+                  }
+                  className="bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
+                >
+                  <option value="DRAFT">Draft</option>
+                  <option value="PUBLISHED">Published</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={handleCreateCourse}
+                  disabled={createCourseMutation.isPending}
+                  className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150 disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+                >
+                  {createCourseMutation.isPending ? "Creating…" : "Create course"}
+                </button>
               </div>
             </div>
+          </Panel>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
-              <label style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>Lecture notes (markdown)</label>
-              <textarea rows={8} defaultValue={`A binary tree is recursive by nature: each node has a left subtree and a right subtree.
-
-The three classical traversals — preorder, inorder, postorder — differ only in **when** you visit the node relative to its children.
-
-> In a BST, inorder traversal yields keys in ascending order.`}
-                style={{ padding: '8px 12px', border: '1px solid var(--line)', background: 'var(--paper-2)', color: 'var(--ink)', borderRadius: 4, fontSize: 12, lineHeight: 1.6, resize: 'vertical' }}/>
-            </div>
-
-            <div style={{ marginTop: 18 }}>
-              <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Assignment binding</div>
-              <div style={{ padding: 14, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontSize: 12 }}>axr-201/m3-trees-traversals</div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 4 }}>Template repo · auto-forked per student</div>
-                  </div>
-                  <button style={{ padding: '6px 12px', background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)', borderRadius: 4, cursor: 'pointer' }}>Change repo</button>
-                </div>
+          <Panel title="Create linked batch" sub="Connects a mentor and dates to a course">
+            <div className="p-4 space-y-3">
+              <select
+                value={effectiveCourseId ?? ""}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
+              >
+                <option value="">Select course</option>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+              <div className="grid grid-cols-2 gap-3">
+                <FieldInput
+                  label="Batch code"
+                  value={batchForm.batch_code}
+                  onChange={(value) => setBatchForm((prev) => ({ ...prev, batch_code: value.slice(0, 4) }))}
+                />
+                <FieldInput
+                  label="Batch name"
+                  value={batchForm.batch_name}
+                  onChange={(value) => setBatchForm((prev) => ({ ...prev, batch_name: value }))}
+                />
+              </div>
+              <FieldInput
+                label="Description"
+                value={batchForm.description}
+                onChange={(value) => setBatchForm((prev) => ({ ...prev, description: value }))}
+              />
+              <div className="grid grid-cols-3 gap-3">
+                <FieldDate
+                  label="Start date"
+                  value={batchForm.batch_start_date}
+                  onChange={(value) => setBatchForm((prev) => ({ ...prev, batch_start_date: value }))}
+                />
+                <FieldDate
+                  label="End date"
+                  value={batchForm.batch_end_date}
+                  onChange={(value) => setBatchForm((prev) => ({ ...prev, batch_end_date: value }))}
+                />
+                <FieldDate
+                  label="Estimated end"
+                  value={batchForm.estimated_end_date}
+                  onChange={(value) => setBatchForm((prev) => ({ ...prev, estimated_end_date: value }))}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-[11px] text-text-muted">
+                  Mentor
+                  <select
+                    value={batchForm.mentor_id}
+                    onChange={(e) => setBatchForm((prev) => ({ ...prev, mentor_id: e.target.value }))}
+                    className="mt-1 w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
+                  >
+                    <option value="">Select mentor</option>
+                    {mentors.map((mentor) => (
+                      <option key={mentor.id} value={mentor.id}>
+                        {mentor.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-[11px] text-text-muted">
+                  Total classes
+                  <input
+                    type="number"
+                    min={1}
+                    value={batchForm.total_classes}
+                    onChange={(e) =>
+                      setBatchForm((prev) => ({ ...prev, total_classes: Number(e.target.value) || 1 }))
+                    }
+                    className="mt-1 w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
+                  />
+                </label>
+              </div>
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={handleCreateBatch}
+                  disabled={createBatchMutation.isPending}
+                  className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150 disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+                >
+                  {createBatchMutation.isPending ? "Creating…" : "Create batch"}
+                </button>
               </div>
             </div>
+          </Panel>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 22 }}>
-              <button style={{ padding: '8px 16px', background: 'var(--ink)', color: 'var(--paper)', border: '1px solid var(--ink)', borderRadius: 4, fontWeight: 500, cursor: 'pointer' }}>Save changes</button>
-              <button style={{ padding: '8px 16px', background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 4, fontWeight: 500, cursor: 'pointer' }}>Publish lecture</button>
+          {feedback ? (
+            <div className="col-span-2 bg-bg-secondary border border-border-default rounded-lg px-4 py-3 text-[12.5px] text-text-secondary">
+              {feedback}
             </div>
-          </div>
+          ) : null}
         </div>
+      )}
+    </LmsLayout>
+  );
+}
 
-        {/* Right rail: activity + JSON import card */}
-        <div style={{ borderLeft: '1px solid var(--line)', background: 'var(--paper-2)', overflow: 'auto' }}>
-          <div style={{ padding: 16 }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 8 }}>Import a course</div>
-            <div style={{ padding: 14, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8 }}>
-              <div style={{ fontSize: 12, marginBottom: 6 }}>course-creator-helper-cli</div>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-3)', marginBottom: 12, lineHeight: 1.5 }}>
-                Generate a course JSON locally, then drop it here. We'll validate and create a draft.
-              </div>
-              <div style={{
-                border: '1.5px dashed var(--line-2)', borderRadius: 8,
-                padding: 18, textAlign: 'center', background: 'var(--card)',
-              }}>
-                <div style={{ fontSize: 11, color: 'var(--ink-3)', marginBottom: 6 }}>course.v1.json</div>
-                <div style={{ fontSize: 12 }}>Drop JSON here, or <span style={{ color: 'var(--accent)', textDecoration: 'underline' }}>browse</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
+function FieldRead({ label, value, multiline = false }: { label: string; value: string; multiline?: boolean }) {
+  return (
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">{label}</p>
+      <div className={`mt-1 px-3 py-2 rounded-md border border-border-default bg-bg-primary text-[12.5px] text-text-secondary ${multiline ? "min-h-[120px] whitespace-pre-wrap leading-6" : "truncate"}`}>
+        {value}
       </div>
     </div>
+  );
+}
+
+function FieldInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-[11px] text-text-muted">
+      {label}
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
+      />
+    </label>
+  );
+}
+
+function FieldTextarea({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-[11px] text-text-muted">
+      {label}
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        className="mt-1 w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary resize-none"
+      />
+    </label>
+  );
+}
+
+function FieldDate({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-[11px] text-text-muted">
+      {label}
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
+      />
+    </label>
   );
 }

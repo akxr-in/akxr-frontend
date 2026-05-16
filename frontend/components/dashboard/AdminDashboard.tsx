@@ -1079,7 +1079,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
       >
         {activeTab === "overview" && (
           <OverviewScreen
-            onNewCourse={() => router.push("/lms/admin")}
+            onNewCourse={() => router.push("/lms/admin?tab=create")}
             firstName={firstName}
             dashData={dashData}
             dashLoading={dashLoading}
@@ -1089,7 +1089,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
         )}
         {activeTab === "catalog" && (
           <CatalogScreen
-            onNewCourse={() => router.push("/lms/admin")}
+            onNewCourse={() => router.push("/lms/admin?tab=create")}
             courses={courses}
             batches={batches}
             getMentorName={getMentorName}
