@@ -411,6 +411,58 @@ export const useAssignStudentToBatch = (): UseMutationResult<
     mutationFn: ({ userId, batchId }) => assignStudentToBatch(userId, batchId),
   })
 
+// ── Admin: batch-request approval ─────────────────────────────────────────────
+
+export type BatchRequestStatus = 'pending' | 'approved' | 'rejected'
+
+export interface AdminBatchRequest {
+  id: string
+  batch_code: string
+  mentor_id: string
+  change_type: string
+  proposed_value?: string | null
+  reason: string
+  status: BatchRequestStatus
+  created_at: string
+  updated_at: string
+}
+
+export const getAllBatchRequests = (): Promise<{
+  data: { data: AdminBatchRequest[]; message: string }
+  status: number
+  headers: Headers
+}> =>
+  customFetch(`/batch-requests`, { method: 'GET' })
+
+export const getGetAllBatchRequestsQueryKey = () => ['getAllBatchRequests'] as const
+
+export const useGetAllBatchRequests = (
+  options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBatchRequests>>, Error>> }
+) =>
+  useQuery({
+    queryKey: getGetAllBatchRequestsQueryKey(),
+    queryFn: getAllBatchRequests,
+    ...options?.query,
+  })
+
+export const updateBatchRequestStatus = (
+  id: string,
+  status: 'approved' | 'rejected'
+): Promise<void> =>
+  customFetch<void>(`/batch-requests/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+
+export const useUpdateBatchRequestStatus = (): UseMutationResult<
+  void,
+  Error,
+  { id: string; status: 'approved' | 'rejected' }
+> =>
+  useMutation({
+    mutationFn: ({ id, status }) => updateBatchRequestStatus(id, status),
+  })
+
 // ── Self-enroll in a batch (student) ──────────────────────────────────────────
 
 export const enrollInBatch = (batchId: string): Promise<void> =>

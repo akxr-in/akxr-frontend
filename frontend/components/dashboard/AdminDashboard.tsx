@@ -18,15 +18,20 @@ import {
   usePatchBatchId,
   useAssignStudentToBatch,
   useDeleteAdminUser,
+  useGetAllBatchRequests,
+  useUpdateBatchRequestStatus,
   getAdminBatchesQueryKey,
   getAdminCoursesQueryKey,
   getAdminDashboardQueryKey,
+  getGetAllBatchRequestsQueryKey,
   type AdminDashboard as AdminDashboardData,
   type AdminBatch,
   type AdminCourse,
   type AdminUser,
+  type AdminBatchRequest,
 } from "@akxr/api";
 import { useGetAdminUsers, getGetAdminUsersQueryKey } from "@akxr/api";
+import toast from "react-hot-toast";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -243,6 +248,88 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
 // Screens
 // ---------------------------------------------------------------------------
 
+function ApprovalInbox() {
+  const queryClient = useQueryClient();
+  const { data: requestsRes, isLoading } = useGetAllBatchRequests();
+  const { mutateAsync: updateStatus, isPending } = useUpdateBatchRequestStatus();
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+
+  const allRequests: AdminBatchRequest[] = requestsRes?.data?.data ?? [];
+  const pending = allRequests.filter((r) => r.status === "pending");
+
+  const handleDecide = async (id: string, status: "approved" | "rejected") => {
+    setPendingKey(`${id}:${status}`);
+    try {
+      await updateStatus({ id, status });
+      await queryClient.invalidateQueries({ queryKey: getGetAllBatchRequestsQueryKey() });
+      toast.success(`Request ${status}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update request");
+    } finally {
+      setPendingKey(null);
+    }
+  };
+
+  return (
+    <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
+      <div className="px-4 py-3 border-b border-border-default flex items-center justify-between">
+        <p className="text-[13px] font-semibold text-white">Approval inbox</p>
+        {pending.length > 0 && (
+          <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">
+            {pending.length} pending
+          </span>
+        )}
+      </div>
+      {isLoading ? (
+        <div className="p-8 text-center text-text-muted text-[13px]">Loading…</div>
+      ) : pending.length === 0 ? (
+        <div className="p-8 text-center text-text-muted text-[13px]">No pending requests.</div>
+      ) : (
+        <ul className="divide-y divide-border-default">
+          {pending.map((req) => (
+            <li key={req.id} className="px-4 py-3 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[12.5px] text-text-primary">
+                    <span className="font-mono text-brand">{req.batch_code}</span>
+                    <span className="text-text-muted"> · </span>
+                    <span className="capitalize">{req.change_type}</span>
+                    {req.proposed_value && (
+                      <>
+                        <span className="text-text-muted"> → </span>
+                        <span className="font-mono">{req.proposed_value}</span>
+                      </>
+                    )}
+                  </p>
+                  <p className="text-[11.5px] text-text-muted mt-0.5 truncate">{req.reason}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => handleDecide(req.id, "approved")}
+                    className="px-2.5 py-1 rounded-md text-[11px] font-medium border border-success/40 text-success hover:bg-success/10 disabled:opacity-50 transition-colors"
+                  >
+                    {pendingKey === `${req.id}:approved` ? "…" : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => handleDecide(req.id, "rejected")}
+                    className="px-2.5 py-1 rounded-md text-[11px] font-medium border border-error/40 text-error hover:bg-error/10 disabled:opacity-50 transition-colors"
+                  >
+                    {pendingKey === `${req.id}:rejected` ? "…" : "Reject"}
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function OverviewScreen({
   onNewCourse,
   firstName,
@@ -331,12 +418,7 @@ function OverviewScreen({
         </div>
 
         {/* Approval inbox */}
-        <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-border-default">
-            <p className="text-[13px] font-semibold text-white">Approval inbox</p>
-          </div>
-          <div className="p-8 text-center text-text-muted text-[13px]">No pending requests.</div>
-        </div>
+        <ApprovalInbox />
       </div>
     </div>
   );
