@@ -2,8 +2,9 @@
 
 import { useRef, useEffect } from "react";
 import { Button, Input } from "@akxr/design-system";
-import { usePostMeeting } from "@akxr/api";
+import { usePostMeeting, getGetBatchIdMeetingsQueryKey } from "@akxr/api";
 import type { PostMeetingBody } from "@akxr/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,7 @@ interface Props {
 
 export function ScheduleClassModal({ open, onClose, batchId, onSuccess }: Props) {
     const overlayRef = useRef<HTMLDivElement>(null);
+    const queryClient = useQueryClient();
     const { mutate, isPending } = usePostMeeting();
 
     const {
@@ -76,6 +78,7 @@ export function ScheduleClassModal({ open, onClose, batchId, onSuccess }: Props)
 
         mutate({ data: body }, {
             onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: getGetBatchIdMeetingsQueryKey(batchId) });
                 reset();
                 onClose();
                 onSuccess?.();
