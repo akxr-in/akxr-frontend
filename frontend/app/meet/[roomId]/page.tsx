@@ -33,39 +33,24 @@ function MeetingRoom({
   const roomJoined = useRealtimeKitSelector((m) => m.self.roomJoined);
 
   const [joinedUserIds, setJoinedUserIds] = useState<Set<string>>(new Set());
-  const [activeUserIds, setActiveUserIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"chat" | "people">("people");
   const [ended, setEnded] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [ending, setEnding] = useState(false);
 
+  // Track joined participants reactively via selector — accumulate to capture leavers too
+  const joinedParticipants = useRealtimeKitSelector((m) => (m as any).participants?.joined);
+  const activeParticipants = useRealtimeKitSelector((m) => (m as any).participants?.active);
+
   useEffect(() => {
-    if (!meeting || !roomJoined) return;
-
-    const onJoin = (p: any) => {
-      const uid = p.userId || p.customParticipantId;
-      if (!uid) return;
-      setJoinedUserIds((prev) => new Set([...prev, uid]));
-      setActiveUserIds((prev) => new Set([...prev, uid]));
-    };
-
-    const onLeave = (p: any) => {
-      const uid = p.userId || p.customParticipantId;
-      if (!uid) return;
-      setActiveUserIds((prev) => {
-        const next = new Set(prev);
-        next.delete(uid);
-        return next;
-      });
-    };
-
-    (meeting as any).on("participantJoined", onJoin);
-    (meeting as any).on("participantLeft", onLeave);
-    return () => {
-      (meeting as any).off("participantJoined", onJoin);
-      (meeting as any).off("participantLeft", onLeave);
-    };
-  }, [meeting, roomJoined]);
+    if (!joinedParticipants) return;
+    const ids: string[] = (joinedParticipants.toArray?.() ?? [])
+      .map((p: any) => p.userId || p.customParticipantId)
+      .filter(Boolean);
+    if (ids.length > 0) {
+      setJoinedUserIds((prev) => new Set([...prev, ...ids]));
+    }
+  }, [joinedParticipants]);
 
   const handleLeave = () => {
     meeting.leaveRoom();
@@ -75,10 +60,14 @@ function MeetingRoom({
   const handleEndMeeting = async () => {
     setEnding(true);
     try {
+      const activeIds: string[] = (activeParticipants?.toArray?.() ?? [])
+        .map((p: any) => p.userId || p.customParticipantId)
+        .filter(Boolean);
+
       await customFetch(`/meeting/${meetingId}/end`, {
         method: "POST",
         body: JSON.stringify({
-          present_participant_ids: Array.from(activeUserIds),
+          present_participant_ids: activeIds,
           joined_participant_ids: Array.from(joinedUserIds),
         }),
       });
