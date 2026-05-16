@@ -1,14 +1,39 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { Spinner } from "@akxr/design-system";
-import { useGetBatch } from "@akxr/api";
+import { useGetBatch, useEnrollInBatch, useGetUser, getGetUserQueryKey } from "@akxr/api";
 import type { GetBatch200DataItem } from "@akxr/api";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { BatchCard } from "../../../../../components/BatchCard";
 
 export default function StudentEnrollPage() {
+    const router = useRouter();
+    const queryClient = useQueryClient();
     const { data: batchesData, isLoading, error } = useGetBatch();
+    const { data: userRes } = useGetUser();
+    const { mutateAsync: enroll, isPending: isEnrolling } = useEnrollInBatch();
+    const [pendingBatchId, setPendingBatchId] = useState<string | null>(null);
+
+    const enrolledBatchIds: string[] =
+        userRes?.status === 200 ? userRes.data.data?.batch_ids ?? [] : [];
+
+    const handleEnroll = async (batchId: string) => {
+        setPendingBatchId(batchId);
+        try {
+            await enroll(batchId);
+            await queryClient.invalidateQueries({ queryKey: getGetUserQueryKey() });
+            toast.success("Enrolled successfully");
+            router.push("/");
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Failed to enroll");
+        } finally {
+            setPendingBatchId(null);
+        }
+    };
 
     const batches: GetBatch200DataItem[] = useMemo(() => {
         if (batchesData?.status === 200 && Array.isArray(batchesData.data?.data)) {
@@ -66,13 +91,21 @@ export default function StudentEnrollPage() {
                                     const isCompleted =
                                         batch.batch_end_date &&
                                         new Date(batch.batch_end_date) < new Date();
+                                    const isEnrolled = enrolledBatchIds.includes(batch.id);
+                                    const isThisPending = isEnrolling && pendingBatchId === batch.id;
                                     return (
                                         <BatchCard
                                             key={batch.id}
                                             batch={batch}
-                                            actionLabel="Enroll Now"
-                                            actionDisabled={!!isCompleted}
-                                            onAction={() => console.log("Enroll in batch", batch.id)}
+                                            actionLabel={
+                                                isEnrolled
+                                                    ? "Enrolled"
+                                                    : isThisPending
+                                                    ? "Enrolling…"
+                                                    : "Enroll Now"
+                                            }
+                                            actionDisabled={!!isCompleted || isEnrolled || isEnrolling}
+                                            onAction={() => handleEnroll(batch.id)}
                                         />
                                     );
                                 })}

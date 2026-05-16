@@ -58,6 +58,7 @@ export {
   getAdminCourses, getAdminCoursesQueryKey, useGetAdminCourses,
   updateMeetingAttendance, useUpdateMeetingAttendance,
   assignStudentToBatch, useAssignStudentToBatch,
+  enrollInBatch, useEnrollInBatch,
   deleteBatch, useDeleteBatch,
   deleteAdminUser, useDeleteAdminUser,
   getBatchStudents, getBatchStudentsQueryKey, useGetBatchStudents,

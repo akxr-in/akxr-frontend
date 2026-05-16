@@ -411,6 +411,18 @@ export const useAssignStudentToBatch = (): UseMutationResult<
     mutationFn: ({ userId, batchId }) => assignStudentToBatch(userId, batchId),
   })
 
+// ── Self-enroll in a batch (student) ──────────────────────────────────────────
+
+export const enrollInBatch = (batchId: string): Promise<void> =>
+  customFetch<void>(`/user/batches/${batchId}/enroll`, {
+    method: 'POST',
+  })
+
+export const useEnrollInBatch = (): UseMutationResult<void, Error, string> =>
+  useMutation({
+    mutationFn: (batchId: string) => enrollInBatch(batchId),
+  })
+
 // ── Attendance override ───────────────────────────────────────────────────────
 
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'PARTIALLY_PRESENT'
