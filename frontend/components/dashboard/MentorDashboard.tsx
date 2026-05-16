@@ -12,10 +12,14 @@ import {
   useGetMeetingIdAttendance,
   useGetBatchRequestsMy,
   usePostBatchRequests,
+  useUpdateMeetingAttendance,
   getBatchIdMeetings,
   getGetBatchIdMeetingsQueryKey,
-  type MentorBatch
+  getGetMeetingIdAttendanceQueryKey,
+  type MentorBatch,
+  type AttendanceStatus,
 } from "@akxr/api";
+import toast from "react-hot-toast";
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { getGetBatchRequestsMyQueryKey } from "@akxr/api";
@@ -483,6 +487,27 @@ function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const attendanceData: any = (attendanceRes as any)?.data?.data;
 
+  const queryClient = useQueryClient();
+  const { mutateAsync: updateAttendance, isPending: isUpdating } = useUpdateMeetingAttendance();
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+
+  const handleMark = async (userId: string, status: AttendanceStatus) => {
+    if (!selectedMeetingId) return;
+    const key = `${userId}:${status}`;
+    setPendingKey(key);
+    try {
+      await updateAttendance({ meetingId: selectedMeetingId, userId, status });
+      await queryClient.invalidateQueries({
+        queryKey: getGetMeetingIdAttendanceQueryKey(selectedMeetingId),
+      });
+      toast.success(`Marked ${status.toLowerCase().replace('_', ' ')}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update attendance");
+    } finally {
+      setPendingKey(null);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -532,6 +557,7 @@ function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
                   <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Student</th>
                   <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Status</th>
                   <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Time in Meeting</th>
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Mark</th>
                 </tr>
               </thead>
               <tbody>
@@ -545,6 +571,31 @@ function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
                       </span>
                     </td>
                     <td className="px-3.5 py-3 text-[12.5px] text-text-muted">{Math.round((attendee.total_time_seconds || 0) / 60)} mins</td>
+                    <td className="px-3.5 py-3">
+                      <div className="flex items-center gap-1.5">
+                        {(['PRESENT', 'PARTIALLY_PRESENT', 'ABSENT'] as AttendanceStatus[]).map((s) => {
+                          const key = `${attendee.user_id}:${s}`;
+                          const isActive = attendee.status === s;
+                          const isThisPending = pendingKey === key;
+                          const label = s === 'PRESENT' ? 'P' : s === 'PARTIALLY_PRESENT' ? 'PP' : 'A';
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              disabled={isUpdating || isActive}
+                              onClick={() => handleMark(attendee.user_id, s)}
+                              className={`px-2 py-1 rounded text-[10px] font-mono uppercase border transition-colors ${
+                                isActive
+                                  ? 'border-brand text-brand bg-brand/10 cursor-default'
+                                  : 'border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary disabled:opacity-50'
+                              }`}
+                            >
+                              {isThisPending ? '…' : label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
