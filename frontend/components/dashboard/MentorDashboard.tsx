@@ -14,9 +14,12 @@ import {
   useGetBatchRequestsMy,
   usePostBatchRequests,
   getMentorBatchesQueryKey,
+  getBatchIdMeetings,
+  getGetBatchIdMeetingsQueryKey,
   type MentorBatch
 } from "@akxr/api";
 import { useMemo } from "react";
+import { useQueries } from "@tanstack/react-query";
 import { getGetBatchRequestsMyQueryKey } from "@akxr/api";
 
 // ---------------------------------------------------------------------------
@@ -191,7 +194,13 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
   const [showModal, setShowModal] = useState(false);
   const [showChangeModal, setShowChangeModal] = useState(false);
 
-  const { data: meetingsData } = useGetMeeting();
+  // GET /meeting is admin-only — fetch per-batch instead (mentor has access to GET /batch/:id/meetings)
+  const meetingQueries = useQueries({
+    queries: batches.map((b) => ({
+      queryKey: getGetBatchIdMeetingsQueryKey(b.id),
+      queryFn: () => getBatchIdMeetings(b.id),
+    })),
+  });
 
   const totalStudents = batches.reduce((acc, b) => acc + b.student_count, 0);
   const avgAtt = batches.length > 0
@@ -209,7 +218,7 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
 
   const scheduledClasses = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw: any[] = (meetingsData as any)?.data?.data ?? [];
+    const raw: any[] = meetingQueries.flatMap((q) => (q.data as any)?.data?.data ?? []);
     if (!raw.length) return [];
     const now = new Date();
     return raw
@@ -240,7 +249,7 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
           timeRemaining,
         };
       });
-  }, [meetingsData, batchNameMap]);
+  }, [meetingQueries, batchNameMap]);
 
   const firstBatch = batches[0];
   const liveClass = scheduledClasses.find((c) => c.isLive);
