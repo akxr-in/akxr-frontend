@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
@@ -46,10 +47,11 @@ type ChangeType = 'date' | 'reschedule' | 'size';
 
 interface ChangeModalProps {
   batchCode: string;
+  currentEndDate?: string | null;
   onClose: () => void;
 }
 
-function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
+function ChangeModal({ batchCode, currentEndDate, onClose }: ChangeModalProps) {
   const [changeType, setChangeType] = useState<ChangeType>('date');
   const [reason, setReason] = useState('');
   const [proposedDate, setProposedDate] = useState('');
@@ -116,6 +118,7 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
                 <input
                   type="text"
                   readOnly
+                  value={currentEndDate ? new Date(currentEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                   className="w-full bg-bg-elevated border border-border-default rounded-md px-3 py-2 text-[13px] text-text-muted"
                 />
               </div>
@@ -183,6 +186,7 @@ function ChangeModal({ batchCode, onClose }: ChangeModalProps) {
 // ---------------------------------------------------------------------------
 
 function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; batches: MentorBatch[]; isLoading: boolean }) {
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
 
   const totalStudents = batches.reduce((acc, b) => acc + b.student_count, 0);
@@ -268,6 +272,7 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
                     <td className="px-3.5 py-3">
                       <button
                         type="button"
+                        onClick={() => router.push(`/control-panel/admin/batches/${batch.id}`)}
                         className="inline-flex items-center px-3 py-1 rounded-md text-[11.5px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
                       >
                         View
@@ -318,7 +323,11 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
       )}
 
       {showModal && firstBatch && (
-        <ChangeModal batchCode={firstBatch.batch_code} onClose={() => setShowModal(false)} />
+        <ChangeModal
+          batchCode={firstBatch.batch_code}
+          currentEndDate={firstBatch.batch_end_date}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );
@@ -417,10 +426,11 @@ function AttendanceScreen() {
   );
 }
 
-function RequestsScreen() {
+function RequestsScreen({ batches }: { batches: MentorBatch[] }) {
   const [showModal, setShowModal] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<MentorBatch | null>(null);
   const { data: requestsRes, isLoading } = useGetBatchRequestsMy();
-  
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const requests = (requestsRes?.data as any)?.data || [];
 
@@ -433,7 +443,7 @@ function RequestsScreen() {
         </div>
         <button
           type="button"
-          onClick={() => setShowModal(true)}
+          onClick={() => { setSelectedBatch(batches[0] ?? null); setShowModal(true); }}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
           style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
         >
@@ -482,7 +492,11 @@ function RequestsScreen() {
       )}
 
       {showModal && (
-        <ChangeModal batchCode="" onClose={() => setShowModal(false)} />
+        <ChangeModal
+          batchCode={selectedBatch?.batch_code ?? ""}
+          currentEndDate={selectedBatch?.batch_end_date}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );
@@ -519,7 +533,7 @@ export function MentorDashboard({ user }: MentorDashboardProps) {
     >
       {activeTab === 'batches'    && <BatchesScreen firstName={firstName} batches={batches} isLoading={isLoading} />}
       {activeTab === 'attendance' && <AttendanceScreen />}
-      {activeTab === 'requests'   && <RequestsScreen />}
+      {activeTab === 'requests'   && <RequestsScreen batches={batches} />}
     </AppShell>
   );
 }
