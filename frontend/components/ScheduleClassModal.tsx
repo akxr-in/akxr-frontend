@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { Button, Input } from "@akxr/design-system";
-import { usePostMeeting, getGetBatchIdMeetingsQueryKey } from "@akxr/api";
+import { usePostMeeting, getGetBatchIdMeetingsQueryKey, getGetMeetingQueryKey } from "@akxr/api";
 import type { PostMeetingBody } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -79,6 +79,7 @@ export function ScheduleClassModal({ open, onClose, batchId, onSuccess }: Props)
         mutate({ data: body }, {
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: getGetBatchIdMeetingsQueryKey(batchId) });
+                queryClient.invalidateQueries({ queryKey: getGetMeetingQueryKey() });
                 reset();
                 onClose();
                 onSuccess?.();

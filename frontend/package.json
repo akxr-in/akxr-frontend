@@ -12,6 +12,7 @@
     "@akxr/api": "workspace:*",
     "@akxr/design-system": "workspace:*",
     "@cloudflare/realtimekit-react": "^1.4.0",
+    "@cloudflare/realtimekit-react-ui": "^1.1.2",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.90.20",
     "next": "16.1.6",
