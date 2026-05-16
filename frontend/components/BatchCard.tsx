@@ -21,6 +21,8 @@ export interface BatchCardProps {
   onAction?: () => void;
   /** @deprecated Use onAction instead */
   onViewDetails?: () => void;
+  studentCount?: number;
+  mentorDisplayName?: string;
 }
 
 function formatDate(dateString: string): string {
@@ -62,18 +64,15 @@ function calculateCourseProgress(
   return Math.round((completedCourseIds.length / courseIds.length) * 100);
 }
 
-export const BatchCard = ({ batch, actionLabel = "View details", actionDisabled, onAction, onViewDetails }: BatchCardProps) => {
+export const BatchCard = ({ batch, actionLabel = "View details", actionDisabled, onAction, onViewDetails, studentCount = 0, mentorDisplayName }: BatchCardProps) => {
   const status = getBatchStatus(batch.batch_start_date, batch.batch_end_date);
   const name = batch.batch_name;
   const courseProgress = calculateCourseProgress(
     batch.completed_course_ids,
     batch.course_ids
   );
-  const studentsEnrolled = 0; // TODO: hook up real value when backend provides it
-  const mentorName =
-    batch.mentor_ids.length > 0
-      ? `Mentor ${batch.mentor_ids[0].slice(0, 8)}`
-      : "No mentor assigned";
+  const studentsEnrolled = studentCount;
+  const mentorName = mentorDisplayName ?? (batch.mentor_ids.length > 0 ? "Mentor assigned" : "No mentor assigned");
   const description = batch.description || "No description available";
   const startDate = formatDate(batch.batch_start_date);
   const endDate = batch.batch_end_date

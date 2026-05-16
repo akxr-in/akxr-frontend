@@ -1,26 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Spinner } from "@akxr/design-system";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../components/SidebarNav";
 import { BatchCard } from "../../../../../components/BatchCard";
 import { CrudBatchModal } from "../../../../../components/CrudBatchModal";
-import { useGetBatch, getGetBatchQueryKey } from "@akxr/api";
+import { useGetBatch, getGetBatchQueryKey, useGetAdminUsers } from "@akxr/api";
 
 // Main Page Component
 export default function BatchManagementPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
     const { data, isLoading, error } = useGetBatch();
+    const { data: usersData } = useGetAdminUsers();
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // customFetch wraps the response as { data: <openapi>, status, headers }
-    // and GetBatch200 is { data: GetBatch200DataItem[], message }
-    const batchData = Array.isArray(data?.data?.data)
-        ? data.data.data
-        : [];
+    const batchData = Array.isArray(data?.data?.data) ? data.data.data : [];
+
+    const allUsers = useMemo(() => {
+        if (usersData?.status === 200 && Array.isArray(usersData.data?.data)) {
+            return usersData.data.data;
+        }
+        return [];
+    }, [usersData]);
+
+    const studentCountByBatch = useMemo(() => {
+        const counts: Record<string, number> = {};
+        allUsers.forEach((u) => {
+            if (u.role === "STUDENT") {
+                (u.batch_ids ?? []).forEach((bId) => {
+                    counts[bId] = (counts[bId] ?? 0) + 1;
+                });
+            }
+        });
+        return counts;
+    }, [allUsers]);
+
+    const mentorNameByBatch = useMemo(() => {
+        const names: Record<string, string> = {};
+        batchData.forEach((batch) => {
+            if (batch.mentor_ids.length > 0) {
+                const mentor = allUsers.find((u) => u.id === batch.mentor_ids[0]);
+                names[batch.id] = mentor?.full_name ?? "Mentor assigned";
+            }
+        });
+        return names;
+    }, [batchData, allUsers]);
 
     return (
         <div className="min-h-screen bg-bg-primary flex">
@@ -80,10 +107,10 @@ export default function BatchManagementPage() {
                                     <BatchCard
                                         key={batch.id}
                                         batch={batch}
+                                        studentCount={studentCountByBatch[batch.id] ?? 0}
+                                        mentorDisplayName={mentorNameByBatch[batch.id]}
                                         onViewDetails={() =>
-                                            router.push(
-                                                `/control-panel/admin/batches/${batch.id}`
-                                            )
+                                            router.push(`/control-panel/admin/batches/${batch.id}`)
                                         }
                                     />
                                 ))}
