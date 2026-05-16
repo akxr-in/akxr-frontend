@@ -18,6 +18,7 @@ export interface Meeting {
   created_by: string
   created_at: string
   updated_at: string
+  realtime_kit_room_id?: string
 }
 
 export interface BatchWithStats {

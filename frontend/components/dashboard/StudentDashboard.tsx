@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -25,6 +26,7 @@ interface SessionEntry {
   title: string;
   state: SessionState;
   myAtt: AttStatus | null;
+  rtkRoomId?: string;
 }
 
 interface BatchInfo {
@@ -92,6 +94,7 @@ function deriveSessions(
       title: meeting.title,
       state,
       myAtt,
+      rtkRoomId: meeting.realtime_kit_room_id,
     };
   });
 }
@@ -142,6 +145,7 @@ interface OverviewScreenProps {
   sessions: SessionEntry[];
   isLoading: boolean;
   onOpenBatch: () => void;
+  onJoinLive: (rtkRoomId: string) => void;
 }
 
 function OverviewScreen({
@@ -150,6 +154,7 @@ function OverviewScreen({
   sessions,
   isLoading,
   onOpenBatch,
+  onJoinLive,
 }: OverviewScreenProps) {
   if (isLoading) return <LoadingState />;
 
@@ -188,9 +193,10 @@ function OverviewScreen({
               : "Welcome to your dashboard."}
           </p>
           <div className="flex items-center gap-3">
-            {todaySession && (
+            {todaySession?.rtkRoomId && (
               <button
                 type="button"
+                onClick={() => onJoinLive(todaySession.rtkRoomId!)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
                 style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
               >
@@ -331,9 +337,10 @@ interface BatchDetailScreenProps {
   batchInfo: BatchInfo | null;
   sessions: SessionEntry[];
   onBack: () => void;
+  onJoinLive: (rtkRoomId: string) => void;
 }
 
-function BatchDetailScreen({ batchInfo, sessions, onBack }: BatchDetailScreenProps) {
+function BatchDetailScreen({ batchInfo, sessions, onBack, onJoinLive }: BatchDetailScreenProps) {
   return (
     <div className="space-y-5">
       {/* Back + header */}
@@ -420,9 +427,10 @@ function BatchDetailScreen({ batchInfo, sessions, onBack }: BatchDetailScreenPro
                     )}
                   </td>
                   <td className="px-3.5 py-3">
-                    {session.state === "today" ? (
+                    {session.state === "today" && session.rtkRoomId ? (
                       <button
                         type="button"
+                        onClick={() => onJoinLive(session.rtkRoomId!)}
                         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11.5px] font-medium border border-brand text-brand hover:bg-brand hover:text-text-inverted transition-all"
                       >
                         Join
@@ -455,8 +463,11 @@ const STUDENT_TABS = [
 ];
 
 export function StudentDashboard({ user }: StudentDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const firstName = user.full_name.split(" ")[0];
+
+  const handleJoinLive = (rtkRoomId: string) => router.push(`/meet/${rtkRoomId}`);
 
   const { data: batchRes, isLoading: batchLoading } = useGetUserBatches();
   const { data: attRes, isLoading: attLoading } = useGetUserAttendance();
@@ -515,6 +526,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           sessions={sessions}
           isLoading={isLoading}
           onOpenBatch={() => setActiveTab("batch")}
+          onJoinLive={handleJoinLive}
         />
       )}
       {activeTab === "batch" && (
@@ -522,6 +534,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           batchInfo={batchInfo}
           sessions={sessions}
           onBack={() => setActiveTab("overview")}
+          onJoinLive={handleJoinLive}
         />
       )}
     </AppShell>
