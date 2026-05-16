@@ -5,13 +5,15 @@ import {
   useGetUser,
   useGetUserAttendance,
   useGetUserBatches,
+  useGetContinueLearning,
   type AttendanceWithMeeting,
   type BatchWithStats,
 } from "@akxr/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EmptyHint, fmtDate, fmtDateTime, LmsLayout, Panel, StatTile } from "@/components/lms/LmsLayout";
+import { CoursePlayer } from "@/components/lms/CoursePlayer";
 
-type StudentTab = "home" | "course";
+type StudentTab = "home" | "courses";
 
 type SessionState = "done" | "today" | "upcoming";
 
@@ -56,11 +58,11 @@ function LMSStudentInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<StudentTab>("home");
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
   const { data: userRes, isLoading: userLoading } = useGetUser();
   const { data: batchesRes, isLoading: batchLoading } = useGetUserBatches();
   const { data: attendanceRes, isLoading: attendanceLoading } = useGetUserAttendance();
+  const { data: continueLearningRes } = useGetContinueLearning();
 
   const user = userRes?.status === 200 ? userRes.data.data : null;
 
@@ -76,6 +78,11 @@ function LMSStudentInner() {
     (selectedBatchId ? batches.find((item) => item.id === selectedBatchId) : undefined) ??
     batches[0] ??
     null;
+
+  // Continue learning context
+  const continueLearning = continueLearningRes?.data?.data;
+  const nextCourseId = continueLearning?.next?.course_id ?? null;
+  const nextLectureId = continueLearning?.next?.lecture_id ?? null;
 
   const sessions = useMemo<SessionView[]>(() => {
     if (!batch) return [];
@@ -114,13 +121,6 @@ function LMSStudentInner() {
       });
   }, [attendanceRecords, batch]);
 
-  const resumeSession =
-    sessions.find((s) => s.state === "today") ??
-    sessions.find((s) => s.state === "upcoming") ??
-    sessions[sessions.length - 1] ??
-    null;
-  const effectiveActiveSessionId = activeSessionId ?? resumeSession?.id ?? null;
-  const activeSession = sessions.find((s) => s.id === effectiveActiveSessionId) ?? sessions[0] ?? null;
   const doneCount = sessions.filter((s) => s.state === "done").length;
   const progress = sessions.length > 0 ? doneCount / sessions.length : 0;
   const attendanceRows = sessions.filter((s) => s.state === "done" && s.attendance !== null);
@@ -135,155 +135,120 @@ function LMSStudentInner() {
   const firstName = user?.full_name.split(" ")[0] ?? "there";
   const loading = userLoading || batchLoading || attendanceLoading;
 
+  const upcomingSessions = sessions.filter((s) => s.state !== "done").slice(0, 5);
+
   if (!user || user.role !== "STUDENT") return null;
 
   return (
     <LmsLayout
       role="STUDENT"
       heading={`Welcome back, ${firstName}.`}
-      subtitle="Track your batch progress, continue sessions, and review your attendance from one place."
+      subtitle="Track your batch progress, continue your course, and review your attendance."
       userName={user.full_name}
       tabs={[
         { id: "home", label: "My batch" },
-        { id: "course", label: "Session player" },
+        { id: "courses", label: "Courses" },
       ]}
       activeTab={activeTab}
       onTabChange={(id) => setActiveTab(id as StudentTab)}
     >
       {loading ? (
-        <div className="h-[45vh] flex items-center justify-center text-text-muted text-[13px]">Loading LMS workspace…</div>
+        <div className="h-[45vh] flex items-center justify-center text-text-muted text-[13px]">
+          Loading LMS workspace…
+        </div>
       ) : !batch ? (
         <Panel title="No batch assigned yet">
           <EmptyHint text="You are not assigned to a batch yet. Once admin adds you, your LMS timeline will appear here." />
         </Panel>
       ) : activeTab === "home" ? (
         <div className="space-y-5">
+          {/* Stats row */}
           <div className="grid grid-cols-4 gap-4">
             <StatTile label="Batch" value={batch.batch_code} sub={batch.batch_name} />
-            <StatTile label="Progress" value={`${Math.round(progress * 100)}%`} sub={`${doneCount}/${sessions.length} sessions done`} />
-            <StatTile label="Attendance" value={`${Math.round(attendanceScore * 100)}%`} sub={`${attendanceRows.length} recorded sessions`} />
-            <StatTile label="Mentor" value={batch.mentor_names[0] ?? "TBD"} sub={`${fmtDate(batch.batch_start_date)} → ${fmtDate(batch.batch_end_date)}`} />
+            <StatTile
+              label="Sessions"
+              value={`${Math.round(progress * 100)}%`}
+              sub={`${doneCount}/${sessions.length} done`}
+            />
+            <StatTile
+              label="Attendance"
+              value={`${Math.round(attendanceScore * 100)}%`}
+              sub={`${attendanceRows.length} recorded`}
+            />
+            <StatTile
+              label="Mentor"
+              value={batch.mentor_names[0] ?? "TBD"}
+              sub={`${fmtDate(batch.batch_start_date)} → ${fmtDate(batch.batch_end_date)}`}
+            />
           </div>
 
           <div className="grid gap-4" style={{ gridTemplateColumns: "1.4fr 1fr" }}>
-            <Panel title="Continue learning" sub={`Batch ${batch.batch_code} · ${batch.batch_name}`}>
+            {/* Continue learning card */}
+            <Panel
+              title="Continue learning"
+              sub={`Batch ${batch.batch_code} · ${batch.batch_name}`}
+            >
               <div className="p-5">
-                {activeSession ? (
+                {continueLearning?.is_done ? (
                   <div className="bg-bg-primary border border-border-default rounded-lg p-5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">Next session</p>
-                    <h2 className="text-[24px] text-white font-semibold tracking-[-0.02em] mt-2">{activeSession.title}</h2>
-                    <p className="text-[12.5px] text-text-muted mt-2">
-                      {activeSession.dateTime} · {activeSession.durationLabel}
+                    <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-emerald-400">
+                      All done
                     </p>
+                    <h2 className="text-[20px] text-white font-semibold tracking-[-0.02em] mt-2">
+                      You've completed all courses!
+                    </h2>
+                  </div>
+                ) : nextCourseId ? (
+                  <div className="bg-bg-primary border border-border-default rounded-lg p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted">
+                      Next lecture
+                    </p>
+                    <h2 className="text-[20px] text-white font-semibold tracking-[-0.02em] mt-2">
+                      Continue from where you left off
+                    </h2>
                     <button
                       type="button"
-                      onClick={() => setActiveTab("course")}
+                      onClick={() => setActiveTab("courses")}
                       className="mt-5 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-                      style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)",
+                      }}
                     >
-                      Resume in player
+                      Resume course
                     </button>
                   </div>
                 ) : (
-                  <EmptyHint text="No sessions available in this batch yet." />
+                  <EmptyHint text="No course content available yet." />
                 )}
               </div>
             </Panel>
 
+            {/* Upcoming sessions */}
             <Panel title="Upcoming sessions" sub="Next 5 on your timeline">
               <div className="p-3 space-y-1">
-                {sessions.filter((s) => s.state !== "done").slice(0, 5).length === 0 ? (
+                {upcomingSessions.length === 0 ? (
                   <EmptyHint text="No upcoming sessions." />
                 ) : (
-                  sessions
-                    .filter((s) => s.state !== "done")
-                    .slice(0, 5)
-                    .map((session) => (
-                      <button
-                        key={session.id}
-                        type="button"
-                        onClick={() => {
-                          setActiveSessionId(session.id);
-                          setActiveTab("course");
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-md border border-transparent hover:border-border-default hover:bg-bg-primary transition-colors"
-                      >
-                        <p className="text-[12px] text-text-secondary truncate">{session.title}</p>
-                        <p className="text-[10.5px] text-text-muted mt-1">
-                          {session.dateTime} · {session.durationLabel}
-                        </p>
-                      </button>
-                    ))
+                  upcomingSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="px-3 py-2 rounded-md border border-transparent"
+                    >
+                      <p className="text-[12px] text-text-secondary truncate">{session.title}</p>
+                      <p className="text-[10.5px] text-text-muted mt-1">
+                        {session.dateTime} · {session.durationLabel}
+                      </p>
+                    </div>
+                  ))
                 )}
               </div>
             </Panel>
           </div>
         </div>
       ) : (
-        <div className="grid gap-4" style={{ gridTemplateColumns: "320px 1fr" }}>
-          <Panel title={batch.batch_name} sub={`Batch ${batch.batch_code} · Mentor ${batch.mentor_names[0] ?? "TBD"}`}>
-            <div className="p-2 space-y-1 max-h-[70vh] overflow-auto">
-              {sessions.length === 0 ? (
-                <EmptyHint text="No sessions yet." />
-              ) : (
-                sessions.map((session, idx) => {
-                  const selected = session.id === activeSession?.id;
-                  return (
-                    <button
-                      key={session.id}
-                      type="button"
-                      onClick={() => setActiveSessionId(session.id)}
-                      className={`w-full text-left px-3 py-2 rounded-md border transition-colors ${
-                        selected
-                          ? "bg-bg-primary border-brand"
-                          : "bg-transparent border-transparent hover:border-border-default hover:bg-bg-primary"
-                      }`}
-                    >
-                      <p className="font-mono text-[10px] text-text-muted">Session {idx + 1}</p>
-                      <p className={`text-[12.5px] mt-1 truncate ${selected ? "text-white" : "text-text-secondary"}`}>
-                        {session.title}
-                      </p>
-                      <p className="text-[10.5px] text-text-muted mt-1">
-                        {session.date} · {session.durationLabel}
-                      </p>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </Panel>
-
-          <div className="space-y-4">
-            <Panel title={activeSession?.title ?? "Select a session"} sub={activeSession ? `${activeSession.dateTime} · ${activeSession.durationLabel}` : undefined}>
-              <div className="p-4">
-                <div className="aspect-video border border-border-default rounded-lg bg-bg-primary flex items-center justify-center">
-                  <span className="text-[12px] text-text-muted">
-                    {activeSession ? "Video player integration placeholder" : "No session selected"}
-                  </span>
-                </div>
-              </div>
-            </Panel>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Panel title="Notes" sub="Session summary">
-                <div className="p-4 text-[13px] text-text-secondary leading-6 min-h-[170px]">
-                  {activeSession?.description ?? "Select a session to view notes."}
-                </div>
-              </Panel>
-              <Panel title="My attendance" sub="For this session">
-                <div className="p-4 min-h-[170px]">
-                  {activeSession?.attendance ? (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border border-border-default bg-bg-primary text-text-secondary">
-                      {activeSession.attendance}
-                    </span>
-                  ) : (
-                    <p className="text-[12.5px] text-text-muted">Attendance will appear once this session is completed.</p>
-                  )}
-                </div>
-              </Panel>
-            </div>
-          </div>
-        </div>
+        /* Courses tab — Udemy-style player */
+        <CoursePlayer initialCourseId={nextCourseId} initialLectureId={nextLectureId} />
       )}
     </LmsLayout>
   );

@@ -501,6 +501,250 @@ export const useEnrollInBatch = (): UseMutationResult<void, Error, string> =>
     mutationFn: (batchId: string) => enrollInBatch(batchId),
   })
 
+// ── Admin course-structure endpoints ─────────────────────────────────────────
+
+export interface AdminModule {
+  id: string
+  title: string
+  sequence_order: number
+  course_id: string
+  lectures: {
+    id: string
+    title: string
+    sequence_order: number
+    video_url: string | null
+    text_content: string | null
+    assignment_reference: string | null
+    module_id: string
+    created_at: string
+    updated_at: string
+  }[]
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminLecture {
+  id: string
+  title: string
+  sequence_order: number
+  video_url: string | null
+  text_content: string | null
+  assignment_reference: string | null
+  module_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AddModuleBody {
+  title: string
+  sequence_order?: number
+}
+
+export interface UpdateModuleBody {
+  title?: string
+  sequence_order?: number
+}
+
+export interface AddLectureBody {
+  title: string
+  sequence_order?: number
+  video_url?: string | null
+  text_content?: string | null
+  assignment_reference?: string | null
+}
+
+export interface UpdateLectureBody {
+  title?: string
+  sequence_order?: number
+  video_url?: string | null
+  text_content?: string | null
+  assignment_reference?: string | null
+}
+
+type ModuleResponse = { data: { data: AdminModule; message: string }; status: 201 | 200; headers: Headers }
+type LectureResponse = { data: { data: AdminLecture; message: string }; status: 201 | 200; headers: Headers }
+
+export const addModule = (courseId: string, body: AddModuleBody): Promise<ModuleResponse> =>
+  customFetch<ModuleResponse>(`/admin/courses/${courseId}/modules`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const useAddModule = (): UseMutationResult<ModuleResponse, Error, { courseId: string; body: AddModuleBody }> =>
+  useMutation({ mutationFn: ({ courseId, body }) => addModule(courseId, body) })
+
+export const updateAdminModule = (moduleId: string, body: UpdateModuleBody): Promise<ModuleResponse> =>
+  customFetch<ModuleResponse>(`/admin/modules/${moduleId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+
+export const useUpdateAdminModule = (): UseMutationResult<ModuleResponse, Error, { moduleId: string; body: UpdateModuleBody }> =>
+  useMutation({ mutationFn: ({ moduleId, body }) => updateAdminModule(moduleId, body) })
+
+export const deleteAdminModule = (moduleId: string): Promise<void> =>
+  customFetch<void>(`/admin/modules/${moduleId}`, { method: 'DELETE' })
+
+export const useDeleteAdminModule = (): UseMutationResult<void, Error, string> =>
+  useMutation({ mutationFn: (moduleId) => deleteAdminModule(moduleId) })
+
+export const addLecture = (moduleId: string, body: AddLectureBody): Promise<LectureResponse> =>
+  customFetch<LectureResponse>(`/admin/modules/${moduleId}/lectures`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const useAddLecture = (): UseMutationResult<LectureResponse, Error, { moduleId: string; body: AddLectureBody }> =>
+  useMutation({ mutationFn: ({ moduleId, body }) => addLecture(moduleId, body) })
+
+export const updateAdminLecture = (lectureId: string, body: UpdateLectureBody): Promise<LectureResponse> =>
+  customFetch<LectureResponse>(`/admin/lectures/${lectureId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+
+export const useUpdateAdminLecture = (): UseMutationResult<LectureResponse, Error, { lectureId: string; body: UpdateLectureBody }> =>
+  useMutation({ mutationFn: ({ lectureId, body }) => updateAdminLecture(lectureId, body) })
+
+export const deleteAdminLecture = (lectureId: string): Promise<void> =>
+  customFetch<void>(`/admin/lectures/${lectureId}`, { method: 'DELETE' })
+
+export const useDeleteAdminLecture = (): UseMutationResult<void, Error, string> =>
+  useMutation({ mutationFn: (lectureId) => deleteAdminLecture(lectureId) })
+
+// ── LMS Student Course Hooks ──────────────────────────────────────────────────
+
+export interface UserLecture {
+  id: string
+  title: string
+  sequence_order: number
+  video_url: string | null
+  text_content: string | null
+  assignment_reference: string | null
+  module_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface UserModule {
+  id: string
+  title: string
+  sequence_order: number
+  course_id: string
+  lectures: UserLecture[]
+  created_at: string
+  updated_at: string
+}
+
+export interface UserCourse {
+  id: string
+  title: string
+  description: string
+  status: 'DRAFT' | 'PUBLISHED'
+  modules: UserModule[]
+  created_at: string
+  updated_at: string
+}
+
+export type CourseState = 'COMPLETED' | 'IN_PROGRESS' | 'LOCKED'
+
+export interface UserCourseWithState {
+  batch_id: string
+  course: UserCourse
+  state: CourseState
+}
+
+export interface GetUserCoursesResponse {
+  data: { data: { courses: UserCourseWithState[] }; message: string }
+  status: 200
+  headers: Headers
+}
+
+export const getUserCourses = (): Promise<GetUserCoursesResponse> =>
+  customFetch<GetUserCoursesResponse>(`/user/courses`, { method: 'GET' })
+
+export const getUserCoursesQueryKey = () => ['getUserCourses'] as const
+
+export function useGetUserCourses<TData = GetUserCoursesResponse, TError = unknown>(
+  options?: UseQueryOptions<GetUserCoursesResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getUserCoursesQueryKey(),
+    queryFn: getUserCourses,
+    ...options,
+  })
+}
+
+export interface GetUserCourseResponse {
+  data: {
+    data: {
+      course: UserCourse
+      course_state: CourseState
+      completed_lecture_ids: string[]
+    }
+    message: string
+  }
+  status: 200
+  headers: Headers
+}
+
+export const getUserCourse = (courseId: string): Promise<GetUserCourseResponse> =>
+  customFetch<GetUserCourseResponse>(`/user/courses/${courseId}`, { method: 'GET' })
+
+export const getUserCourseQueryKey = (courseId: string) => ['getUserCourse', courseId] as const
+
+export function useGetUserCourse<TData = GetUserCourseResponse, TError = unknown>(
+  courseId: string,
+  options?: Omit<UseQueryOptions<GetUserCourseResponse, TError, TData>, 'queryKey' | 'queryFn'>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getUserCourseQueryKey(courseId),
+    queryFn: () => getUserCourse(courseId),
+    enabled: !!courseId,
+    ...options,
+  } as UseQueryOptions<GetUserCourseResponse, TError, TData>)
+}
+
+export interface ContinueLearningResponse {
+  data: {
+    data: {
+      is_done: boolean
+      next: { batch_id: string; course_id: string; lecture_id: string } | null
+    }
+    message: string
+  }
+  status: 200
+  headers: Headers
+}
+
+export const getContinueLearning = (): Promise<ContinueLearningResponse> =>
+  customFetch<ContinueLearningResponse>(`/user/continue-learning`, { method: 'GET' })
+
+export const getContinueLearningQueryKey = () => ['getContinueLearning'] as const
+
+export function useGetContinueLearning<TData = ContinueLearningResponse, TError = unknown>(
+  options?: UseQueryOptions<ContinueLearningResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getContinueLearningQueryKey(),
+    queryFn: getContinueLearning,
+    ...options,
+  })
+}
+
+export interface CompleteLectureResponse {
+  data: { lecture_id: string; is_completed: boolean }
+  status: 200
+  headers: Headers
+}
+
+export const postCompleteLecture = (lectureId: string): Promise<CompleteLectureResponse> =>
+  customFetch<CompleteLectureResponse>(`/user/lectures/${lectureId}/complete`, { method: 'POST' })
+
+export function usePostCompleteLecture(): UseMutationResult<CompleteLectureResponse, Error, string> {
+  return useMutation({ mutationFn: (lectureId: string) => postCompleteLecture(lectureId) })
+}
+
 // ── Attendance override ───────────────────────────────────────────────────────
 
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'PARTIALLY_PRESENT'
