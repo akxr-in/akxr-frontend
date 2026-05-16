@@ -273,6 +273,78 @@ export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown
   })
 }
 
+// ── GET /meeting/room/:roomId ──────────────────────────────────────────────────
+
+export interface MeetingByRoomResponse {
+  data: {
+    data: {
+      id: string
+      title: string
+      description: string | null
+      batch_id: string
+      realtime_kit_room_id: string
+      meeting_url: string
+      scheduled_start_time: string
+      scheduled_end_time: string
+      created_by: string
+    }
+    message: string
+  }
+  status: 200
+  headers: Headers
+}
+
+export const getMeetingByRoomId = (roomId: string): Promise<MeetingByRoomResponse> =>
+  customFetch<MeetingByRoomResponse>(`/meeting/room/${roomId}`, { method: 'GET' })
+
+export const getMeetingByRoomIdQueryKey = (roomId: string) => ['getMeetingByRoomId', roomId] as const
+
+export function useGetMeetingByRoomId<TData = MeetingByRoomResponse, TError = unknown>(
+  roomId: string,
+  options?: UseQueryOptions<MeetingByRoomResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getMeetingByRoomIdQueryKey(roomId),
+    queryFn: () => getMeetingByRoomId(roomId),
+    enabled: !!roomId,
+    ...options,
+  })
+}
+
+// ── GET /meeting/:id/token ─────────────────────────────────────────────────────
+
+export interface MeetingTokenResponse {
+  data: {
+    data: {
+      authToken: string
+      meetingId: string
+      realtime_kit_room_id: string
+      meeting_url: string
+    }
+    message: string
+  }
+  status: 200
+  headers: Headers
+}
+
+export const getMeetingToken = (meetingId: string): Promise<MeetingTokenResponse> =>
+  customFetch<MeetingTokenResponse>(`/meeting/${meetingId}/token`, { method: 'GET' })
+
+export const getMeetingTokenQueryKey = (meetingId: string) => ['getMeetingToken', meetingId] as const
+
+export function useGetMeetingToken<TData = MeetingTokenResponse, TError = unknown>(
+  meetingId: string,
+  options?: UseQueryOptions<MeetingTokenResponse, TError, TData>
+): UseQueryResult<TData, TError> {
+  return useQuery({
+    queryKey: getMeetingTokenQueryKey(meetingId),
+    queryFn: () => getMeetingToken(meetingId),
+    enabled: !!meetingId,
+    staleTime: 1000 * 60 * 50, // tokens valid ~1hr, refetch before expiry
+    ...options,
+  })
+}
+
 // ── GET /batch/:id/students ───────────────────────────────────────────────────
 
 export interface BatchStudent {

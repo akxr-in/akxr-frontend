@@ -11,6 +11,7 @@ import {
     type AttendanceStatus as ApiAttendanceStatus,
 } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
 
@@ -46,6 +47,7 @@ const SortIcon = () => (
 export default function BatchDetailPage() {
     const params = useParams<{ id: string }>();
     const batchId = params.id;
+    const router = useRouter();
     const queryClient = useQueryClient();
 
     const { data, isLoading } = useGetBatchId(batchId);
@@ -224,6 +226,19 @@ export default function BatchDetailPage() {
                             </svg>
                             <span>{selectedDate}</span>
                         </div>
+
+                        {activeSession && (activeSession as any).realtime_kit_room_id && (
+                            <button
+                                type="button"
+                                onClick={() => router.push(`/meet/${(activeSession as any).realtime_kit_room_id}`)}
+                                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-brand text-black text-sm font-medium hover:bg-brand/90 transition-colors whitespace-nowrap"
+                            >
+                                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                                </svg>
+                                Join live class
+                            </button>
+                        )}
                     </div>
 
                     <div className="mt-5 space-y-2 text-sm text-text-muted">

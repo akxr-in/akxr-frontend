@@ -22,6 +22,8 @@ export { env } from './lib/env';
 export type {
   BatchStudent,
   GetBatchStudentsResponse,
+  MeetingByRoomResponse,
+  MeetingTokenResponse,
   Meeting,
   BatchWithStats,
   AttendanceRecord,
@@ -59,5 +61,7 @@ export {
   deleteBatch, useDeleteBatch,
   deleteAdminUser, useDeleteAdminUser,
   getBatchStudents, getBatchStudentsQueryKey, useGetBatchStudents,
+  getMeetingByRoomId, getMeetingByRoomIdQueryKey, useGetMeetingByRoomId,
+  getMeetingToken, getMeetingTokenQueryKey, useGetMeetingToken,
   type AttendanceStatus,
 } from './api/custom-hooks';
