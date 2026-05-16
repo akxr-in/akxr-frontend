@@ -96,7 +96,7 @@ export default function LMSAdmin() {
 
   const courses: AdminCourse[] = coursesRes?.data?.data ?? EMPTY_COURSES;
   const batches: AdminBatch[] = batchesRes?.data?.data ?? EMPTY_BATCHES;
-  const allUsers = (usersRes?.status === 200 ? usersRes.data.data.data : EMPTY_USERS) as AdminUser[];
+  const allUsers = (usersRes?.status === 200 ? usersRes.data.data : EMPTY_USERS) as AdminUser[];
   const mentors = allUsers.filter((item) => item.role === "MENTOR" || item.role === "MENTOR_EDITOR");
   const effectiveCourseId = selectedCourseId ?? courses[0]?.id ?? null;
   const selectedCourse = courses.find((course) => course.id === effectiveCourseId) ?? null;
