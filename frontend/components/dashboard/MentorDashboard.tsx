@@ -9,11 +9,9 @@ import { ProgressBar } from "./ProgressBar";
 import type { UserDataResponseData } from "@akxr/api";
 import {
   useGetMentorBatches,
-  useGetMeeting,
   useGetMeetingIdAttendance,
   useGetBatchRequestsMy,
   usePostBatchRequests,
-  getMentorBatchesQueryKey,
   getBatchIdMeetings,
   getGetBatchIdMeetingsQueryKey,
   type MentorBatch
@@ -327,13 +325,9 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
                       {cls.timeRemaining ? `In ${cls.timeRemaining}` : 'Join'}
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/control-panel/admin/batches/${cls.batchId}`)}
-                      className="inline-flex items-center px-3 py-1.5 rounded-md text-[12px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
-                    >
-                      View batch
-                    </button>
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-md text-[12px] font-medium border border-border-default text-text-muted font-mono">
+                      Scheduled
+                    </span>
                   )}
                 </div>
               </div>
@@ -385,13 +379,7 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
                     </td>
                     <td className="px-3.5 py-3 text-[12.5px] text-text-primary">{Math.round(batch.avg_attendance_pct)}%</td>
                     <td className="px-3.5 py-3">
-                      <button
-                        type="button"
-                        onClick={() => router.push(`/control-panel/admin/batches/${batch.id}`)}
-                        className="inline-flex items-center px-3 py-1 rounded-md text-[11.5px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
-                      >
-                        View
-                      </button>
+                      <span className="font-mono text-[11px] text-text-muted">{batch.batch_code}</span>
                     </td>
                   </tr>
                 );
@@ -439,12 +427,13 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
               type="button"
               onClick={() => liveClass?.rtkRoomId
                 ? router.push(`/meet/${liveClass.rtkRoomId}`)
-                : router.push(`/control-panel/admin/batches/${firstBatch.id}`)
+                : undefined
               }
-              className="inline-flex items-center px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
+              disabled={!liveClass?.rtkRoomId}
+              className="inline-flex items-center px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
             >
-              {liveClass ? 'Join now' : 'View batch'}
+              {liveClass ? 'Join now' : 'No live session'}
             </button>
           </div>
         </div>
@@ -468,10 +457,17 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
   );
 }
 
-function AttendanceScreen() {
-  const { data: meetingsRes, isLoading: meetingsLoading } = useGetMeeting();
+function AttendanceScreen({ batches }: { batches: MentorBatch[] }) {
+  const meetingQueries = useQueries({
+    queries: batches.map((b) => ({
+      queryKey: getGetBatchIdMeetingsQueryKey(b.id),
+      queryFn: () => getBatchIdMeetings(b.id),
+    })),
+  });
+  const meetingsLoading = meetingQueries.some((q) => q.isLoading);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const meetings: any[] = (meetingsRes as any)?.data?.data || [];
+  const meetings: any[] = meetingQueries.flatMap((q) => (q.data as any)?.data?.data ?? []);
+
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>("");
 
   useEffect(() => {
@@ -668,7 +664,7 @@ export function MentorDashboard({ user }: MentorDashboardProps) {
       onTabChange={setActiveTab}
     >
       {activeTab === 'batches'    && <BatchesScreen firstName={firstName} batches={batches} isLoading={isLoading} />}
-      {activeTab === 'attendance' && <AttendanceScreen />}
+      {activeTab === 'attendance' && <AttendanceScreen batches={batches} />}
       {activeTab === 'requests'   && <RequestsScreen batches={batches} />}
     </AppShell>
   );
