@@ -19,6 +19,7 @@ import {
 } from "@cloudflare/realtimekit-react-ui";
 import { useGetMeetingByRoomId, useGetMeetingToken, useGetUser } from "@akxr/api";
 import { customFetch } from "@akxr/api";
+import toast from "react-hot-toast";
 
 // ── Inner meeting room (needs RealtimeKitProvider context) ────────────────────
 
@@ -74,8 +75,7 @@ function MeetingRoom({
       meeting.leaveRoom();
       setEnded(true);
     } catch (e) {
-      console.error(e);
-      alert("Failed to end meeting");
+      toast.error(e instanceof Error ? e.message : "Failed to end meeting");
     } finally {
       setEnding(false);
       setConfirmEnd(false);
@@ -225,14 +225,65 @@ function MeetingRoom({
 
 // ── Root page — handles token fetch + RTK init ────────────────────────────────
 
+function MeetErrorScreen({
+  title,
+  message,
+  onRetry,
+}: {
+  title: string;
+  message: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+      <div className="text-center space-y-4 max-w-md px-6">
+        <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center mx-auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-red-400">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold text-white">{title}</h2>
+        <p className="text-[#888] text-sm">{message}</p>
+        <div className="flex items-center justify-center gap-2">
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="px-4 py-2 rounded-lg bg-brand text-black text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Retry
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] text-sm hover:bg-[#2a2a2a] transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MeetRoomPage() {
   const params = useParams<{ roomId: string }>();
   const roomId = params.roomId;
 
-  const { data: meetingData, isLoading: meetingLoading } = useGetMeetingByRoomId(roomId);
+  const {
+    data: meetingData,
+    isLoading: meetingLoading,
+    error: meetingError,
+  } = useGetMeetingByRoomId(roomId);
   const meeting = meetingData?.data?.data;
 
-  const { data: tokenData, isLoading: tokenLoading } = useGetMeetingToken(meeting?.id ?? "", {
+  const {
+    data: tokenData,
+    isLoading: tokenLoading,
+    error: tokenError,
+  } = useGetMeetingToken(meeting?.id ?? "", {
     enabled: !!meeting?.id,
   } as any);
   const authToken = tokenData?.data?.data?.authToken;
@@ -242,6 +293,8 @@ export default function MeetRoomPage() {
   const isMentorOrAdmin = currentUser?.role === "MENTOR" || currentUser?.role === "ADMIN";
 
   const [client, loadClient] = useRealtimeKitClient();
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [joinAttempt, setJoinAttempt] = useState(0);
 
   useEffect(() => {
     if (!authToken || client) return;
@@ -250,8 +303,12 @@ export default function MeetRoomPage() {
 
   useEffect(() => {
     if (!client || !meeting?.id) return;
-    client.joinRoom().catch(console.error);
-  }, [client, meeting?.id]);
+    setJoinError(null);
+    client.joinRoom().catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to join the meeting room";
+      setJoinError(msg);
+    });
+  }, [client, meeting?.id, joinAttempt]);
 
   if (meetingLoading || tokenLoading) {
     return (
@@ -264,19 +321,49 @@ export default function MeetRoomPage() {
     );
   }
 
-  if (!meeting) {
+  if (meetingError) {
+    const msg = meetingError instanceof Error ? meetingError.message : "Could not load meeting.";
+    const isForbidden = /forbidden|do not have access/i.test(msg);
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <p className="text-[#555]">Meeting not found.</p>
-      </div>
+      <MeetErrorScreen
+        title={isForbidden ? "Access denied" : "Could not load meeting"}
+        message={
+          isForbidden
+            ? "You are not enrolled in this batch, so you can't join this session."
+            : msg
+        }
+      />
     );
+  }
+
+  if (!meeting) {
+    return <MeetErrorScreen title="Meeting not found" message="The room you tried to join doesn't exist." />;
+  }
+
+  if (tokenError) {
+    const msg = tokenError instanceof Error ? tokenError.message : "Could not fetch meeting token.";
+    return <MeetErrorScreen title="Could not join meeting" message={msg} />;
   }
 
   if (!authToken) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <p className="text-[#555]">You do not have access to this meeting.</p>
-      </div>
+      <MeetErrorScreen
+        title="Access denied"
+        message="You do not have permission to join this meeting."
+      />
+    );
+  }
+
+  if (joinError) {
+    return (
+      <MeetErrorScreen
+        title="Failed to connect"
+        message={joinError}
+        onRetry={() => {
+          setJoinError(null);
+          setJoinAttempt((n) => n + 1);
+        }}
+      />
     );
   }
 
