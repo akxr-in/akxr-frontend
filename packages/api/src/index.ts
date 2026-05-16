@@ -47,6 +47,10 @@ export {
   getMentorBatches, getMentorBatchesQueryKey, useGetMentorBatches,
   getAdminDashboard, getAdminDashboardQueryKey, useGetAdminDashboard,
   getAdminBatches, getAdminBatchesQueryKey, useGetAdminBatches,
+  // Explicit re-exports below take precedence over the generated admin module's
+  // star export for the same names (TypeScript spec: named > star).
+  // The custom versions have simpler response types (no error union) which
+  // match the access pattern used throughout the frontend.
   getAdminCourses, getAdminCoursesQueryKey, useGetAdminCourses,
   updateMeetingAttendance, useUpdateMeetingAttendance,
   assignStudentToBatch, useAssignStudentToBatch,

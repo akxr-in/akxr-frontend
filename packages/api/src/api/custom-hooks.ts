@@ -6,8 +6,6 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import type { UseQueryOptions, UseQueryResult, UseMutationResult } from '@tanstack/react-query'
 import { customFetch } from './custom-fetch'
 
-const BASE = 'http://localhost:3000'
-
 // ── shared types ──────────────────────────────────────────────────────────────
 
 export interface Meeting {
@@ -98,7 +96,7 @@ export interface GetUserBatches200 {
 export type GetUserBatchesResponse = { data: GetUserBatches200; status: 200; headers: Headers }
 
 export const getUserBatches = (): Promise<GetUserBatchesResponse> =>
-  customFetch<GetUserBatchesResponse>(`${BASE}/user/batches`, { method: 'GET' })
+  customFetch<GetUserBatchesResponse>(`/user/batches`, { method: 'GET' })
 
 export const getUserBatchesQueryKey = () => ['getUserBatches'] as const
 
@@ -122,7 +120,7 @@ export interface GetUserAttendance200 {
 export type GetUserAttendanceResponse = { data: GetUserAttendance200; status: 200; headers: Headers }
 
 export const getUserAttendance = (): Promise<GetUserAttendanceResponse> =>
-  customFetch<GetUserAttendanceResponse>(`${BASE}/user/attendance`, { method: 'GET' })
+  customFetch<GetUserAttendanceResponse>(`/user/attendance`, { method: 'GET' })
 
 export const getUserAttendanceQueryKey = () => ['getUserAttendance'] as const
 
@@ -146,7 +144,7 @@ export interface GetMentorBatches200 {
 export type GetMentorBatchesResponse = { data: GetMentorBatches200; status: 200; headers: Headers }
 
 export const getMentorBatches = (): Promise<GetMentorBatchesResponse> =>
-  customFetch<GetMentorBatchesResponse>(`${BASE}/batch/mentor`, { method: 'GET' })
+  customFetch<GetMentorBatchesResponse>(`/batch/mentor`, { method: 'GET' })
 
 export const getMentorBatchesQueryKey = () => ['getMentorBatches'] as const
 
@@ -170,7 +168,7 @@ export interface GetAdminDashboard200 {
 export type GetAdminDashboardResponse = { data: GetAdminDashboard200; status: 200; headers: Headers }
 
 export const getAdminDashboard = (): Promise<GetAdminDashboardResponse> =>
-  customFetch<GetAdminDashboardResponse>(`${BASE}/admin/dashboard`, { method: 'GET' })
+  customFetch<GetAdminDashboardResponse>(`/admin/dashboard`, { method: 'GET' })
 
 export const getAdminDashboardQueryKey = () => ['getAdminDashboard'] as const
 
@@ -227,7 +225,7 @@ export interface GetAdminBatches200 { data: AdminBatch[]; message: string }
 export type GetAdminBatchesResponse = { data: GetAdminBatches200; status: 200; headers: Headers }
 
 export const getAdminBatches = (): Promise<GetAdminBatchesResponse> =>
-  customFetch<GetAdminBatchesResponse>(`${BASE}/batch`, { method: 'GET' })
+  customFetch<GetAdminBatchesResponse>(`/batch`, { method: 'GET' })
 
 export const getAdminBatchesQueryKey = () => ['getAdminBatches'] as const
 
@@ -243,9 +241,11 @@ export function useGetAdminBatches<TData = GetAdminBatchesResponse, TError = unk
 
 export interface GetAdminCoursesResponse { data: { data: AdminCourse[]; message: string }; status: 200; headers: Headers }
 export const getAdminCourses = (): Promise<GetAdminCoursesResponse> =>
-  customFetch<GetAdminCoursesResponse>(`${BASE}/admin/courses`, { method: 'GET' })
+  customFetch<GetAdminCoursesResponse>(`/admin/courses`, { method: 'GET' })
 
-export const getAdminCoursesQueryKey = () => ['getAdminCourses'] as const
+// Returns the same key as the generated getGetAdminCoursesQueryKey so both
+// the custom hook and the generated one share a cache entry.
+export const getAdminCoursesQueryKey = () => ['/admin/courses'] as const
 
 export function useGetAdminCourses<TData = GetAdminCoursesResponse, TError = unknown>(
   options?: UseQueryOptions<GetAdminCoursesResponse, TError, TData>
@@ -259,7 +259,7 @@ export function useGetAdminCourses<TData = GetAdminCoursesResponse, TError = unk
 
 export interface GetAdminUsersResponse { data: { data: AdminUser[]; message: string }; status: 200; headers: Headers }
 export const getAdminUsers = (): Promise<GetAdminUsersResponse> =>
-  customFetch<GetAdminUsersResponse>(`${BASE}/admin/users`, { method: 'GET' })
+  customFetch<GetAdminUsersResponse>(`/admin/users`, { method: 'GET' })
 
 export const getAdminUsersQueryKey = () => ['getAdminUsers'] as const
 
@@ -276,7 +276,7 @@ export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown
 // ── DELETE /batch/:id ─────────────────────────────────────────────────────────
 
 export const deleteBatch = (id: string): Promise<void> =>
-  customFetch<void>(`${BASE}/batch/${id}`, { method: 'DELETE' })
+  customFetch<void>(`/batch/${id}`, { method: 'DELETE' })
 
 export const useDeleteBatch = (): UseMutationResult<void, Error, string> =>
   useMutation({ mutationFn: (id: string) => deleteBatch(id) })
