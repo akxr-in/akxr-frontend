@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   getAdminBatchesQueryKey,
   getAdminCoursesQueryKey,
@@ -69,6 +69,14 @@ const EMPTY_BATCHES: AdminBatch[] = [];
 const EMPTY_USERS: AdminUser[] = [];
 
 export default function LMSAdmin() {
+  return (
+    <Suspense fallback={null}>
+      <LMSAdminInner />
+    </Suspense>
+  );
+}
+
+function LMSAdminInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -127,35 +135,39 @@ export default function LMSAdmin() {
       return;
     }
 
+    // Orval-generated PostAdminCoursesBody is stale (still uses the pre-LMS
+    // name/time_allotted_in_weeks shape); the BE Zod schema actually accepts
+    // { title, description, status, modules } — build the payload as untyped
+    // and cast through unknown so excess-property checks don't trip the build.
+    const createCoursePayload = {
+      title: courseForm.title.trim(),
+      description: courseForm.description.trim(),
+      status: courseForm.status,
+      modules: courseForm.moduleTitle.trim()
+        ? [
+            {
+              title: courseForm.moduleTitle.trim(),
+              sequence_order: 1,
+              lectures: courseForm.lectureTitle.trim()
+                ? [
+                    {
+                      title: courseForm.lectureTitle.trim(),
+                      sequence_order: 1,
+                      video_url: courseForm.lectureVideoUrl.trim() || null,
+                      text_content: courseForm.lectureNotes.trim() || null,
+                      assignment_reference: courseForm.assignmentRef.trim() || null,
+                    },
+                  ]
+                : [],
+            },
+          ]
+        : [],
+    };
+
     createCourseMutation.mutate(
       {
-        // Orval-generated PostAdminCoursesBody is stale (uses old name/time_allotted_in_weeks
-        // shape); the BE Zod schema actually accepts { title, description, status, modules }.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: {
-          title: courseForm.title.trim(),
-          description: courseForm.description.trim(),
-          status: courseForm.status,
-          modules: courseForm.moduleTitle.trim()
-            ? [
-                {
-                  title: courseForm.moduleTitle.trim(),
-                  sequence_order: 1,
-                  lectures: courseForm.lectureTitle.trim()
-                    ? [
-                        {
-                          title: courseForm.lectureTitle.trim(),
-                          sequence_order: 1,
-                          video_url: courseForm.lectureVideoUrl.trim() || null,
-                          text_content: courseForm.lectureNotes.trim() || null,
-                          assignment_reference: courseForm.assignmentRef.trim() || null,
-                        },
-                      ]
-                    : [],
-                },
-              ]
-            : [],
-        } as any,
+        data: createCoursePayload as any,
       },
       {
         onSuccess: async (res) => {

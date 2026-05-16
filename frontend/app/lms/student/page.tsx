@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   useGetUser,
   useGetUserAttendance,
@@ -45,6 +45,14 @@ function durationLabel(minutes: number): string {
 }
 
 export default function LMSStudent() {
+  return (
+    <Suspense fallback={null}>
+      <LMSStudentInner />
+    </Suspense>
+  );
+}
+
+function LMSStudentInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<StudentTab>("home");

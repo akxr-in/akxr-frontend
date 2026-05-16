@@ -77,12 +77,15 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
 
   const handlePublish = async () => {
     try {
+      // Orval-generated PostAdminCoursesBody is stale (still uses old name/
+      // time_allotted_in_weeks shape). BE Zod accepts { title, description }.
+      const coursePayload = {
+        title: form.title,
+        description: form.description,
+      };
       const courseRes = await createCourse({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: {
-          title: form.title,
-          description: form.description,
-        } as any,
+        data: coursePayload as any,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const courseId = (courseRes.data as any).data?.id;

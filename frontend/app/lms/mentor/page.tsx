@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   useGetMeeting,
   useGetMentorBatches,
@@ -15,6 +15,14 @@ import { EmptyHint, fmtDate, fmtDateTime, LmsLayout, Panel, StatTile } from "@/c
 type MentorTab = "batches" | "live";
 
 export default function LMSMentor() {
+  return (
+    <Suspense fallback={null}>
+      <LMSMentorInner />
+    </Suspense>
+  );
+}
+
+function LMSMentorInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<MentorTab>("batches");
