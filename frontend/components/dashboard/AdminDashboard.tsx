@@ -88,9 +88,9 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
           batch_code: form.batchCode,
           description: form.description,
           total_classes: parseInt(form.weeks, 10) * parseInt(form.sessionsPerWeek, 10),
-          batch_start_date: new Date(form.startsOn).toISOString(),
-          batch_end_date: new Date(new Date(form.startsOn).getTime() + parseInt(form.weeks, 10) * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          estimated_end_date: new Date(new Date(form.startsOn).getTime() + parseInt(form.weeks, 10) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          batch_start_date: form.startsOn,
+          batch_end_date: new Date(new Date(form.startsOn).getTime() + parseInt(form.weeks, 10) * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          estimated_end_date: new Date(new Date(form.startsOn).getTime() + parseInt(form.weeks, 10) * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           mentor_ids: form.mentor ? [form.mentor] : [],
           course_ids: [courseId],
         }
