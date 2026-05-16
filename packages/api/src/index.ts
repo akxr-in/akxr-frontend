@@ -48,4 +48,6 @@ export {
   getAdminDashboard, getAdminDashboardQueryKey, useGetAdminDashboard,
   getAdminBatches, getAdminBatchesQueryKey, useGetAdminBatches,
   getAdminCourses, getAdminCoursesQueryKey, useGetAdminCourses,
+  updateMeetingAttendance, useUpdateMeetingAttendance,
+  type AttendanceStatus,
 } from './api/custom-hooks';

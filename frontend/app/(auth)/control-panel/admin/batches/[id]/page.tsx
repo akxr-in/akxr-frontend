@@ -1,18 +1,29 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button, Input, Spinner, Chip, Dropdown } from "@akxr/design-system";
 import type { DropdownOption } from "@akxr/design-system";
-import { useGetBatchId, useGetBatchIdMeetings, useGetMeetingIdParticipants, useGetAdminUsers, getGetBatchIdQueryKey } from "@akxr/api";
+import {
+    useGetBatchId, useGetBatchIdMeetings, useGetMeetingIdParticipants,
+    useGetAdminUsers, getGetBatchIdQueryKey,
+    useUpdateMeetingAttendance,
+    type AttendanceStatus as ApiAttendanceStatus,
+} from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { SidebarNav } from "../../../../../../components/SidebarNav";
 import { CrudBatchModal } from "../../../../../../components/CrudBatchModal";
 
-type AttendanceStatus = "present" | "absent" | "partial";
+type DisplayStatus = "present" | "absent" | "partial";
+
+const API_STATUS_MAP: Record<DisplayStatus, ApiAttendanceStatus> = {
+    present: "PRESENT",
+    absent: "ABSENT",
+    partial: "PARTIALLY_PRESENT",
+};
 
 const statusChipConfig: Record<
-    AttendanceStatus,
+    DisplayStatus,
     { label: string; variant: "success" | "error" | "warning" }
 > = {
     present: { label: "Present", variant: "success" },
@@ -20,7 +31,7 @@ const statusChipConfig: Record<
     partial: { label: "Partially Present", variant: "warning" },
 };
 
-const attendanceOptions: DropdownOption<AttendanceStatus>[] = [
+const attendanceOptions: DropdownOption<DisplayStatus>[] = [
     { value: "present", label: <Chip variant="success" className="text-xs">Present</Chip> },
     { value: "absent", label: <Chip variant="error" className="text-xs">Absent</Chip> },
     { value: "partial", label: <Chip variant="warning" className="text-xs">Partially Present</Chip> },
@@ -32,20 +43,23 @@ const SortIcon = () => (
     </svg>
 );
 
-
 export default function BatchDetailPage() {
     const params = useParams<{ id: string }>();
     const batchId = params.id;
     const queryClient = useQueryClient();
+
     const { data, isLoading } = useGetBatchId(batchId);
     const { data: meetingsData } = useGetBatchIdMeetings(batchId);
     const { data: usersData } = useGetAdminUsers();
+    const { mutateAsync: updateAttendance } = useUpdateMeetingAttendance();
+
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedSessionId, setSelectedSessionId] = useState<string>("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [attendanceOverrides, setAttendanceOverrides] = useState<Record<string, DisplayStatus>>({});
 
     const batch = data?.status === 200 ? data.data.data : null;
 
-    // Build session options from meetings
     const meetings =
         meetingsData?.status === 200 && Array.isArray(meetingsData.data?.data)
             ? meetingsData.data.data
@@ -57,20 +71,20 @@ export default function BatchDetailPage() {
         return { value: m.id, label: <span className="text-sm text-text-secondary">{label}</span> };
     });
 
-    // Auto-select first session if none selected
-    const activeSessionId =
-        selectedSessionId || (meetings.length > 0 ? meetings[0].id : "");
+    const activeSessionId = selectedSessionId || (meetings.length > 0 ? meetings[0].id : "");
     const activeSession = meetings.find((m) => m.id === activeSessionId);
 
     const selectedDate = activeSession
         ? new Date(activeSession.scheduled_start_time).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
+            month: "short", day: "numeric", year: "numeric",
         })
         : "No sessions";
 
-    // Get all students in this batch from admin users
+    // Clear overrides when session changes so stale overrides don't bleed across sessions
+    useEffect(() => {
+        setAttendanceOverrides({});
+    }, [activeSessionId]);
+
     const batchStudents = useMemo(() => {
         if (usersData?.status === 200 && Array.isArray(usersData.data?.data)) {
             return usersData.data.data.filter(
@@ -80,7 +94,6 @@ export default function BatchDetailPage() {
         return [];
     }, [usersData, batchId]);
 
-    // Fetch participants (attendees) for the active meeting/session
     const { data: participantsData, isLoading: isLoadingParticipants } =
         useGetMeetingIdParticipants(activeSessionId, {
             query: { enabled: !!activeSessionId },
@@ -93,21 +106,51 @@ export default function BatchDetailPage() {
         return new Set<string>();
     }, [participantsData]);
 
-    // Build student rows: all batch students with attendance status from meeting participants
     const studentRows = useMemo(() => {
-        return batchStudents.map((student) => ({
-            ...student,
-            attendance: (activeSessionId
-                ? participantIds.has(student.id)
-                    ? "present"
-                    : "absent"
-                : "present") as AttendanceStatus,
-        }));
-    }, [batchStudents, participantIds, activeSessionId]);
+        return batchStudents.map((student) => {
+            const fromApi: DisplayStatus = activeSessionId
+                ? participantIds.has(student.id) ? "present" : "absent"
+                : "absent";
+            return {
+                ...student,
+                attendance: attendanceOverrides[student.id] ?? fromApi,
+            };
+        });
+    }, [batchStudents, participantIds, activeSessionId, attendanceOverrides]);
+
+    const filteredRows = useMemo(() => {
+        if (!searchQuery.trim()) return studentRows;
+        const q = searchQuery.toLowerCase();
+        return studentRows.filter((s) => s.full_name.toLowerCase().includes(q));
+    }, [studentRows, searchQuery]);
 
     const totalStudents = studentRows.length;
     const presentStudents = studentRows.filter((s) => s.attendance === "present").length;
-    const absentStudents = studentRows.filter((s) => s.attendance === "absent").length;
+    const partialStudents = studentRows.filter((s) => s.attendance === "partial").length;
+    const attendancePct =
+        totalStudents > 0
+            ? Math.round(((presentStudents + partialStudents * 0.5) / totalStudents) * 100)
+            : 0;
+
+    const handleAttendanceChange = async (studentId: string, status: DisplayStatus) => {
+        if (!activeSessionId) return;
+        setAttendanceOverrides((prev) => ({ ...prev, [studentId]: status }));
+        try {
+            await updateAttendance({
+                meetingId: activeSessionId,
+                userId: studentId,
+                status: API_STATUS_MAP[status],
+            });
+        } catch {
+            // revert optimistic update on failure
+            setAttendanceOverrides((prev) => {
+                const next = { ...prev };
+                delete next[studentId];
+                return next;
+            });
+            alert("Failed to update attendance");
+        }
+    };
 
     if (isLoading) {
         return (
@@ -122,12 +165,9 @@ export default function BatchDetailPage() {
 
     return (
         <div className="min-h-screen bg-bg-primary flex">
-            {/* Sidebar */}
             <SidebarNav activeIndex={1} />
 
-            {/* Main Content */}
             <main className="flex-1 p-8 overflow-auto">
-                {/* Header */}
                 <div className="flex items-start justify-between mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-text-primary">
@@ -142,38 +182,37 @@ export default function BatchDetailPage() {
                     </Button>
                 </div>
 
-                {/* Filters & Summary */}
                 <section className="mb-6 max-w-2xl">
-                    {/* Batch dropdown */}
-                    <button className="flex w-full items-center justify-between px-5 py-3 rounded-xl bg-bg-card border border-border-default text-sm text-text-secondary">
-                        <span>Sessions Dropdown with search</span>
-                        <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                    </button>
-
-                    {/* Date & Session row */}
-                    <div className="mt-3 flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <Dropdown
                             value={activeSessionId}
-                            options={sessionOptions.length > 0 ? sessionOptions : [{ value: "", label: <span className="text-sm text-text-muted">No sessions available</span> }]}
+                            options={
+                                sessionOptions.length > 0
+                                    ? sessionOptions
+                                    : [{ value: "", label: <span className="text-sm text-text-muted">No sessions available</span> }]
+                            }
                             onChange={(id) => setSelectedSessionId(id)}
                             disabled={meetings.length === 0}
-                            trigger={(selected) => (
+                            trigger={() => (
                                 <div className="flex flex-1 items-center justify-between px-5 py-3 rounded-xl bg-black text-sm text-text-secondary min-w-[200px]">
                                     <span className="truncate">
                                         {activeSession?.title || "Select Session"}
                                     </span>
-                                    <svg className="w-4 h-4 text-text-muted shrink-0 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
+                                    <svg className="w-4 h-4 text-text-muted shrink-0 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                                    </svg>
                                 </div>
                             )}
                             menuClassName="min-w-[280px]"
                         />
                         <div className="flex items-center gap-2 px-5 py-3 rounded-xl bg-black text-sm text-text-secondary">
-                            <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H4.75z" clipRule="evenodd" /></svg>
+                            <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H4.75z" clipRule="evenodd" />
+                            </svg>
                             <span>{selectedDate}</span>
                         </div>
                     </div>
 
-                    {/* Stats */}
                     <div className="mt-5 space-y-2 text-sm text-text-muted">
                         <div className="flex items-center justify-between">
                             <span>Total Students</span>
@@ -186,25 +225,22 @@ export default function BatchDetailPage() {
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Avg Progress</span>
-                            <span className="text-text-primary font-medium">Test%</span>
+                            <span>Attendance</span>
+                            <span className="text-text-primary font-medium">{attendancePct}%</span>
                         </div>
                     </div>
-
                 </section>
 
-                {/* Search + Date row */}
-                <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-4 mb-4">
                     <div className="flex-1 max-w-md">
-                        <Input placeholder="Search students..." />
+                        <Input
+                            placeholder="Search students..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-default bg-bg-primary text-sm text-text-secondary">
-                        <svg className="w-4 h-4 text-text-muted" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H4.75z" clipRule="evenodd" /></svg>
-                        <span>{selectedDate}</span>
-                    </button>
                 </div>
 
-                {/* Table */}
                 <div className="rounded-lg overflow-hidden border border-border-default">
                     <table className="w-full text-sm">
                         <thead>
@@ -215,44 +251,37 @@ export default function BatchDetailPage() {
                                 <th className="px-6 py-3.5 text-left text-xs font-medium text-primary">
                                     Status <SortIcon />
                                 </th>
-                                <th className="px-6 py-3.5 text-left text-xs font-medium text-primary">
-                                    Modified <SortIcon />
-                                </th>
                                 <th className="px-6 py-3.5 text-right text-xs font-medium text-primary">
-                                    Progress <SortIcon />
+                                    Email
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-bg-primary">
                             {isLoadingParticipants ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center">
+                                    <td colSpan={3} className="px-6 py-8 text-center">
                                         <Spinner size="md" />
                                     </td>
                                 </tr>
-                            ) : studentRows.length === 0 ? (
+                            ) : filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-text-muted">
-                                        No students in this batch
+                                    <td colSpan={3} className="px-6 py-8 text-center text-text-muted">
+                                        {searchQuery ? "No students match the search." : "No students in this batch."}
                                     </td>
                                 </tr>
                             ) : (
-                                studentRows.map((student) => (
-                                    <tr
-                                        key={student.id}
-                                        className="border-t border-border-default"
-                                    >
-                                        <td className="px-6 py-4 text-text-primary">
-                                            {student.full_name}
-                                        </td>
+                                filteredRows.map((student) => (
+                                    <tr key={student.id} className="border-t border-border-default">
+                                        <td className="px-6 py-4 text-text-primary">{student.full_name}</td>
                                         <td className="px-6 py-4">
                                             <Dropdown
                                                 value={student.attendance}
                                                 options={attendanceOptions}
+                                                onChange={(status) => handleAttendanceChange(student.id, status)}
                                                 trigger={(selected) => {
-                                                    const config = statusChipConfig[selected.value as AttendanceStatus];
+                                                    const config = statusChipConfig[selected.value as DisplayStatus];
                                                     return (
-                                                        <Chip variant={config.variant} className="text-xs">
+                                                        <Chip variant={config.variant} className="text-xs cursor-pointer">
                                                             {config.label}
                                                         </Chip>
                                                     );
@@ -260,11 +289,8 @@ export default function BatchDetailPage() {
                                                 menuClassName="min-w-[180px]"
                                             />
                                         </td>
-                                        <td className="px-6 py-4 text-text-secondary">
-                                            {activeSessionId && participantIds.has(student.id) ? "Yes" : "No"}
-                                        </td>
-                                        <td className="px-6 py-4 text-text-muted text-right">
-                                            —
+                                        <td className="px-6 py-4 text-text-muted text-right text-xs">
+                                            {student.email}
                                         </td>
                                     </tr>
                                 ))
@@ -274,17 +300,15 @@ export default function BatchDetailPage() {
                 </div>
             </main>
 
-            {/* Edit Batch Modal */}
             <CrudBatchModal
                 open={showEditModal}
                 onClose={() => setShowEditModal(false)}
                 batch={batch}
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: getGetBatchIdQueryKey(batchId) });
+                    setShowEditModal(false);
                 }}
             />
         </div>
     );
 }
-
-

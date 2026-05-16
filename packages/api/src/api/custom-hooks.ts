@@ -2,8 +2,8 @@
  * Custom hooks for endpoints added after initial orval codegen.
  * Follows the same customFetch + React Query pattern as generated hooks.
  */
-import { useQuery } from '@tanstack/react-query'
-import type { UseQueryOptions, UseQueryResult } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import type { UseQueryOptions, UseQueryResult, UseMutationResult } from '@tanstack/react-query'
 import { customFetch } from './custom-fetch'
 
 const BASE = 'http://localhost:3000'
@@ -272,3 +272,27 @@ export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown
     ...options,
   })
 }
+
+// ── Attendance override ───────────────────────────────────────────────────────
+
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'PARTIALLY_PRESENT'
+
+export const updateMeetingAttendance = (
+  meetingId: string,
+  userId: string,
+  status: AttendanceStatus
+): Promise<void> =>
+  customFetch<void>(`/meeting/${meetingId}/attendance/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+
+export const useUpdateMeetingAttendance = (): UseMutationResult<
+  void,
+  Error,
+  { meetingId: string; userId: string; status: AttendanceStatus }
+> =>
+  useMutation({
+    mutationFn: ({ meetingId, userId, status }) =>
+      updateMeetingAttendance(meetingId, userId, status),
+  })
