@@ -16,6 +16,7 @@ import {
   getMentorBatchesQueryKey,
   type MentorBatch
 } from "@akxr/api";
+import { useMemo } from "react";
 import { getGetBatchRequestsMyQueryKey } from "@akxr/api";
 
 // ---------------------------------------------------------------------------
@@ -188,6 +189,9 @@ function ChangeModal({ batchCode, currentEndDate, onClose }: ChangeModalProps) {
 function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; batches: MentorBatch[]; isLoading: boolean }) {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
+  const [showChangeModal, setShowChangeModal] = useState(false);
+
+  const { data: meetingsData } = useGetMeeting();
 
   const totalStudents = batches.reduce((acc, b) => acc + b.student_count, 0);
   const avgAtt = batches.length > 0
@@ -197,7 +201,49 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
   const fmtDate = (iso: string | null | undefined) =>
     iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
 
+  const batchNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const b of batches) map.set(b.id, b.batch_name);
+    return map;
+  }, [batches]);
+
+  const scheduledClasses = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw: any[] = (meetingsData as any)?.data?.data ?? [];
+    if (!raw.length) return [];
+    const now = new Date();
+    return raw
+      .filter((m) => m.status !== 'ENDED' && m.status !== 'CANCELLED')
+      .sort((a, b) => new Date(a.scheduled_start_time).getTime() - new Date(b.scheduled_start_time).getTime())
+      .map((m) => {
+        const start = new Date(m.scheduled_start_time);
+        const end = m.scheduled_end_time
+          ? new Date(m.scheduled_end_time)
+          : new Date(start.getTime() + ((m.duration_minutes as number) || 60) * 60_000);
+        const isLive = m.status === 'STARTED' || (start <= now && end > now);
+        let timeRemaining: string | undefined;
+        if (!isLive && start > now) {
+          const diff = start.getTime() - now.getTime();
+          const hrs = Math.floor(diff / 3_600_000);
+          const mins = Math.floor((diff % 3_600_000) / 60_000);
+          timeRemaining = hrs > 0 ? `${hrs}hr ${mins}min` : `${mins}min`;
+        }
+        const fmt = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        return {
+          id: m.id as string,
+          rtkRoomId: (m.realtime_kit_room_id as string | undefined) ?? '',
+          title: (m.title as string) || 'Untitled',
+          batchId: m.batch_id as string,
+          batchName: batchNameMap.get(m.batch_id) ?? 'Unknown Batch',
+          time: `${fmt(start)} – ${fmt(end)}`,
+          isLive,
+          timeRemaining,
+        };
+      });
+  }, [meetingsData, batchNameMap]);
+
   const firstBatch = batches[0];
+  const liveClass = scheduledClasses.find((c) => c.isLive);
 
   if (isLoading) {
     return (
@@ -226,6 +272,66 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
         <StatCard label="Total students" value={totalStudents} sub="across all batches" />
         <StatCard label="Avg attendance" value={`${avgAtt}%`} sub="term average" positive={avgAtt >= 75} />
       </div>
+
+      {/* Scheduled classes */}
+      {scheduledClasses.length > 0 && (
+        <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-default">
+            <p className="text-[13px] font-semibold text-white">Scheduled classes</p>
+          </div>
+          <div className="divide-y divide-border-default">
+            {scheduledClasses.map((cls) => (
+              <div key={cls.id} className="flex items-center justify-between px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] text-text-primary font-medium truncate">{cls.title}</span>
+                    {cls.isLive && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/20 text-success text-[10px] font-medium shrink-0">
+                        <span className="w-1 h-1 rounded-full bg-success animate-pulse" />
+                        Live
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11.5px] text-text-muted mt-0.5">
+                    {cls.batchName} · {cls.time}
+                  </p>
+                </div>
+                <div className="ml-4 shrink-0">
+                  {cls.isLive && cls.rtkRoomId ? (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/meet/${cls.rtkRoomId}`)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium border border-brand text-text-inverted transition-all duration-150"
+                      style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                      </svg>
+                      Join now
+                    </button>
+                  ) : cls.rtkRoomId ? (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/meet/${cls.rtkRoomId}`)}
+                      className="inline-flex items-center px-3 py-1.5 rounded-md text-[12px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
+                    >
+                      {cls.timeRemaining ? `In ${cls.timeRemaining}` : 'Join'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/control-panel/admin/batches/${cls.batchId}`)}
+                      className="inline-flex items-center px-3 py-1.5 rounded-md text-[12px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
+                    >
+                      View batch
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border-default">
@@ -291,32 +397,45 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
           <div className="flex items-start justify-between">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted mb-1">
-                Today · {firstBatch.batch_code}
+                {liveClass ? `Live now · ${liveClass.batchName}` : `Today · ${firstBatch.batch_code}`}
               </p>
-              <h3 className="text-[16px] font-semibold text-white">{firstBatch.batch_name}</h3>
+              <h3 className="text-[16px] font-semibold text-white">
+                {liveClass ? liveClass.title : firstBatch.batch_name}
+              </h3>
               <p className="text-[12.5px] text-text-muted mt-0.5">
-                {firstBatch.student_count} students · {firstBatch.meetings_count} sessions total
+                {liveClass ? liveClass.time : `${firstBatch.student_count} students · ${firstBatch.meetings_count} sessions total`}
               </p>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-elevated border border-border-default">
-              <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
-              <span className="text-[11px] text-error font-medium">Not started</span>
-            </div>
+            {liveClass ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-success/10 border border-success/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                <span className="text-[11px] text-success font-medium">Live</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-bg-elevated border border-border-default">
+                <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
+                <span className="text-[11px] text-error font-medium">Not started</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 mt-4">
             <button
               type="button"
-              onClick={() => setShowModal(true)}
+              onClick={() => setShowChangeModal(true)}
               className="inline-flex items-center px-4 py-2 rounded-md text-[13px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors"
             >
               Request date change
             </button>
             <button
               type="button"
+              onClick={() => liveClass?.rtkRoomId
+                ? router.push(`/meet/${liveClass.rtkRoomId}`)
+                : router.push(`/control-panel/admin/batches/${firstBatch.id}`)
+              }
               className="inline-flex items-center px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
               style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
             >
-              Start now
+              {liveClass ? 'Join now' : 'View batch'}
             </button>
           </div>
         </div>
@@ -327,6 +446,13 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
           batchCode={firstBatch.batch_code}
           currentEndDate={firstBatch.batch_end_date}
           onClose={() => setShowModal(false)}
+        />
+      )}
+      {showChangeModal && firstBatch && (
+        <ChangeModal
+          batchCode={firstBatch.batch_code}
+          currentEndDate={firstBatch.batch_end_date}
+          onClose={() => setShowChangeModal(false)}
         />
       )}
     </div>
