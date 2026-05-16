@@ -54,8 +54,8 @@ export default function BatchDetailPage() {
     const currentRole = currentUserData?.status === 200 ? currentUserData.data.data.role : undefined;
     const isMentor = currentRole === "MENTOR";
 
-    const { data: adminUsersData } = useGetAdminUsers({ query: { enabled: !isMentor } });
-    const { data: batchStudentsData } = useGetBatchStudents(batchId, { enabled: isMentor });
+    const { data: adminUsersData } = useGetAdminUsers({ query: { enabled: currentRole === "ADMIN" } });
+    const { data: batchStudentsData } = useGetBatchStudents(batchId, { enabled: currentRole === "MENTOR" });
     const { mutateAsync: updateAttendance } = useUpdateMeetingAttendance();
 
     const [showEditModal, setShowEditModal] = useState(false);
