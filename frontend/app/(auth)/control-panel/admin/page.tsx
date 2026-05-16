@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Button,
   BellIcon,
@@ -204,6 +205,8 @@ const ScheduledClassCard = ({
 
 // Main Page Component
 export default function AdminDashboard() {
+  const router = useRouter();
+
   // Real API data
   const { data: userData, isLoading: isLoadingUser } = useGetUser();
   const { data: usersData } = useGetAdminUsers();
@@ -290,6 +293,7 @@ export default function AdminDashboard() {
 
           return {
             id: m.id as string,
+            rtkRoomId: (m.realtime_kit_room_id as string | undefined) ?? "",
             title: (m.title as string) || "Untitled Meeting",
             time: `${formatTime(start)} - ${formatTime(end)}`,
             batchName:
@@ -444,7 +448,7 @@ export default function AdminDashboard() {
                   batchName={classItem.batchName}
                   isLive={classItem.isLive}
                   timeRemaining={classItem.timeRemaining}
-                  onJoin={() => console.log("Join class", classItem.id)}
+                  onJoin={() => classItem.rtkRoomId ? router.push(`/meet/${classItem.rtkRoomId}`) : undefined}
                 />
               ))
             )}

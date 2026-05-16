@@ -367,7 +367,7 @@ export const getBatchStudentsQueryKey = (batchId: string) => ['getBatchStudents'
 
 export function useGetBatchStudents<TData = GetBatchStudentsResponse, TError = unknown>(
   batchId: string,
-  options?: UseQueryOptions<GetBatchStudentsResponse, TError, TData>
+  options?: Omit<UseQueryOptions<GetBatchStudentsResponse, TError, TData>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<TData, TError> {
   return useQuery({
     queryKey: getBatchStudentsQueryKey(batchId),

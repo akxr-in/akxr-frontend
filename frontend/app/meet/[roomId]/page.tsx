@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { useRealtimeKitClient, RealtimeKitProvider, useRealtimeKitSelector } from "@cloudflare/realtimekit-react";
+import { useRealtimeKitClient, RealtimeKitProvider, useRealtimeKitSelector, useRealtimeKitMeeting } from "@cloudflare/realtimekit-react";
 import { useGetMeetingByRoomId, useGetMeetingToken, useGetUser, useGetBatchStudents } from "@akxr/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@akxr/api";
@@ -246,14 +246,15 @@ function ControlBar({
 }) {
   const self = useRealtimeKitSelector((m) => m.self);
   const roomJoined = useRealtimeKitSelector((m) => m.self.roomJoined);
+  const { meeting } = useRealtimeKitMeeting();
   const [ending, setEnding] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
 
   if (!self || !roomJoined) return null;
 
-  const toggleAudio = () => self.audio.toggle();
-  const toggleVideo = () => self.video.toggle();
-  const toggleScreenShare = () => self.screenShare.toggle();
+  const toggleAudio = () => self.audioEnabled ? self.disableAudio() : self.enableAudio();
+  const toggleVideo = () => self.videoEnabled ? self.disableVideo() : self.enableVideo();
+  const toggleScreenShare = () => self.screenShareEnabled ? self.disableScreenShare() : self.enableScreenShare();
 
   const handleEndMeeting = async () => {
     setEnding(true);
@@ -336,7 +337,7 @@ function ControlBar({
         {/* Leave button (everyone) */}
         <button
           type="button"
-          onClick={() => self.leaveRoom?.()}
+          onClick={() => meeting.leaveRoom()}
           className="px-4 py-2 rounded-lg border border-border-default text-text-secondary text-sm hover:bg-bg-card transition-colors"
         >
           Leave
