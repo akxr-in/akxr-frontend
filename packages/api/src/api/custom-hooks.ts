@@ -386,6 +386,14 @@ export const deleteAdminUser = (userId: string): Promise<void> =>
 export const useDeleteAdminUser = (): UseMutationResult<void, Error, string> =>
   useMutation({ mutationFn: (userId: string) => deleteAdminUser(userId) })
 
+// ── DELETE /admin/courses/:courseId ──────────────────────────────────────────
+
+export const deleteAdminCourse = (courseId: string): Promise<void> =>
+  customFetch<void>(`/admin/courses/${courseId}`, { method: 'DELETE' })
+
+export const useDeleteAdminCourse = (): UseMutationResult<void, Error, string> =>
+  useMutation({ mutationFn: (courseId: string) => deleteAdminCourse(courseId) })
+
 // ── DELETE /batch/:id ─────────────────────────────────────────────────────────
 
 export const deleteBatch = (id: string): Promise<void> =>

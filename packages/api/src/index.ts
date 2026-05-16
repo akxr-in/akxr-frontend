@@ -64,6 +64,7 @@ export {
   type AdminBatchRequest, type BatchRequestStatus,
   deleteBatch, useDeleteBatch,
   deleteAdminUser, useDeleteAdminUser,
+  deleteAdminCourse, useDeleteAdminCourse,
   getBatchStudents, getBatchStudentsQueryKey, useGetBatchStudents,
   getMeetingByRoomId, getMeetingByRoomIdQueryKey, useGetMeetingByRoomId,
   getMeetingToken, getMeetingTokenQueryKey, useGetMeetingToken,

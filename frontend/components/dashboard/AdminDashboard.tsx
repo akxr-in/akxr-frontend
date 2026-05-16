@@ -20,6 +20,7 @@ import {
   useDeleteAdminUser,
   useGetAllBatchRequests,
   useUpdateBatchRequestStatus,
+  useDeleteAdminCourse,
   getAdminBatchesQueryKey,
   getAdminCoursesQueryKey,
   getAdminDashboardQueryKey,
@@ -439,11 +440,32 @@ function CatalogScreen({
     courses[0]?.id ?? null
   );
   const [editingBatch, setEditingBatch] = useState<AdminBatch | null>(null);
+  const [confirmDeleteCourse, setConfirmDeleteCourse] = useState<AdminCourse | null>(null);
+  const { mutateAsync: doDeleteCourse, isPending: isDeletingCourse } = useDeleteAdminCourse();
 
   const selectedCourse = courses.find((c) => c.id === selectedCourseId) ?? null;
   const courseBatches = selectedCourseId
     ? batches.filter((b) => b.course_ids.includes(selectedCourseId))
     : [];
+  const linkedBatchCount = confirmDeleteCourse
+    ? batches.filter((b) => b.course_ids.includes(confirmDeleteCourse.id)).length
+    : 0;
+
+  const handleDeleteCourse = async () => {
+    if (!confirmDeleteCourse) return;
+    try {
+      await doDeleteCourse(confirmDeleteCourse.id);
+      queryClient.invalidateQueries({ queryKey: getAdminCoursesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getAdminDashboardQueryKey() });
+      toast.success(`Deleted course "${confirmDeleteCourse.name}"`);
+      if (selectedCourseId === confirmDeleteCourse.id) {
+        setSelectedCourseId(courses.find((c) => c.id !== confirmDeleteCourse.id)?.id ?? null);
+      }
+      setConfirmDeleteCourse(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete course");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -473,18 +495,37 @@ function CatalogScreen({
                 const isActive = course.id === selectedCourseId;
                 const batchCount = batches.filter((b) => b.course_ids.includes(course.id)).length;
                 return (
-                  <button key={course.id} type="button" onClick={() => setSelectedCourseId(course.id)}
-                    className={`w-full text-left pl-3.5 pr-4 py-3 border-b border-border-default border-l-2 hover:bg-bg-primary transition-colors ${isActive ? "border-l-brand bg-bg-primary" : "border-l-transparent"}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
+                  <div
+                    key={course.id}
+                    className={`group relative pl-3.5 pr-4 py-3 border-b border-border-default border-l-2 hover:bg-bg-primary transition-colors ${isActive ? "border-l-brand bg-bg-primary" : "border-l-transparent"}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCourseId(course.id)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-start justify-between gap-2">
                         <p className="text-[12.5px] text-text-primary mt-0.5">{course.name}</p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.time_allotted_in_weeks}w</span>
-                      <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{batchCount}B</span>
-                    </div>
-                  </button>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{course.time_allotted_in_weeks}w</span>
+                        <span className="font-mono text-[9.5px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded border border-border-default text-text-muted">{batchCount}B</span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${course.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteCourse(course);
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded text-text-muted hover:text-error hover:bg-error/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+                      </svg>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -550,6 +591,44 @@ function CatalogScreen({
           setEditingBatch(null);
         }}
       />
+
+      {confirmDeleteCourse && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-bg-secondary border border-border-default rounded-xl w-full max-w-md mx-4 shadow-2xl">
+            <div className="px-5 py-4 border-b border-border-default">
+              <h3 className="text-[15px] font-semibold text-white">Delete course</h3>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-[13px] text-text-secondary">
+                Permanently delete <span className="font-semibold text-white">{confirmDeleteCourse.name}</span>? This action cannot be undone.
+              </p>
+              {linkedBatchCount > 0 && (
+                <p className="text-[12px] text-error border border-error/40 bg-error/10 rounded-md px-3 py-2">
+                  Warning: {linkedBatchCount} batch{linkedBatchCount === 1 ? "" : "es"} reference this course. Delete or reassign them first to avoid orphaned batches.
+                </p>
+              )}
+            </div>
+            <div className="px-5 py-4 border-t border-border-default flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteCourse(null)}
+                disabled={isDeletingCourse}
+                className="px-4 py-2 rounded-md text-[13px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteCourse}
+                disabled={isDeletingCourse}
+                className="px-4 py-2 rounded-md text-[13px] font-medium border border-error/40 bg-error/10 text-error hover:bg-error/20 disabled:opacity-50 transition-colors"
+              >
+                {isDeletingCourse ? "Deleting…" : "Delete course"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
