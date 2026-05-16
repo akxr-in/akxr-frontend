@@ -16,6 +16,7 @@ import {
   usePostBatch,
   usePostAdminUpgradeRole,
   usePatchBatchId,
+  useAssignStudentToBatch,
   getAdminBatchesQueryKey,
   getAdminCoursesQueryKey,
   getAdminDashboardQueryKey,
@@ -483,7 +484,25 @@ function PeopleScreen({
   const queryClient = useQueryClient();
   const { mutateAsync: upgradeRole } = usePostAdminUpgradeRole();
   const { mutateAsync: patchBatch } = usePatchBatchId();
+  const { mutateAsync: assignBatch, isPending: isAssigning } = useAssignStudentToBatch();
   const [togglingCell, setTogglingCell] = useState<string | null>(null);
+  const [assigningStudent, setAssigningStudent] = useState<string | null>(null);
+
+  const students = allUsers.filter((u) => u.role === "STUDENT");
+
+  const handleAssignBatch = async (userId: string, batchId: string) => {
+    if (!batchId || isAssigning) return;
+    setAssigningStudent(userId);
+    try {
+      await assignBatch({ userId, batchId });
+      queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
+    } catch (e) {
+      console.error(e);
+      alert("Failed to assign batch");
+    } finally {
+      setAssigningStudent(null);
+    }
+  };
 
   const handleToggleAssign = async (batch: AdminBatch, mentorId: string) => {
     const cellKey = `${batch.id}-${mentorId}`;
@@ -634,6 +653,54 @@ function PeopleScreen({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Student batch enrollment */}
+      <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-border-default">
+          <p className="text-[13px] font-semibold text-white">Student batch enrollment</p>
+        </div>
+        {students.length === 0 ? (
+          <div className="p-8 text-center text-text-muted text-[13px]">No students yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border-default">
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Student</th>
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Email</th>
+                  <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 bg-bg-primary text-left">Assign Batch</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.map((student, i) => (
+                  <tr key={student.id} className={`hover:bg-bg-primary transition-colors ${i < students.length - 1 ? "border-b border-border-default" : ""}`}>
+                    <td className="px-3.5 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={student.full_name} size="sm" />
+                        <span className="text-[12.5px] text-text-primary">{student.full_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-3.5 py-3 text-[12.5px] text-text-muted">{student.email}</td>
+                    <td className="px-3.5 py-3">
+                      <select
+                        className="bg-bg-primary border border-border-default rounded-md px-2 py-1 text-[12px] text-text-primary outline-none focus:border-border-focus transition-colors disabled:opacity-50"
+                        defaultValue={student.batch_ids?.[0] ?? ""}
+                        disabled={assigningStudent === student.id}
+                        onChange={(e) => handleAssignBatch(student.id, e.target.value)}
+                      >
+                        <option value="">No batch</option>
+                        {batches.map((b) => (
+                          <option key={b.id} value={b.id}>{b.batch_name}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
