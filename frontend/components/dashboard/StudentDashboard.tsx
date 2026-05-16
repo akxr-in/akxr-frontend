@@ -55,9 +55,13 @@ function getMeetingState(
   const now = new Date();
   const end = new Date(scheduledEnd);
   const start = new Date(scheduledStart);
-  // Check today first — a meeting that started today stays "today" even if
-  // it runs past its scheduled end (mentor may extend it).
-  if (start.toDateString() === now.toDateString()) return "today";
+  const STALE_GRACE_MS = 6 * 60 * 60 * 1000;
+  // A meeting that started today stays "today" even if it runs past its
+  // scheduled end (mentor may extend) — but only within a 6h grace window
+  // so stale never-ended sessions don't keep showing a join button forever.
+  if (start.toDateString() === now.toDateString() && now.getTime() - end.getTime() < STALE_GRACE_MS) {
+    return "today";
+  }
   if (end < now) return "done";
   return "upcoming";
 }

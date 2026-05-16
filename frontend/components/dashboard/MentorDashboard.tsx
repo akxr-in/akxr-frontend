@@ -222,8 +222,15 @@ function BatchesScreen({ firstName, batches, isLoading }: { firstName: string; b
     const raw: any[] = meetingQueries.flatMap((q) => (q.data as any)?.data?.data ?? []);
     if (!raw.length) return [];
     const now = new Date();
+    const HIDE_AFTER_MS = 6 * 60 * 60 * 1000; // hide stale past meetings after 6h
     return raw
       .filter((m) => m.status !== 'ENDED' && m.status !== 'CANCELLED')
+      .filter((m) => {
+        const end = m.scheduled_end_time
+          ? new Date(m.scheduled_end_time)
+          : new Date(new Date(m.scheduled_start_time).getTime() + ((m.duration_minutes as number) || 60) * 60_000);
+        return now.getTime() - end.getTime() < HIDE_AFTER_MS;
+      })
       .sort((a, b) => new Date(a.scheduled_start_time).getTime() - new Date(b.scheduled_start_time).getTime())
       .map((m) => {
         const start = new Date(m.scheduled_start_time);
