@@ -169,37 +169,6 @@ export default function LoginPage() {
             </svg>
             {isGithubLoading ? "Redirecting to GitHub…" : "Continue with GitHub"}
           </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-2.5 my-6">
-            <div className="flex-1 h-px bg-line" />
-            <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-ink-4">
-              or
-            </span>
-            <div className="flex-1 h-px bg-line" />
-          </div>
-
-          {/* Email form */}
-          <form onSubmit={handleEmail} className="flex flex-col gap-3 text-left">
-            <Field label="Email" type="email" placeholder="you@example.com" value={email} onChange={setEmail} autoComplete="email" required />
-            <Field label="Password" type="password" placeholder="••••••••" value={password} onChange={setPassword} autoComplete="current-password" required />
-
-            <button
-              type="submit"
-              disabled={loginMutation.isPending}
-              className="
-                mt-1 w-full flex items-center justify-center px-3.5 py-2.5 font-sans
-                text-[12.5px] font-medium tracking-[-0.003em] rounded-[var(--r-sm)]
-                border border-line bg-card text-ink
-                transition-[background,border-color] duration-100
-                hover:bg-card-elev hover:border-line-2
-                disabled:cursor-not-allowed disabled:bg-paper-2 disabled:text-ink-4
-              "
-            >
-              {loginMutation.isPending ? "Signing in…" : "Continue with email"}
-            </button>
-          </form>
-
           {/* Terms */}
           <p className="mt-7 text-[11.5px] text-ink-4 leading-[1.55]">
             By continuing you accept the Akxr terms and privacy policy.
