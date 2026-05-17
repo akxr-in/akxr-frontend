@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@akxr/design-system", "@akxr/api"],
   env: {
     APP_ENV: process.env.APP_ENV,
+    NEXT_PUBLIC_DC_ENDPOINT: process.env.NEXT_PUBLIC_DC_ENDPOINT,
   },
 };
 

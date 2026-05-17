@@ -7,6 +7,12 @@ const backendUrls = {
     production: 'https://api.akxr.in'
 }
 
+const dcEndpoints = {
+    development: 'https://data-collection-staging.akxr.in',
+    staging: 'https://data-collection-staging.akxr.in',
+    production: 'https://data-collection.akxr.in'
+}
+
 const env = {
     // Environment
     APP_ENV,
@@ -16,6 +22,7 @@ const env = {
 
     // URLs
     BACKEND_URL: backendUrls[APP_ENV],
+    DC_ENDPOINT: dcEndpoints[APP_ENV]
 }
 
 module.exports = {
