@@ -12,7 +12,7 @@ import { hasAuthToken } from './auth-storage'
 function useAuthQuery<TQueryFnData, TError, TData = TQueryFnData>(
   options: UseQueryOptions<TQueryFnData, TError, TData>,
 ): UseQueryResult<TData, TError> {
-  return useAuthQuery({
+  return useQuery({
     ...options,
     enabled: hasAuthToken() && (options.enabled ?? true),
   })
