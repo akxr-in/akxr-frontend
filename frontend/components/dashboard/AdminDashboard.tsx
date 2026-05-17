@@ -142,8 +142,8 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
                   className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium border"
                   style={
                     step >= s
-                      ? { background: "#C9963A", borderColor: "#C9963A", color: "#000" }
-                      : { background: "transparent", borderColor: "#404040", color: "#737373" }
+                      ? { background: "var(--gold)", borderColor: "var(--gold)", color: "var(--paper)" }
+                      : { background: "transparent", borderColor: "var(--line-2)", color: "var(--ink-4)" }
                   }
                 >
                   {s}
@@ -233,13 +233,13 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
             {step === 1 ? (
               <button type="button" onClick={() => setStep(2)}
                 className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-                style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+                style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
                 Next: batch
               </button>
             ) : (
               <button type="button" onClick={handlePublish}
                 className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-                style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+                style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
                 Publish course
               </button>
             )}
@@ -408,7 +408,7 @@ function OverviewScreen({
           </button>
           <button type="button" onClick={onNewCourse}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-brand text-text-inverted transition-all duration-150"
-            style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+            style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -534,7 +534,7 @@ function CatalogScreen({
         <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">Courses & batches</h2>
         <button type="button" onClick={onNewCourse}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-brand text-text-inverted transition-all duration-150"
-          style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+          style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -837,16 +837,16 @@ function PeopleScreen({
                             style={
                               isAssigned
                                 ? { background: "rgba(201,150,58,0.20)", borderColor: "rgba(201,150,58,0.4)", opacity: isToggling ? 0.5 : 1 }
-                                : { background: "transparent", borderColor: "#333", opacity: isToggling ? 0.5 : 1 }
+                                : { background: "transparent", borderColor: "var(--line-2)", opacity: isToggling ? 0.5 : 1 }
                             }
                           >
                             {isAssigned && !isToggling && (
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9963A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M20 6L9 17l-5-5" />
                               </svg>
                             )}
                             {isToggling && (
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2" className="animate-spin">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" strokeWidth="2" className="animate-spin">
                                 <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                                 <path d="M12 2a10 10 0 0 1 10 10" />
                               </svg>

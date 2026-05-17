@@ -31,18 +31,19 @@ import { formatDate as fmtDateUtil, formatDateLong, formatTime } from "@/lib/for
 
 type RequestStatus = 'pending' | 'approved' | 'rejected';
 
-const requestStatusConfig: Record<RequestStatus, { bg: string; text: string; border: string; label: string }> = {
-  pending:  { bg: 'rgba(201,150,58,0.10)',  text: '#C9963A', border: 'rgba(201,150,58,0.2)',  label: 'Pending'  },
-  approved: { bg: 'rgba(34,197,94,0.12)',   text: '#22C55E', border: 'rgba(34,197,94,0.2)',   label: 'Approved' },
-  rejected: { bg: 'rgba(197,34,34,0.14)',   text: '#C52222', border: 'rgba(197,34,34,0.2)',   label: 'Rejected' },
+// Maps mentor-side request states to the canonical status tones
+// (matches reference Pill: warn/ok/bad).
+const requestStatusConfig: Record<RequestStatus, { className: string; label: string }> = {
+  pending:  { className: 'bg-brand-subtle   text-brand-ink border-brand-muted',   label: 'Pending'  },
+  approved: { className: 'bg-success-subtle text-success   border-success-muted', label: 'Approved' },
+  rejected: { className: 'bg-error-subtle   text-error     border-error-muted',   label: 'Rejected' },
 };
 
 function RequestStatusBadge({ status }: { status: RequestStatus }) {
   const cfg = requestStatusConfig[status];
   return (
     <span
-      className="inline-flex items-center px-2 py-0.5 rounded-full font-mono text-[10px] uppercase tracking-[0.06em] border"
-      style={{ backgroundColor: cfg.bg, color: cfg.text, borderColor: cfg.border }}
+      className={`inline-flex items-center px-2 py-0.5 rounded-[var(--r-sm)] font-mono text-[10px] uppercase tracking-[0.06em] border ${cfg.className}`}
     >
       {cfg.label}
     </span>
@@ -178,7 +179,7 @@ function ChangeModal({ batchCode, currentEndDate, onClose }: ChangeModalProps) {
             type="button"
             onClick={handleSubmit}
             className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-            style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
+            style={{ background: 'linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)' }}
           >
             Submit request
           </button>
@@ -338,7 +339,7 @@ function BatchesScreen({
                       type="button"
                       onClick={() => router.push(`/meet/${cls.rtkRoomId}`)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium border border-brand text-text-inverted transition-all duration-150"
-                      style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
+                      style={{ background: 'linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)' }}
                     >
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                         <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
@@ -463,7 +464,7 @@ function BatchesScreen({
               }
               disabled={!liveClass?.rtkRoomId}
               className="inline-flex items-center px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
+              style={{ background: 'linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)' }}
             >
               {liveClass ? 'Join now' : 'No live session'}
             </button>
@@ -660,7 +661,7 @@ function RequestsScreen({ batches }: { batches: MentorBatch[] }) {
           type="button"
           onClick={() => { setSelectedBatch(batches[0] ?? null); setShowModal(true); }}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-          style={{ background: 'linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)' }}
+          style={{ background: 'linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
