@@ -95,15 +95,15 @@ function MeetingRoom({
   if (ended) {
     const totalSeen = joinedUserIds.size;
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+      <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center space-y-4 max-w-sm px-6">
-          <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-green-400" aria-hidden="true">
+          <div className="w-16 h-16 rounded-full bg-ok-bg flex items-center justify-center mx-auto">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-ok" aria-hidden="true">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-white">Class ended</h2>
-          <p className="text-[#888] text-sm">
+          <p className="text-ink-4 text-sm">
             {totalSeen > 0
               ? `Attendance recorded for ${totalSeen} participant${totalSeen === 1 ? "" : "s"}.`
               : "Attendance has been recorded."}
@@ -111,7 +111,7 @@ function MeetingRoom({
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="px-4 py-2 rounded-lg bg-brand text-black text-sm font-medium hover:opacity-90 transition-opacity"
+            className="px-4 py-2 rounded-lg bg-brand text-paper text-sm font-medium hover:opacity-90 transition-opacity"
           >
             Back to dashboard
           </button>
@@ -121,21 +121,21 @@ function MeetingRoom({
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#0f0f0f] overflow-hidden">
+    <div className="h-screen flex flex-col bg-paper overflow-hidden">
       {/* Header */}
-      <header className="shrink-0 flex items-center justify-between px-6 h-14 bg-[#1a1a1a] border-b border-[#2a2a2a]">
+      <header className="shrink-0 flex items-center justify-between px-6 h-14 bg-paper-2 border-b border-line">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse block" />
+          <span className="w-2 h-2 rounded-full bg-ok animate-pulse block" />
           <span className="text-white font-medium text-sm">Live class</span>
         </div>
-        <div className="hidden md:flex gap-1 bg-[#111] rounded-lg p-1" role="tablist" aria-label="Sidebar panel">
+        <div className="hidden md:flex gap-1 bg-paper rounded-lg p-1" role="tablist" aria-label="Sidebar panel">
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === "people"}
             onClick={() => setActiveTab("people")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              activeTab === "people" ? "bg-[#2a2a2a] text-white" : "text-[#666] hover:text-white"
+              activeTab === "people" ? "bg-card-elev text-white" : "text-ink-4 hover:text-white"
             }`}
           >
             People
@@ -146,7 +146,7 @@ function MeetingRoom({
             aria-selected={activeTab === "chat"}
             onClick={() => setActiveTab("chat")}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              activeTab === "chat" ? "bg-[#2a2a2a] text-white" : "text-[#666] hover:text-white"
+              activeTab === "chat" ? "bg-card-elev text-white" : "text-ink-4 hover:text-white"
             }`}
           >
             Chat
@@ -157,12 +157,12 @@ function MeetingRoom({
       {/* Main content */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Video area */}
-        <div className="flex-1 relative overflow-hidden bg-[#0d0d0d]">
+        <div className="flex-1 relative overflow-hidden bg-bg-deep">
           {!roomJoined ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center space-y-3">
                 <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-[#888] text-sm">Connecting…</p>
+                <p className="text-ink-4 text-sm">Connecting…</p>
               </div>
             </div>
           ) : (
@@ -175,7 +175,7 @@ function MeetingRoom({
         </div>
 
         {/* Sidebar — hides on small screens so the video grid stays usable on mobile */}
-        <aside className="hidden md:flex w-72 border-l border-[#2a2a2a] bg-[#1a1a1a] overflow-hidden flex-col">
+        <aside className="hidden md:flex w-72 border-l border-line bg-paper-2 overflow-hidden flex-col">
           {activeTab === "chat" ? (
             <RtkChat
               meeting={meeting}
@@ -191,7 +191,7 @@ function MeetingRoom({
       </div>
 
       {/* Controls */}
-      <footer className="shrink-0 flex items-center justify-between px-6 h-20 bg-[#1a1a1a] border-t border-[#2a2a2a]">
+      <footer className="shrink-0 flex items-center justify-between px-6 h-20 bg-paper-2 border-t border-line">
         <div className="flex items-center gap-2">
           <RtkMicToggle meeting={meeting} variant="horizontal" />
           <RtkCameraToggle meeting={meeting} variant="horizontal" />
@@ -202,7 +202,7 @@ function MeetingRoom({
           <button
             type="button"
             onClick={handleLeave}
-            className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] text-sm hover:bg-[#2a2a2a] transition-colors"
+            className="px-4 py-2 rounded-lg border border-line-2 text-ink-3 text-sm hover:bg-card-elev transition-colors"
           >
             Leave
           </button>
@@ -214,14 +214,14 @@ function MeetingRoom({
                   type="button"
                   disabled={ending}
                   onClick={handleEndMeeting}
-                  className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-500 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 rounded-lg bg-bad text-white text-sm font-medium hover:bg-bad disabled:opacity-50 transition-colors"
                 >
                   {ending ? "Ending…" : "Confirm end"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmEnd(false)}
-                  className="px-3 py-2 rounded-lg border border-[#333] text-[#aaa] text-sm"
+                  className="px-3 py-2 rounded-lg border border-line-2 text-ink-3 text-sm"
                 >
                   Cancel
                 </button>
@@ -230,7 +230,7 @@ function MeetingRoom({
               <button
                 type="button"
                 onClick={() => setConfirmEnd(true)}
-                className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/40 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors"
+                className="px-4 py-2 rounded-lg bg-bad/10 border border-bad-deep text-bad text-sm font-medium hover:bg-bad/20 transition-colors"
               >
                 End class
               </button>
@@ -254,22 +254,22 @@ function MeetErrorScreen({
   onRetry?: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+    <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="text-center space-y-4 max-w-md px-6">
-        <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/40 flex items-center justify-center mx-auto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-red-400">
+        <div className="w-12 h-12 rounded-full bg-bad/10 border border-bad-deep flex items-center justify-center mx-auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-bad">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 8v4M12 16h.01" />
           </svg>
         </div>
         <h2 className="text-lg font-semibold text-white">{title}</h2>
-        <p className="text-[#888] text-sm">{message}</p>
+        <p className="text-ink-4 text-sm">{message}</p>
         <div className="flex items-center justify-center gap-2">
           {onRetry && (
             <button
               type="button"
               onClick={onRetry}
-              className="px-4 py-2 rounded-lg bg-brand text-black text-sm font-medium hover:opacity-90 transition-opacity"
+              className="px-4 py-2 rounded-lg bg-brand text-paper text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Retry
             </button>
@@ -277,7 +277,7 @@ function MeetErrorScreen({
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] text-sm hover:bg-[#2a2a2a] transition-colors"
+            className="px-4 py-2 rounded-lg border border-line-2 text-ink-3 text-sm hover:bg-card-elev transition-colors"
           >
             Back
           </button>
@@ -331,10 +331,10 @@ export default function MeetRoomPage() {
 
   if (meetingLoading || tokenLoading) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+      <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#888] text-sm">Loading meeting…</p>
+          <p className="text-ink-4 text-sm">Loading meeting…</p>
         </div>
       </div>
     );
@@ -390,7 +390,7 @@ export default function MeetRoomPage() {
     <RealtimeKitProvider
       value={client}
       fallback={
-        <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="min-h-screen bg-paper flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       }
