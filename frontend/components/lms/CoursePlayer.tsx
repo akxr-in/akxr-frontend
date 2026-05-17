@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  useGetUser,
   useGetUserCourses,
   useGetUserCourse,
   usePostCompleteLecture,
@@ -13,6 +14,8 @@ import {
   type UserLecture,
 } from "@akxr/api";
 import { EmptyHint, Panel } from "./LmsLayout";
+import { LectureVideoPlayer } from "./LectureVideoPlayer";
+import { dc, initDc } from "@/lib/dc";
 
 // ── Inline markdown renderer (text + [label](url) links only) ────────────────
 
@@ -53,43 +56,38 @@ function MarkdownText({ text, className }: { text: string; className?: string })
   );
 }
 
-// ── Video URL helpers ─────────────────────────────────────────────────────────
-
-function getEmbedUrl(url: string): string | null {
-  try {
-    const u = new URL(url);
-
-    // YouTube
-    if (u.hostname.includes("youtube.com") || u.hostname.includes("youtu.be")) {
-      let videoId: string | null = null;
-      if (u.hostname.includes("youtu.be")) {
-        videoId = u.pathname.slice(1);
-      } else {
-        videoId = u.searchParams.get("v");
-        if (!videoId && u.pathname.startsWith("/embed/")) {
-          videoId = u.pathname.replace("/embed/", "");
-        }
-      }
-      return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1` : null;
-    }
-
-    // Vimeo
-    if (u.hostname.includes("vimeo.com")) {
-      const match = u.pathname.match(/\/(\d+)/);
-      return match ? `https://player.vimeo.com/video/${match[1]}?title=0&byline=0` : null;
-    }
-
-    // Already an embed URL or generic — use as-is
-    return url;
-  } catch {
-    return null;
-  }
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function LectureContent({ lecture }: { lecture: UserLecture }) {
   const hasAny = lecture.video_url || lecture.text_content || lecture.assignment_reference;
+
+  // Text tracking: open on mount, close on unmount, scroll on window scroll.
+  const textRef = useRef<HTMLDivElement | null>(null);
+  const openedAtRef = useRef<number>(0);
+  useEffect(() => {
+    if (!lecture.text_content) return;
+    dc.text.open(lecture.id);
+    openedAtRef.current = Date.now();
+
+    const onScroll = () => {
+      const el = textRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const viewportH = window.innerHeight || document.documentElement.clientHeight;
+      const total = rect.height;
+      if (total <= 0) return;
+      const scrolled = Math.min(Math.max(viewportH - rect.top, 0), total);
+      const pct = Math.round((scrolled / total) * 100);
+      dc.text.scroll(lecture.id, pct);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      const seconds = Math.max(0, Math.round((Date.now() - openedAtRef.current) / 1000));
+      dc.text.close(lecture.id, seconds);
+    };
+  }, [lecture.id, lecture.text_content]);
 
   if (!hasAny) {
     return (
@@ -101,34 +99,16 @@ function LectureContent({ lecture }: { lecture: UserLecture }) {
 
   return (
     <div className="space-y-5">
-      {lecture.video_url && (() => {
-        const embedUrl = getEmbedUrl(lecture.video_url!);
-        return embedUrl ? (
-          <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
-            <iframe
-              src={embedUrl}
-              title={lecture.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen
-              className="w-full h-full"
-            />
-          </div>
-        ) : (
-          <div className="aspect-video flex items-center justify-center border border-border-default rounded-lg bg-bg-primary">
-            <a
-              href={lecture.video_url!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand text-[13px] underline"
-            >
-              Open video in new tab
-            </a>
-          </div>
-        );
-      })()}
+      {lecture.video_url && (
+        <LectureVideoPlayer
+          videoUrl={lecture.video_url}
+          videoId={lecture.id}
+          title={lecture.title}
+        />
+      )}
 
       {lecture.text_content && (
-        <div className="border border-border-default rounded-lg bg-bg-secondary p-6">
+        <div ref={textRef} className="border border-border-default rounded-lg bg-bg-secondary p-6">
           <p className="text-[11px] font-mono uppercase tracking-[0.08em] text-text-muted mb-3">Description</p>
           <MarkdownText
             text={lecture.text_content}
@@ -229,9 +209,8 @@ function CourseSidebar({
             <button
               type="button"
               onClick={() => onSelectCourse(entry.course.id)}
-              className={`w-full text-left px-4 py-3 transition-colors ${
-                isActiveCourse ? "bg-bg-primary" : "hover:bg-bg-primary"
-              }`}
+              className={`w-full text-left px-4 py-3 transition-colors ${isActiveCourse ? "bg-bg-primary" : "hover:bg-bg-primary"
+                }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -243,13 +222,12 @@ function CourseSidebar({
                   </p>
                 </div>
                 <span
-                  className={`flex-shrink-0 text-[9.5px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded border ${
-                    entry.state === "COMPLETED"
+                  className={`flex-shrink-0 text-[9.5px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded border ${entry.state === "COMPLETED"
                       ? "border-emerald-800 text-emerald-400"
                       : entry.state === "IN_PROGRESS"
-                      ? "border-brand text-brand"
-                      : "border-border-default text-text-muted"
-                  }`}
+                        ? "border-brand text-brand"
+                        : "border-border-default text-text-muted"
+                    }`}
                 >
                   {entry.state === "IN_PROGRESS" ? "Active" : entry.state === "COMPLETED" ? "Done" : "Locked"}
                 </span>
@@ -296,11 +274,10 @@ function CourseSidebar({
                             key={lecture.id}
                             type="button"
                             onClick={() => onSelectLecture(lecture.id)}
-                            className={`w-full text-left px-5 py-2.5 flex items-start gap-2.5 transition-colors border-t border-border-default ${
-                              active
+                            className={`w-full text-left px-5 py-2.5 flex items-start gap-2.5 transition-colors border-t border-border-default ${active
                                 ? "bg-bg-primary border-l-2 border-l-brand"
                                 : "hover:bg-bg-primary border-l-2 border-l-transparent"
-                            }`}
+                              }`}
                           >
                             <span className="flex-shrink-0 mt-0.5">
                               {done ? (
@@ -338,6 +315,8 @@ interface CoursePlayerProps {
 
 export function CoursePlayer({ initialCourseId, initialLectureId }: CoursePlayerProps) {
   const queryClient = useQueryClient();
+  const { data: userRes } = useGetUser();
+  const userId = userRes?.status === 200 ? userRes.data.data.id : null;
   const { data: coursesRes, isLoading } = useGetUserCourses();
   const courses = coursesRes?.data?.data?.courses ?? [];
 
@@ -359,6 +338,11 @@ export function CoursePlayer({ initialCourseId, initialLectureId }: CoursePlayer
     }
   }, [inProgressCourse, activeCourseId]);
 
+  // Re-identify with active course so subsequent events carry course context.
+  useEffect(() => {
+    if (userId && activeCourseId) initDc(userId, activeCourseId);
+  }, [userId, activeCourseId]);
+
   const { data: courseDetailRes } = useGetUserCourse(activeCourseId ?? "", {
     enabled: !!activeCourseId,
   });
@@ -377,7 +361,7 @@ export function CoursePlayer({ initialCourseId, initialLectureId }: CoursePlayer
       );
     const next = allLectures.find((l) => !completedIds.has(l.id)) ?? allLectures[0] ?? null;
     if (next) setActiveLectureId(next.id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCourseDetail?.id]);
 
   const activeLecture = activeCourseDetail?.modules
@@ -390,6 +374,7 @@ export function CoursePlayer({ initialCourseId, initialLectureId }: CoursePlayer
     if (!activeLectureId || markingComplete) return;
     setMarkingComplete(true);
     try {
+      if (activeLecture?.video_url) dc.video.complete(activeLectureId);
       await completeMutation.mutateAsync(activeLectureId);
       await queryClient.invalidateQueries({ queryKey: getUserCourseQueryKey(activeCourseId!) });
       await queryClient.invalidateQueries({ queryKey: getUserCoursesQueryKey() });
@@ -467,11 +452,10 @@ export function CoursePlayer({ initialCourseId, initialLectureId }: CoursePlayer
                 type="button"
                 disabled={isLectureComplete || markingComplete}
                 onClick={handleMarkComplete}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12px] font-medium border transition-all duration-150 ${
-                  isLectureComplete
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12px] font-medium border transition-all duration-150 ${isLectureComplete
                     ? "border-emerald-800 text-emerald-400 bg-emerald-900/20 cursor-default"
                     : "border-brand text-text-inverted cursor-pointer hover:opacity-90"
-                }`}
+                  }`}
                 style={
                   !isLectureComplete
                     ? { background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }

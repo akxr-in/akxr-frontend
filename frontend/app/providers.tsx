@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { DcBootstrapper } from "@/components/DcBootstrapper";
 import { clearAuthTokens, isAuthError } from "@akxr/api";
 
 function redirectToLogin() {
@@ -80,6 +81,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
+            <DcBootstrapper />
             {children}
             <Toaster
                 position="bottom-right"
