@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CrudBatchModal } from "../CrudBatchModal";
 import { ScheduleClassModal } from "../ScheduleClassModal";
+import { InstantMeetingButton } from "./InstantMeetingButton";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -399,6 +400,7 @@ function OverviewScreen({
           <p className="text-text-muted text-[13.5px] mt-0.5">{formatWeekday(new Date())}</p>
         </div>
         <div className="flex items-center gap-2">
+          <InstantMeetingButton />
           <button type="button" onClick={handleExport}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

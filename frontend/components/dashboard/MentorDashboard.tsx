@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "./AppShell";
+import { InstantMeetingButton } from "./InstantMeetingButton";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
 import type { UserDataResponseData } from "@akxr/api";
@@ -291,6 +292,7 @@ function BatchesScreen({
           Hey, {firstName}.
         </h1>
         <div className="flex items-center gap-2">
+          <InstantMeetingButton />
           <button
             type="button"
             onClick={onOpenLms}
