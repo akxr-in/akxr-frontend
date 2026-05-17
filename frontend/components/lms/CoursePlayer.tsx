@@ -474,7 +474,7 @@ export function CoursePlayer({ initialCourseId, initialLectureId }: CoursePlayer
                 }`}
                 style={
                   !isLectureComplete
-                    ? { background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }
+                    ? { background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }
                     : undefined
                 }
               >
