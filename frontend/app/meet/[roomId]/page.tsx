@@ -37,6 +37,7 @@ function MeetingRoom({
 
   const [joinedUserIds, setJoinedUserIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"chat" | "people">("people");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [ended, setEnded] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [ending, setEnding] = useState(false);
@@ -217,29 +218,34 @@ function MeetingRoom({
           <span className="w-2 h-2 rounded-full bg-ok animate-pulse block" />
           <span className="text-white font-medium text-sm">Live class</span>
         </div>
-        <div className="hidden md:flex gap-1 bg-paper rounded-lg p-1" role="tablist" aria-label="Sidebar panel">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "people"}
-            onClick={() => setActiveTab("people")}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              activeTab === "people" ? "bg-card-elev text-white" : "text-ink-4 hover:text-white"
-            }`}
-          >
-            People
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "chat"}
-            onClick={() => setActiveTab("chat")}
-            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              activeTab === "chat" ? "bg-card-elev text-white" : "text-ink-4 hover:text-white"
-            }`}
-          >
-            Chat
-          </button>
+        {/* Sidebar tabs — clicking the active one collapses the panel,
+            clicking the other swaps + opens. Gives users one place to
+            reclaim screen real estate. */}
+        <div className="hidden md:flex gap-1 bg-paper rounded-[var(--r-sm)] p-1" role="tablist" aria-label="Sidebar panel">
+          {(["people", "chat"] as const).map((tab) => {
+            const isActiveOpen = sidebarOpen && activeTab === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={isActiveOpen}
+                onClick={() => {
+                  if (sidebarOpen && activeTab === tab) {
+                    setSidebarOpen(false);
+                  } else {
+                    setActiveTab(tab);
+                    setSidebarOpen(true);
+                  }
+                }}
+                className={`px-3 py-1 rounded-[var(--r-sm)] text-xs font-medium transition-colors ${
+                  isActiveOpen ? "bg-card-elev text-ink" : "text-ink-4 hover:text-ink"
+                }`}
+              >
+                {tab === "people" ? "People" : "Chat"}
+              </button>
+            );
+          })}
         </div>
       </header>
 
@@ -263,20 +269,35 @@ function MeetingRoom({
           <RtkParticipantsAudio meeting={meeting} style={{ display: "none" }} />
         </div>
 
-        {/* Sidebar — hides on small screens so the video grid stays usable on mobile */}
-        <aside className="hidden md:flex w-72 border-l border-line bg-paper-2 overflow-hidden flex-col">
-          {activeTab === "chat" ? (
-            <RtkChat
-              meeting={meeting}
-              style={{ width: "100%", height: "100%", flex: "1" }}
-            />
-          ) : (
-            <RtkParticipants
-              meeting={meeting}
-              style={{ width: "100%", height: "100%", flex: "1" }}
-            />
-          )}
-        </aside>
+        {/* Sidebar — collapsible via the header tabs. Wider than before
+            (320px) so participant names + chat copy don't truncate to "Aman Kum…".
+            Hidden on small screens so mobile gets full video. */}
+        {sidebarOpen && (
+          <aside className="hidden md:flex w-80 border-l border-line bg-paper-2 overflow-hidden flex-col relative">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+              className="absolute top-2 right-2 z-10 w-6 h-6 flex items-center justify-center rounded-[var(--r-sm)] text-ink-4 hover:text-ink hover:bg-card-elev transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            {activeTab === "chat" ? (
+              <RtkChat
+                meeting={meeting}
+                style={{ width: "100%", height: "100%", flex: "1" }}
+              />
+            ) : (
+              <RtkParticipants
+                meeting={meeting}
+                style={{ width: "100%", height: "100%", flex: "1" }}
+              />
+            )}
+          </aside>
+        )}
       </div>
 
       {/* Controls */}
@@ -284,7 +305,9 @@ function MeetingRoom({
         <div className="flex items-center gap-2">
           <RtkMicToggle meeting={meeting} variant="horizontal" />
           <RtkCameraToggle meeting={meeting} variant="horizontal" />
-          <RtkScreenShareToggle meeting={meeting} />
+          {/* RtkScreenShareToggle defaults to the icon-only square. Pin it
+              to the horizontal labeled variant so it matches Mic/Camera. */}
+          <RtkScreenShareToggle meeting={meeting} variant="horizontal" />
         </div>
 
         <div className="flex items-center gap-3">
