@@ -3,6 +3,7 @@
 import { useGetUser } from "@akxr/api";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { clearAuthTokens } from "@/lib/utils";
 import { Spinner } from "@akxr/design-system";
 import { StudentDashboard } from "@/components/dashboard/StudentDashboard";
 import { MentorDashboard } from "@/components/dashboard/MentorDashboard";
@@ -13,7 +14,9 @@ export default function Home() {
   const { data, isLoading, isError } = useGetUser();
 
   useEffect(() => {
-    if (isError) router.push("/login");
+    if (!isError) return;
+    clearAuthTokens();
+    router.replace("/login");
   }, [isError, router]);
 
   if (isLoading) {

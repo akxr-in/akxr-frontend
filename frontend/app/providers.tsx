@@ -8,6 +8,14 @@ import {
 } from "@tanstack/react-query";
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { clearAuthTokens, isAuthError } from "@akxr/api";
+
+function redirectToLogin() {
+    if (typeof window === "undefined") return;
+    const path = window.location.pathname;
+    if (path === "/login" || path === "/signup" || path.startsWith("/auth/")) return;
+    window.location.replace("/login");
+}
 
 // Error handler helper
 function handleApiError(error: unknown) {
@@ -15,17 +23,14 @@ function handleApiError(error: unknown) {
 
     let message = "An unexpected error occurred";
 
+    if (isAuthError(error)) {
+        clearAuthTokens();
+        redirectToLogin();
+        return;
+    }
+
     if (error instanceof Error) {
         message = error.message;
-
-        // Handle specific HTTP errors
-        if (message.includes("401") || message.includes("Unauthorized")) {
-            message = "Session expired. Please log in again.";
-            if (typeof window !== "undefined") {
-                window.location.href = "/login";
-            }
-            return;
-        }
 
         if (message.includes("403") || message.includes("Forbidden")) {
             message = "You don't have permission to perform this action.";
@@ -62,11 +67,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         staleTime: 60 * 1000,
                         refetchOnWindowFocus: false,
                         retry: (failureCount, error) => {
-                            if (error instanceof Error) {
-                                if (error.message.includes("401") || error.message.includes("403")) {
-                                    return false;
-                                }
-                            }
+                            if (isAuthError(error)) return false;
                             return failureCount < 2;
                         },
                     },

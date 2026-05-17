@@ -1,31 +1,16 @@
 // src/api/custom-fetch.ts
 
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+import {
+  ACCESS_TOKEN_KEY,
+  AuthError,
+  clearTokens,
+  getToken,
+  REFRESH_TOKEN_KEY,
+  setTokens,
+} from './auth-storage';
 
 function getBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-}
-
-function getToken(key: string): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(key);
-}
-
-function setTokens(accessToken: string, refreshToken: string) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  document.cookie = `${ACCESS_TOKEN_KEY}=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-  document.cookie = `${REFRESH_TOKEN_KEY}=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
-}
-
-function clearTokens() {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-  document.cookie = `${ACCESS_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
-  document.cookie = `${REFRESH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 // Strip any hardcoded hostname (from orval codegen) and replace with runtime base URL.
@@ -61,12 +46,75 @@ async function attemptRefresh(): Promise<string | null> {
   return data.access_token;
 }
 
+function failAuth(): never {
+  clearTokens();
+  throw new AuthError();
+}
+
+async function handle401(
+  finalUrl: string,
+  options: RequestInit,
+  buildHeaders: (t: string | null) => HeadersInit,
+  hadToken: boolean,
+): Promise<Response> {
+  // No token was sent — refresh cannot help; clear stale cookies and stop.
+  if (!hadToken) {
+    failAuth();
+  }
+
+  if (!isRefreshing) {
+    isRefreshing = true;
+    const newToken = await attemptRefresh();
+    isRefreshing = false;
+
+    if (newToken) {
+      refreshQueue.forEach((cb) => cb(newToken));
+      refreshQueue = [];
+
+      const retryResponse = await fetch(finalUrl, {
+        ...options,
+        headers: buildHeaders(newToken),
+      });
+
+      if (retryResponse.status === 401) {
+        failAuth();
+      }
+
+      return retryResponse;
+    }
+
+    refreshQueue.forEach((cb) => cb(''));
+    refreshQueue = [];
+    failAuth();
+  }
+
+  const newToken = await new Promise<string>((resolve) => {
+    refreshQueue.push(resolve);
+  });
+
+  if (!newToken) {
+    failAuth();
+  }
+
+  const retryResponse = await fetch(finalUrl, {
+    ...options,
+    headers: buildHeaders(newToken),
+  });
+
+  if (retryResponse.status === 401) {
+    failAuth();
+  }
+
+  return retryResponse;
+}
+
 export const customFetch = async <T>(
   url: string,
   options: RequestInit
 ): Promise<T> => {
   const finalUrl = resolveUrl(url);
   const token = getToken(ACCESS_TOKEN_KEY);
+  const hadToken = !!token;
 
   const buildHeaders = (t: string | null): HeadersInit => ({
     'Content-Type': 'application/json',
@@ -79,51 +127,20 @@ export const customFetch = async <T>(
     headers: buildHeaders(token),
   });
 
-  // Token refresh on 401
   if (response.status === 401) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      const newToken = await attemptRefresh();
-      isRefreshing = false;
-
-      if (newToken) {
-        // Flush queued requests
-        refreshQueue.forEach((cb) => cb(newToken));
-        refreshQueue = [];
-
-        // Retry this request with new token
-        response = await fetch(finalUrl, {
-          ...options,
-          headers: buildHeaders(newToken),
-        });
-      } else {
-        refreshQueue.forEach((cb) => cb(''));
-        refreshQueue = [];
-        clearTokens();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
-        throw new Error('Session expired. Please log in again.');
-      }
-    } else {
-      // Another refresh in progress — wait for it
-      const newToken = await new Promise<string>((resolve) => {
-        refreshQueue.push(resolve);
-      });
-
-      if (!newToken) throw new Error('Session expired. Please log in again.');
-
-      response = await fetch(finalUrl, {
-        ...options,
-        headers: buildHeaders(newToken),
-      });
-    }
+    response = await handle401(finalUrl, options, buildHeaders, hadToken);
   }
 
   const data = await response.json();
 
   if (!response.ok) {
     const errorMessage = data?.message || data?.error || `HTTP ${response.status}: ${response.statusText}`;
+    if (response.status === 401 || response.status === 403) {
+      clearTokens();
+      throw new AuthError(
+        typeof errorMessage === 'string' ? errorMessage : 'Session expired. Please log in again.'
+      );
+    }
     throw new Error(errorMessage);
   }
 

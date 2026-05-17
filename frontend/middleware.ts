@@ -8,20 +8,12 @@ const AUTH_ROUTES = [
     "/complete-profile",
 ];
 
-// Routes only for unauthenticated users (public routes)
-const UNAUTH_ROUTES = [
-    "/login",
-    "/signup",
-];
-
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const accessToken = request.cookies.get(ACCESS_TOKEN_KEY)?.value;
 
     const isAuthenticated = !!accessToken;
     const isAuthRoute = AUTH_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
-    const isUnauthRoute = UNAUTH_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
-    const isCompleteProfileRoute = pathname === "/complete-profile" || pathname.startsWith("/complete-profile/");
 
     // Unauthenticated user trying to access protected route -> redirect to login
     if (!isAuthenticated && isAuthRoute) {
@@ -68,10 +60,8 @@ export async function middleware(request: NextRequest) {
     //     }
     // }
 
-    // Authenticated user trying to access unauth route -> redirect to home
-    if (isAuthenticated && isUnauthRoute) {
-        return NextResponse.redirect(new URL("/", request.url));
-    }
+    // Allow /login and /signup even when a cookie exists. Stale or partial auth state
+    // (cookie without localStorage token) used to bounce /login -> / -> /login in a loop.
 
     return NextResponse.next();
 }

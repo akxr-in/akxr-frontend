@@ -11,6 +11,14 @@ export * from './api/models';
 
 // Re-export custom fetch for customization
 export { customFetch } from './api/custom-fetch';
+export {
+  clearTokens as clearAuthTokens,
+  setTokens as setAuthTokens,
+  isAuthError,
+  AuthError,
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+} from './api/auth-storage';
 
 // Re-export env configuration
 export { env } from './lib/env';
