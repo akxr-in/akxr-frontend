@@ -3,15 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { clearAuthTokens } from "@/lib/utils";
+import { dc } from "@/lib/dc";
 import { Spinner } from "@akxr/design-system";
 
 export default function LogoutPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Clear tokens and redirect to login
-    clearAuthTokens();
-    router.replace("/login");
+    void dc.endSession().finally(() => {
+      clearAuthTokens();
+      router.replace("/login");
+    });
   }, [router]);
 
   return (
