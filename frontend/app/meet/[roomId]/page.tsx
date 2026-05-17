@@ -20,6 +20,7 @@ import {
 import { useGetMeetingByRoomId, useGetMeetingToken, useGetUser } from "@akxr/api";
 import { customFetch } from "@akxr/api";
 import toast from "react-hot-toast";
+import { RtkThemeBridge } from "@/components/meet/RtkThemeBridge";
 
 // ── Inner meeting room (needs RealtimeKitProvider context) ────────────────────
 
@@ -121,6 +122,7 @@ function MeetingRoom({
   }
 
   return (
+    <RtkThemeBridge>
     <div className="h-screen flex flex-col bg-paper overflow-hidden">
       {/* Header */}
       <header className="shrink-0 flex items-center justify-between px-6 h-14 bg-paper-2 border-b border-line">
@@ -239,6 +241,7 @@ function MeetingRoom({
         </div>
       </footer>
     </div>
+    </RtkThemeBridge>
   );
 }
 
