@@ -65,11 +65,14 @@ export default function StudentLmsPage() {
         () => new Set(batch?.completed_course_ids ?? []),
         [batch]
     );
-    const currentCourseId = batch?.current_course_id ?? null;
 
     const getCourseStatus = (courseId: string): CourseStatus => {
         if (completedSet.has(courseId)) return "completed";
-        if (courseId === currentCourseId) return "ongoing";
+
+        const courseIds = batch?.course_ids ?? [];
+        const idx = courseIds.indexOf(courseId);
+        if (idx === 0) return "ongoing";
+        if (idx > 0 && completedSet.has(courseIds[idx - 1])) return "ongoing";
         return "locked";
     };
 
@@ -83,15 +86,17 @@ export default function StudentLmsPage() {
 
     // Current course (hero)
     const currentCourse = useMemo(() => {
-        if (currentCourseId) return courseMap.get(currentCourseId) ?? null;
-        // Fallback: first non-completed course
-        for (const id of batch?.course_ids ?? []) {
-            if (!completedSet.has(id)) {
+        const courseIds = batch?.course_ids ?? [];
+        for (let i = 0; i < courseIds.length; i++) {
+            const id = courseIds[i];
+            if (completedSet.has(id)) continue;
+            const unlocked = i === 0 || completedSet.has(courseIds[i - 1]);
+            if (unlocked) {
                 return courseMap.get(id) ?? null;
             }
         }
         return null;
-    }, [currentCourseId, batch, courseMap, completedSet]);
+    }, [batch, courseMap, completedSet]);
 
     const isLoading = isLoadingUser || isLoadingBatch || isLoadingCourses;
 

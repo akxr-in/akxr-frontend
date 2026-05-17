@@ -11,9 +11,7 @@ import {
   usePostAdminCourses,
   usePostBatch,
   useDeleteAdminCourse,
-  useAddModule,
-  useUpdateAdminModule,
-  useDeleteAdminModule,
+  useAddModule, useDeleteAdminModule,
   useAddLecture,
   useUpdateAdminLecture,
   useDeleteAdminLecture,
@@ -21,11 +19,12 @@ import {
   type AdminCourse,
   type AdminUser,
   type AddLectureBody,
-  type UpdateLectureBody,
+  type UpdateLectureBody
 } from "@akxr/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { EmptyHint, fmtDate, LmsLayout, Panel, StatTile } from "@/components/lms/LmsLayout";
+import { MultiSelect } from "@akxr/design-system";
 
 type AdminTab = "catalog" | "build" | "batch";
 
@@ -819,7 +818,7 @@ interface BatchTabProps {
 }
 
 interface BatchForm {
-  course_id: string;
+  course_ids: string[];
   batch_code: string;
   batch_name: string;
   mentor_id: string;
@@ -831,7 +830,7 @@ interface BatchForm {
 }
 
 const initialBatchForm: BatchForm = {
-  course_id: "",
+  course_ids: [],
   batch_code: "",
   batch_name: "",
   mentor_id: "",
@@ -850,8 +849,7 @@ function BatchTab({ courses, mentors, createBatchMutation, onRefresh }: BatchTab
   const f = (k: keyof BatchForm) => (v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   function handleCreate() {
-    const course = courses.find((c) => c.id === form.course_id);
-    if (!course) { setFeedback("Select a course first."); return; }
+    if (form.course_ids.length === 0) { setFeedback("Select at least one course."); return; }
     if (!form.mentor_id || !form.batch_code.trim() || !form.batch_name.trim()) {
       setFeedback("Batch code, name, and mentor are required.");
       return;
@@ -866,10 +864,10 @@ function BatchTab({ courses, mentors, createBatchMutation, onRefresh }: BatchTab
           batch_start_date: form.batch_start_date,
           batch_end_date: form.batch_end_date,
           estimated_end_date: form.estimated_end_date || form.batch_end_date,
-          current_course_id: course.id,
-          course_ids: [course.id],
+          current_course_id: form.course_ids[0] || null,
+          course_ids: form.course_ids,
           batch_code: form.batch_code.trim().toUpperCase(),
-          description: form.description.trim() || `Batch for ${course.title}`,
+          description: form.description.trim() || `Batch ${form.batch_code}`,
         },
       },
       {
@@ -877,7 +875,7 @@ function BatchTab({ courses, mentors, createBatchMutation, onRefresh }: BatchTab
           if (res.status !== 201) { setFeedback("Batch creation failed."); return; }
           await queryClient.invalidateQueries({ queryKey: getAdminBatchesQueryKey() });
           setForm(initialBatchForm);
-          setFeedback("Batch created and connected to the selected course.");
+          setFeedback("Batch created and connected to the selected courses.");
           onRefresh();
         },
         onError: () => setFeedback("Batch creation failed. Verify dates and mentor."),
@@ -887,21 +885,15 @@ function BatchTab({ courses, mentors, createBatchMutation, onRefresh }: BatchTab
 
   return (
     <div className="max-w-xl">
-      <Panel title="Create batch" sub="Connect a mentor and dates to an existing course">
+      <Panel title="Create batch" sub="Connect a mentor and dates to existing courses">
         <div className="p-4 space-y-3">
-          <label className="text-[11px] text-text-muted flex flex-col gap-1">
-            Course *
-            <select
-              value={form.course_id}
-              onChange={(e) => setForm((p) => ({ ...p, course_id: e.target.value }))}
-              className="bg-bg-primary border border-border-default rounded-md px-3 py-2 text-[12.5px] text-text-primary"
-            >
-              <option value="">Select a course…</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-          </label>
+          <MultiSelect
+            label="Courses *"
+            placeholder="Search and select courses…"
+            options={courses.map((c) => ({ value: c.id, label: c.title }))}
+            value={form.course_ids}
+            onChange={(ids) => setForm((p) => ({ ...p, course_ids: ids }))}
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <FieldInput label="Batch code *" value={form.batch_code} onChange={(v) => setForm((p) => ({ ...p, batch_code: v.slice(0, 8) }))} placeholder="e.g. JS01" />
