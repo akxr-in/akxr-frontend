@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUserGithubLogin, usePostUserAuthSignin } from "@akxr/api";
-import { setAuthTokens } from "@/lib/utils";
+import { getGetUserQueryKey, getUserGithubLogin, usePostUserAuthSignin } from "@akxr/api";
+import { setAuthTokens } from "@akxr/api";
 import { toast } from "../../providers";
+import { useQueryClient } from "@tanstack/react-query";
 
 function Field({
   label,
@@ -54,6 +55,7 @@ function Field({
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const loginMutation = usePostUserAuthSignin();
 
   const [email, setEmail] = useState("");
@@ -93,6 +95,7 @@ export default function LoginPage() {
           }
           const { access_token, refresh_token, user } = response.data.data;
           setAuthTokens(access_token, refresh_token);
+          queryClient.removeQueries({ queryKey: getGetUserQueryKey() });
           if (user.profile_status === "AUTHENTICATED") {
             router.push("/complete-profile");
           } else {

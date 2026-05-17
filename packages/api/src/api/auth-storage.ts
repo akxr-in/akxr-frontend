@@ -22,6 +22,10 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+export function hasAuthToken(): boolean {
+  return !!getToken(ACCESS_TOKEN_KEY);
+}
+
 /** Read token from localStorage, falling back to cookie (middleware may have set cookie only). */
 export function getToken(key: string): string | null {
   if (typeof window === 'undefined') return null;
@@ -42,8 +46,8 @@ export function setTokens(accessToken: string, refreshToken: string) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  document.cookie = `${ACCESS_TOKEN_KEY}=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-  document.cookie = `${REFRESH_TOKEN_KEY}=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+  document.cookie = `${ACCESS_TOKEN_KEY}=${encodeURIComponent(accessToken)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  document.cookie = `${REFRESH_TOKEN_KEY}=${encodeURIComponent(refreshToken)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
 }
 
 export function clearTokens() {

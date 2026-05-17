@@ -2,13 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { setAuthTokens } from "@/lib/utils";
+import { getGetUserQueryKey, setAuthTokens } from "@akxr/api";
 import { toast } from "../../../providers";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants";
 import { Spinner } from "@akxr/design-system";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function GithubCallbackPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         // Parse hash parameters from URL (format: #access_token=...&refresh_token=...&is_new_user=...&profile_status=...)
@@ -27,6 +29,7 @@ export default function GithubCallbackPage() {
         }
 
         setAuthTokens(access_token, refresh_token);
+        queryClient.removeQueries({ queryKey: getGetUserQueryKey() });
 
         if (is_new_user) {
             toast.success("Account created successfully!");
@@ -39,7 +42,7 @@ export default function GithubCallbackPage() {
                 router.push("/");
             }
         }
-    }, [router]);
+    }, [router, queryClient]);
 
     return (
         <div className="min-h-screen bg-bg-primary flex items-center justify-center">

@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useGetUser, useGetContinueLearning } from "@akxr/api";
+import { useGetContinueLearning } from "@akxr/api";
+import { useAuthenticatedUser } from "@/lib/auth-hooks";
 import { dc, initDc } from "@/lib/dc";
 
 export function DcBootstrapper() {
-  const { data: userRes } = useGetUser();
+  const { data: userRes } = useAuthenticatedUser();
   const { data: continueRes } = useGetContinueLearning();
   const user = userRes?.status === 200 ? userRes.data.data : null;
   const courseId = continueRes?.data?.data?.next?.course_id ?? undefined;

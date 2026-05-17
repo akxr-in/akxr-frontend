@@ -6,7 +6,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePostUserAuthSignup, type PostUserAuthSignupBody, getUserGithubLogin } from "@akxr/api";
+import { getGetUserQueryKey, usePostUserAuthSignup, type PostUserAuthSignupBody, getUserGithubLogin } from "@akxr/api";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "../../providers";
 import { setAuthTokens } from "@/lib/utils";
 import { RequiredAsterisk } from "@/components/ui/RequiredAsterisk";
@@ -31,6 +32,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const signupMutation = usePostUserAuthSignup();
 
     const {
@@ -63,6 +65,7 @@ export default function SignupPage() {
 
                     // Store tokens in both localStorage and cookies
                     setAuthTokens(access_token, refresh_token);
+                    queryClient.removeQueries({ queryKey: getGetUserQueryKey() });
 
                     toast.success("Account created successfully!");
 

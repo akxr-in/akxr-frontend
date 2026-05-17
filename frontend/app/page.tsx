@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetUser } from "@akxr/api";
+import { useAuthenticatedUser, useHasAuthToken } from "@/lib/auth-hooks";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { clearAuthTokens } from "@/lib/utils";
@@ -11,15 +11,21 @@ import { AdminDashboard } from "@/components/dashboard/AdminDashboard";
 
 export default function Home() {
   const router = useRouter();
-  const { data, isLoading, isError } = useGetUser();
+  const hasToken = useHasAuthToken();
+  const { data, isLoading, isError, isFetched } = useAuthenticatedUser();
 
   useEffect(() => {
-    if (!isError) return;
-    clearAuthTokens();
-    router.replace("/login");
-  }, [isError, router]);
+    if (!hasToken) {
+      router.replace("/login");
+      return;
+    }
+    if (isFetched && isError) {
+      clearAuthTokens();
+      router.replace("/login");
+    }
+  }, [hasToken, isError, isFetched, router]);
 
-  if (isLoading) {
+  if (!hasToken || isLoading) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-text-muted">

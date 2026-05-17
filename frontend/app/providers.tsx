@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { DcBootstrapper } from "@/components/DcBootstrapper";
-import { clearAuthTokens, isAuthError } from "@akxr/api";
+import { clearAuthTokens, hasAuthToken, isAuthError } from "@akxr/api";
 
 function redirectToLogin() {
     if (typeof window === "undefined") return;
@@ -25,6 +25,8 @@ function handleApiError(error: unknown) {
     let message = "An unexpected error occurred";
 
     if (isAuthError(error)) {
+        // Expected when logged out (e.g. DcBootstrapper before login) — don't clear or redirect.
+        if (!hasAuthToken()) return;
         clearAuthTokens();
         redirectToLogin();
         return;

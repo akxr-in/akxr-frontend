@@ -16,9 +16,11 @@ export {
   setTokens as setAuthTokens,
   isAuthError,
   AuthError,
+  hasAuthToken,
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
 } from './api/auth-storage';
+export { getGetUserQueryKey } from './api/generated/user/user';
 
 // Re-export env configuration
 export { env } from './lib/env';
