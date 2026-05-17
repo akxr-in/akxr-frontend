@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   useRealtimeKitClient,
   RealtimeKitProvider,
@@ -31,6 +31,7 @@ function MeetingRoom({
   meetingId: string;
   isMentorOrAdmin: boolean;
 }) {
+  const router = useRouter();
   const { meeting } = useRealtimeKitMeeting();
   const roomJoined = useRealtimeKitSelector((m) => m.self.roomJoined);
 
@@ -39,6 +40,9 @@ function MeetingRoom({
   const [ended, setEnded] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [ending, setEnding] = useState(false);
+  // Terminal reason for being out of the room — drives a dedicated screen
+  // so users don't sit on "Connecting…" after a kick or remote end.
+  const [exitReason, setExitReason] = useState<null | "kicked" | "ended" | "failed">(null);
 
   // Track joined participants reactively via selector — accumulate to capture leavers too
   const joinedParticipants = useRealtimeKitSelector((m) => (m as any).participants?.joined);
@@ -53,6 +57,30 @@ function MeetingRoom({
       setJoinedUserIds((prev) => new Set([...prev, ...ids]));
     }
   }, [joinedParticipants]);
+
+  // Listen for involuntary room exits.
+  //
+  // The RtK SDK fires `meeting.self.roomLeft` with a `state` field whenever
+  // the local user leaves — voluntarily ("left"), ended-by-host ("ended"),
+  // kicked by host ("kicked"), or a hard failure ("failed"/"disconnected").
+  // Without this listener the user just sees roomJoined flip to false and
+  // gets stuck on our "Connecting…" placeholder forever (the screenshot
+  // bug). Stash the reason and render a terminal screen below.
+  useEffect(() => {
+    if (!meeting?.self) return;
+    const handleRoomLeft = (payload: { state: string }) => {
+      // Voluntary leaves are handled inline by handleLeave / handleEndMeeting
+      // so we don't double-handle them here.
+      if (payload.state === "left" || payload.state === "stageLeft") return;
+      if (payload.state === "kicked") setExitReason("kicked");
+      else if (payload.state === "ended") setExitReason("ended");
+      else if (payload.state === "failed" || payload.state === "disconnected") setExitReason("failed");
+    };
+    meeting.self.on("roomLeft", handleRoomLeft);
+    return () => {
+      meeting.self.off("roomLeft", handleRoomLeft);
+    };
+  }, [meeting]);
 
   // Allow ESC to cancel the "Confirm end" state.
   useEffect(() => {
@@ -93,6 +121,65 @@ function MeetingRoom({
     }
   };
 
+  // Involuntary exit (kicked / host ended / connection lost). Show a
+  // dedicated terminal screen so the user knows why they're not in the
+  // room instead of seeing an infinite "Connecting…".
+  if (exitReason) {
+    const copy = exitReason === "kicked"
+      ? {
+          title: "You were removed from the class",
+          body: "The host removed you from this meeting. Reach out to them if this wasn't expected.",
+          toneBg: "bg-bad-bg",
+          toneFg: "text-bad",
+        }
+      : exitReason === "ended"
+      ? {
+          title: "Class ended",
+          body: "The host ended this class. Attendance has been recorded.",
+          toneBg: "bg-ok-bg",
+          toneFg: "text-ok",
+        }
+      : {
+          title: "Disconnected",
+          body: "We lost the connection to the meeting room. You can rejoin from the dashboard.",
+          toneBg: "bg-brand-subtle",
+          toneFg: "text-brand-ink",
+        };
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-sm px-6">
+          <div className={`w-16 h-16 rounded-full ${copy.toneBg} flex items-center justify-center mx-auto`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-8 h-8 ${copy.toneFg}`} aria-hidden="true">
+              {exitReason === "kicked" ? (
+                <>
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                </>
+              ) : exitReason === "ended" ? (
+                <path d="M5 13l4 4L19 7" />
+              ) : (
+                <>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
+                </>
+              )}
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-ink">{copy.title}</h2>
+          <p className="text-ink-3 text-sm">{copy.body}</p>
+          <button
+            type="button"
+            onClick={() => router.replace("/")}
+            className="px-4 py-2 rounded-[var(--r-sm)] bg-gold text-paper text-sm font-medium hover:bg-gold-deep transition-colors"
+          >
+            Back to dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (ended) {
     const totalSeen = joinedUserIds.size;
     return (
@@ -103,16 +190,16 @@ function MeetingRoom({
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white">Class ended</h2>
-          <p className="text-ink-4 text-sm">
+          <h2 className="text-xl font-semibold text-ink">Class ended</h2>
+          <p className="text-ink-3 text-sm">
             {totalSeen > 0
               ? `Attendance recorded for ${totalSeen} participant${totalSeen === 1 ? "" : "s"}.`
               : "Attendance has been recorded."}
           </p>
           <button
             type="button"
-            onClick={() => window.history.back()}
-            className="px-4 py-2 rounded-lg bg-brand text-paper text-sm font-medium hover:opacity-90 transition-opacity"
+            onClick={() => router.replace("/")}
+            className="px-4 py-2 rounded-[var(--r-sm)] bg-gold text-paper text-sm font-medium hover:bg-gold-deep transition-colors"
           >
             Back to dashboard
           </button>
