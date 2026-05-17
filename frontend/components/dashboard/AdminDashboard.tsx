@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CrudBatchModal } from "../CrudBatchModal";
 import { ScheduleClassModal } from "../ScheduleClassModal";
+import { InstantMeetingButton } from "./InstantMeetingButton";
 import { AppShell } from "./AppShell";
 import { StatCard } from "./StatCard";
 import { ProgressBar } from "./ProgressBar";
@@ -33,6 +34,13 @@ import {
   type AdminBatchRequest,
 } from "@akxr/api";
 import { useGetAdminUsers, getGetAdminUsersQueryKey } from "@akxr/api";
+import {
+  useGetMeeting,
+  usePostMeetingIdCancel,
+  getGetMeetingQueryKey,
+  type GetMeeting200DataItem,
+} from "@akxr/api";
+import { formatDateLong, formatTime } from "@/lib/format";
 import toast from "react-hot-toast";
 import { formatDate as fmtDateUtil, formatWeekday } from "@/lib/format";
 
@@ -135,8 +143,8 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
                   className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-medium border"
                   style={
                     step >= s
-                      ? { background: "#C9963A", borderColor: "#C9963A", color: "#000" }
-                      : { background: "transparent", borderColor: "#404040", color: "#737373" }
+                      ? { background: "var(--gold)", borderColor: "var(--gold)", color: "var(--paper)" }
+                      : { background: "transparent", borderColor: "var(--line-2)", color: "var(--ink-4)" }
                   }
                 >
                   {s}
@@ -226,13 +234,13 @@ function CreateCourseModal({ onClose, mentors }: CreateCourseModalProps) {
             {step === 1 ? (
               <button type="button" onClick={() => setStep(2)}
                 className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-                style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+                style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
                 Next: batch
               </button>
             ) : (
               <button type="button" onClick={handlePublish}
                 className="px-4 py-2 rounded-md text-[13px] font-medium border border-brand text-text-inverted transition-all duration-150"
-                style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+                style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
                 Publish course
               </button>
             )}
@@ -392,6 +400,7 @@ function OverviewScreen({
           <p className="text-text-muted text-[13.5px] mt-0.5">{formatWeekday(new Date())}</p>
         </div>
         <div className="flex items-center gap-2">
+          <InstantMeetingButton />
           <button type="button" onClick={handleExport}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-border-default text-text-muted hover:border-border-strong hover:text-text-secondary transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -401,7 +410,7 @@ function OverviewScreen({
           </button>
           <button type="button" onClick={onNewCourse}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-brand text-text-inverted transition-all duration-150"
-            style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+            style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -527,7 +536,7 @@ function CatalogScreen({
         <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">Courses & batches</h2>
         <button type="button" onClick={onNewCourse}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12.5px] font-medium border border-brand text-text-inverted transition-all duration-150"
-          style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}>
+          style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
@@ -830,16 +839,16 @@ function PeopleScreen({
                             style={
                               isAssigned
                                 ? { background: "rgba(201,150,58,0.20)", borderColor: "rgba(201,150,58,0.4)", opacity: isToggling ? 0.5 : 1 }
-                                : { background: "transparent", borderColor: "#333", opacity: isToggling ? 0.5 : 1 }
+                                : { background: "transparent", borderColor: "var(--line-2)", opacity: isToggling ? 0.5 : 1 }
                             }
                           >
                             {isAssigned && !isToggling && (
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C9963A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M20 6L9 17l-5-5" />
                               </svg>
                             )}
                             {isToggling && (
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="2" className="animate-spin">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ink-4)" strokeWidth="2" className="animate-spin">
                                 <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                                 <path d="M12 2a10 10 0 0 1 10 10" />
                               </svg>
@@ -993,6 +1002,284 @@ function PeopleScreen({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Live classes
+//
+// Admin gets every meeting in the system via GET /meeting (backend special-
+// cases ADMIN role to bypass batch filtering). From here admins can monitor
+// status, jump into a room, or cancel a class — start/end stays with the
+// owning mentor since they're the in-call host.
+// ---------------------------------------------------------------------------
+
+type MeetingStatus = GetMeeting200DataItem["status"];
+
+const STATUS_LABEL: Record<MeetingStatus, string> = {
+  SCHEDULED: "Scheduled",
+  STARTED: "Live",
+  ENDED: "Ended",
+  CANCELLED: "Cancelled",
+};
+
+const STATUS_TONE: Record<MeetingStatus, string> = {
+  SCHEDULED: "bg-bg-elevated text-text-secondary border-border-default",
+  STARTED: "bg-success-subtle text-success border-success-muted",
+  ENDED: "bg-bg-elevated text-text-muted border-border-default",
+  CANCELLED: "bg-error-subtle text-error border-error-muted",
+};
+
+const STATUS_FILTERS = [
+  { id: "all" as const,       label: "All" },
+  { id: "SCHEDULED" as const, label: "Scheduled" },
+  { id: "STARTED" as const,   label: "Live" },
+  { id: "ENDED" as const,     label: "Ended" },
+  { id: "CANCELLED" as const, label: "Cancelled" },
+];
+
+interface LiveClassesScreenProps {
+  batches: AdminBatch[];
+}
+
+function LiveClassesScreen({ batches }: LiveClassesScreenProps) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { data: meetingsRes, isLoading } = useGetMeeting();
+  const { mutateAsync: cancelMeeting, isPending: cancelling } = usePostMeetingIdCancel();
+
+  const [filter, setFilter] = useState<typeof STATUS_FILTERS[number]["id"]>("all");
+  const [confirmCancel, setConfirmCancel] = useState<GetMeeting200DataItem | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  // Orval types the response body as 200|400 union; narrow with a runtime
+  // check on the `data` field (present only on 200).
+  const meetingPayload = meetingsRes?.data;
+  const meetings: GetMeeting200DataItem[] =
+    meetingPayload && "data" in meetingPayload ? meetingPayload.data : [];
+
+  const batchById = new Map(batches.map((b) => [b.id, b]));
+
+  const visible = meetings
+    .filter((m) => filter === "all" || m.status === filter)
+    .sort((a, b) => {
+      // Live first, then scheduled (soonest first), then everything else newest first.
+      const rank = (s: MeetingStatus) =>
+        s === "STARTED" ? 0 : s === "SCHEDULED" ? 1 : 2;
+      const r = rank(a.status) - rank(b.status);
+      if (r !== 0) return r;
+      const ta = new Date(a.scheduled_start_time).getTime();
+      const tb = new Date(b.scheduled_start_time).getTime();
+      return a.status === "SCHEDULED" ? ta - tb : tb - ta;
+    });
+
+  const counts = meetings.reduce<Record<MeetingStatus | "all", number>>(
+    (acc, m) => {
+      acc.all = (acc.all ?? 0) + 1;
+      acc[m.status] = (acc[m.status] ?? 0) + 1;
+      return acc;
+    },
+    { all: 0, SCHEDULED: 0, STARTED: 0, ENDED: 0, CANCELLED: 0 }
+  );
+
+  const handleCancel = async () => {
+    if (!confirmCancel) return;
+    try {
+      await cancelMeeting({
+        id: confirmCancel.id,
+        data: cancelReason.trim() ? { reason: cancelReason.trim() } : {},
+      });
+      await queryClient.invalidateQueries({ queryKey: getGetMeetingQueryKey() });
+      toast.success("Class cancelled");
+      setConfirmCancel(null);
+      setCancelReason("");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not cancel";
+      toast.error(msg);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-[20px] font-semibold tracking-[-0.022em] text-white">
+          Live classes
+        </h2>
+        <p className="text-[12px] text-text-muted">
+          {counts.all} total · {counts.STARTED} live · {counts.SCHEDULED} upcoming
+        </p>
+      </div>
+
+      {/* Filter tabs */}
+      <div role="tablist" aria-label="Filter by status" className="flex items-center gap-1 border-b border-border-default">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            role="tab"
+            type="button"
+            aria-selected={filter === f.id}
+            onClick={() => setFilter(f.id)}
+            className={`px-3 py-2 text-[12.5px] font-medium border-b-2 -mb-px transition-colors focus:outline-none focus:text-text-primary ${
+              filter === f.id
+                ? "text-text-primary border-brand"
+                : "text-text-muted border-transparent hover:text-text-secondary"
+            }`}
+          >
+            {f.label}
+            <span className="ml-1.5 text-[10.5px] text-text-muted font-mono">
+              {counts[f.id] ?? 0}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      {isLoading ? (
+        <div className="text-[12.5px] text-text-muted py-8 text-center">Loading classes…</div>
+      ) : visible.length === 0 ? (
+        <div className="bg-bg-secondary border border-border-default rounded-lg p-12 text-center">
+          <p className="text-[13px] text-text-secondary">No classes in this view</p>
+          <p className="text-[11.5px] text-text-muted mt-1">
+            {filter === "all"
+              ? "Nothing has been scheduled yet."
+              : `No ${filter.toLowerCase()} classes right now.`}
+          </p>
+        </div>
+      ) : (
+        <div className="bg-bg-secondary border border-border-default rounded-lg overflow-hidden">
+          <table className="w-full text-[12.5px]">
+            <thead>
+              <tr className="border-b border-border-default">
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 text-left">Class</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 text-left">Batch</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 text-left">When</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 text-left">Status</th>
+                <th className="font-mono text-[10px] uppercase tracking-[0.08em] text-text-muted px-3.5 py-2.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((m) => {
+                const batch = batchById.get(m.batch_id);
+                const canCancel = m.status === "SCHEDULED" || m.status === "STARTED";
+                const canJoin = m.status === "STARTED";
+                return (
+                  <tr key={m.id} className="border-b border-border-default last:border-b-0 hover:bg-bg-elevated/40 transition-colors">
+                    <td className="px-3.5 py-3">
+                      <div className="text-text-primary font-medium">{m.title}</div>
+                      {m.description && (
+                        <div className="text-[11.5px] text-text-muted line-clamp-1 mt-0.5">{m.description}</div>
+                      )}
+                    </td>
+                    <td className="px-3.5 py-3 text-text-secondary">
+                      {batch ? (
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/control-panel/admin/batches/${batch.id}`)}
+                          className="hover:text-text-primary transition-colors text-left"
+                        >
+                          {batch.batch_name}
+                        </button>
+                      ) : (
+                        <span className="text-text-muted">—</span>
+                      )}
+                    </td>
+                    <td className="px-3.5 py-3 text-text-secondary whitespace-nowrap">
+                      <div>{formatDateLong(m.scheduled_start_time)}</div>
+                      <div className="text-[11.5px] text-text-muted">
+                        {formatTime(m.scheduled_start_time)} · {m.duration_minutes} min
+                      </div>
+                    </td>
+                    <td className="px-3.5 py-3">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10.5px] font-medium uppercase tracking-[0.05em] border ${STATUS_TONE[m.status]}`}>
+                        {m.status === "STARTED" && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" aria-hidden="true" />
+                        )}
+                        {STATUS_LABEL[m.status]}
+                      </span>
+                    </td>
+                    <td className="px-3.5 py-3 text-right whitespace-nowrap">
+                      {canJoin && (
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/meet/${m.id}`)}
+                          className="text-[11.5px] text-brand hover:opacity-80 transition-opacity mr-3"
+                        >
+                          Join
+                        </button>
+                      )}
+                      {canCancel && (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmCancel(m)}
+                          className="text-[11.5px] text-error hover:opacity-80 transition-opacity"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      {!canCancel && !canJoin && (
+                        <span className="text-[11.5px] text-text-muted">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Cancel confirm */}
+      {confirmCancel && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-bg-deep/80 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setConfirmCancel(null);
+              setCancelReason("");
+            }
+          }}
+        >
+          <div className="bg-bg-secondary border border-border-default rounded-lg p-5 w-full max-w-md">
+            <h3 className="text-[15px] font-semibold text-white mb-1">Cancel this class?</h3>
+            <p className="text-[12.5px] text-text-secondary mb-4">
+              <span className="text-text-primary">{confirmCancel.title}</span>
+              {" — "}
+              {formatDateLong(confirmCancel.scheduled_start_time)} at {formatTime(confirmCancel.scheduled_start_time)}
+            </p>
+            <label className="text-[11.5px] font-medium text-text-secondary block mb-1.5">
+              Reason (optional)
+            </label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g. Mentor unavailable"
+              rows={2}
+              className="w-full bg-bg-primary border border-border-default rounded px-2.5 py-1.5 text-[12.5px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand"
+            />
+            <div className="flex items-center justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmCancel(null);
+                  setCancelReason("");
+                }}
+                className="px-3 py-1.5 text-[12.5px] font-medium text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                disabled={cancelling}
+                onClick={handleCancel}
+                className="px-3 py-1.5 text-[12.5px] font-medium bg-error text-white rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {cancelling ? "Cancelling…" : "Cancel class"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AuditLogScreen() {
   return (
     <div className="space-y-5">
@@ -1022,10 +1309,11 @@ interface AdminDashboardProps {
 }
 
 const ADMIN_TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "catalog",  label: "Courses & batches" },
-  { id: "people",   label: "People & roles" },
-  { id: "audit",    label: "Audit log" },
+  { id: "overview",     label: "Overview" },
+  { id: "live-classes", label: "Live classes" },
+  { id: "catalog",      label: "Courses & batches" },
+  { id: "people",       label: "People & roles" },
+  { id: "audit",        label: "Audit log" },
 ];
 
 export function AdminDashboard({ user }: AdminDashboardProps) {
@@ -1069,6 +1357,9 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
             batches={batches}
             getMentorName={getMentorName}
           />
+        )}
+        {activeTab === "live-classes" && (
+          <LiveClassesScreen batches={batches} />
         )}
         {activeTab === "catalog" && (
           <CatalogScreen

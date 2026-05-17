@@ -1,66 +1,36 @@
-export type AttStatus = 'present' | 'partial' | 'absent' | 'live';
+export type AttStatus = "present" | "partial" | "absent" | "live";
 
 interface AttendanceBadgeProps {
   status: AttStatus;
 }
 
 const statusTooltip: Record<AttStatus, string> = {
-  present: 'Present for the full session',
-  partial: 'Joined but missed part of the session',
-  absent: 'Did not join the session',
-  live: 'Session is happening right now',
+  present: "Present for the full session",
+  partial: "Joined but missed part of the session",
+  absent: "Did not join the session",
+  live: "Session is happening right now",
 };
 
-const statusConfig: Record<AttStatus, {
-  bg: string;
-  text: string;
-  border: string;
-  dotColor: string;
-  label: string;
-}> = {
-  present: {
-    bg: 'rgba(34,197,94,0.12)',
-    text: '#22C55E',
-    border: 'rgba(34,197,94,0.2)',
-    dotColor: '#22C55E',
-    label: 'Present',
-  },
-  partial: {
-    bg: 'rgba(201,150,58,0.10)',
-    text: '#C9963A',
-    border: 'rgba(201,150,58,0.2)',
-    dotColor: '#C9963A',
-    label: 'Partial',
-  },
-  absent: {
-    bg: 'rgba(197,34,34,0.14)',
-    text: '#C52222',
-    border: 'rgba(197,34,34,0.2)',
-    dotColor: '#C52222',
-    label: 'Absent',
-  },
-  live: {
-    bg: 'rgba(201,150,58,0.12)',
-    text: '#C9963A',
-    border: 'rgba(201,150,58,0.25)',
-    dotColor: '#C9963A',
-    label: 'LIVE',
-  },
+// Tone via canonical status tokens — same scheme as the reference
+// `Pill` primitive (ds.jsx). Live reuses the gold tone but adds a pulsing
+// dot to read as "happening now".
+const statusConfig: Record<AttStatus, { className: string; label: string; pulse?: boolean }> = {
+  present: { className: "bg-success-subtle text-success border-success-muted",   label: "Present" },
+  partial: { className: "bg-brand-subtle   text-brand-ink border-brand-muted",   label: "Partial" },
+  absent:  { className: "bg-error-subtle   text-error border-error-muted",       label: "Absent" },
+  live:    { className: "bg-brand-subtle   text-brand-ink border-brand-muted",   label: "LIVE", pulse: true },
 };
 
 export function AttendanceBadge({ status }: AttendanceBadgeProps) {
   const cfg = statusConfig[status];
-
   return (
     <span
       title={statusTooltip[status]}
       aria-label={statusTooltip[status]}
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border"
-      style={{ backgroundColor: cfg.bg, color: cfg.text, borderColor: cfg.border }}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--r-sm)] text-[11px] font-medium border ${cfg.className}`}
     >
       <span
-        className={status === 'live' ? 'w-1.5 h-1.5 rounded-full animate-pulse' : 'w-1.5 h-1.5 rounded-full'}
-        style={{ backgroundColor: cfg.dotColor }}
+        className={`w-1.5 h-1.5 rounded-full bg-current ${cfg.pulse ? "animate-pulse" : ""}`}
         aria-hidden="true"
       />
       {cfg.label}

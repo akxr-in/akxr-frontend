@@ -80,7 +80,7 @@ function GoldButton({ children, onClick, disabled, className = "" }: { children:
       onClick={onClick}
       disabled={disabled}
       className={`px-4 py-2 rounded-md text-[12.5px] font-medium border border-brand text-text-inverted transition-all duration-150 disabled:opacity-50 ${className}`}
-      style={{ background: "linear-gradient(135deg, #E2B566 0%, #C9963A 45%, #B27C19 100%)" }}
+      style={{ background: "linear-gradient(135deg, var(--gold-ink) 0%, var(--gold) 45%, var(--gold-deep) 100%)" }}
     >
       {children}
     </button>

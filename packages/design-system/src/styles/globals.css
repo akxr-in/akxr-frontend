@@ -3,183 +3,271 @@
 /* Scan design system components for Tailwind classes */
 @source "../components/**/*.{ts,tsx}";
 
-/* ================================
+/* ============================================================
    AKXR Design System Theme
-   ================================ */
+   ------------------------------------------------------------
+   Source of truth for tokens. Values match the reference
+   design (axar_design_extracted/Control Plane.html).
+   ============================================================ */
 
 :root {
-  /* ========== BACKGROUNDS ========== */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #1a1a1a;
-  --bg-elevated: #27272a;
-  --bg-deep: #050505;
-  --bg-card: #0A0A0A;
+  /* ── Canonical names (match reference) ── */
 
-  /* ========== TEXT ========== */
-  --text-primary: #cccccc;
-  --text-secondary: #a3a3a3;
-  --text-muted: #737373;
-  --text-inverted: #050505;
+  /* Surfaces (darkest → lightest) */
+  --bg-0:       #050505;  /* page edge / deepest */
+  --paper:      #0a0a0a;  /* primary background */
+  --paper-2:    #141414;  /* one level up — inputs, subnav, secondary surfaces */
+  --card:       #191919;  /* default card surface */
+  --card-elev:  #27272a;  /* hover / modal / elevated */
 
-  /* ========== BRAND (Gold) ========== */
-  --brand: #C9963A;
-  --brand-hover: #B27C19;
-  --brand-muted: #523D14;
-  --brand-subtle: #3C2D10;
+  /* Lines */
+  --line:    #262626;     /* default border */
+  --line-2:  #404040;     /* hover / focused border */
 
-  /* ========== ACCENT (Blue) ========== */
-  --accent: #1D4ED8;
-  --accent-light: #678DE5;
-  --accent-muted: #0C235A;
-  --accent-subtle: #06122D;
+  /* Ink (text) */
+  --ink:    #fafafa;      /* headings, primary CTAs label */
+  --ink-2:  #d4d4d4;      /* body text */
+  --ink-3:  #a3a3a3;      /* secondary / labels */
+  --ink-4:  #737373;      /* muted / placeholders */
 
-  /* ========== STATUS: SUCCESS (Green) ========== */
-  --success: #22C55E;
-  --success-muted: #0C5A29;
-  --success-subtle: #062D13;
+  /* Brand (Gold) */
+  --gold:        #C9963A;
+  --gold-deep:   #B27C19;
+  --gold-bg:     #3C2D10;
+  --gold-bg-2:   #523D14;
+  --gold-ink:    #E2B566;
+  --gold-soft:   rgba(201, 150, 58, 0.10);
 
-  /* ========== STATUS: ERROR (Red) ========== */
-  --error: #C52222;
-  --error-muted: #5A0C0C;
-  --error-subtle: #2D0606;
+  --accent:      var(--gold);
+  --accent-soft: var(--gold-soft);
+  --accent-ink:  var(--gold-ink);
 
-  /* ========== STATUS: WARNING (Gold) ========== */
-  --warning: #C9963A;
-  --warning-muted: #523D14;
+  /* Status: Info (Blue) */
+  --info:      #678DE5;
+  --info-deep: #1D4ED8;
+  --info-bg:   #06122D;
+  --info-bg-2: #0C235A;
+  --info-soft: rgba(103, 141, 229, 0.12);
 
-  /* ========== STATUS: INFO (Blue) ========== */
-  --info: #678DE5;
-  --info-muted: #0C235A;
-  --info-subtle: #06122D;
+  /* Status: OK (Green) */
+  --ok:      #22C55E;
+  --ok-deep: #0C5A29;
+  --ok-bg:   #062D13;
+  --ok-soft: rgba(34, 197, 94, 0.12);
 
-  /* ========== BORDERS ========== */
-  --border-default: #27272a;
-  --border-strong: #333333;
-  --border-focus: #1D4ED8;
+  /* Status: Bad (Red) */
+  --bad:      #C52222;
+  --bad-deep: #5A0C0C;
+  --bad-bg:   #2D0606;
+  --bad-soft: rgba(197, 34, 34, 0.14);
 
-  /* ========== GRAYS ========== */
-  --gray-50: #cccccc;
-  --gray-100: #a3a3a3;
-  --gray-200: #737373;
-  --gray-300: #333333;
-  --gray-400: #27272a;
-  --gray-500: #1a1a1a;
-  --gray-600: #191919;
-  --gray-700: #0a0a0a;
-  --gray-800: #050505;
+  /* Status: Warn (amber slot uses gold) */
+  --warn:      var(--gold);
+  --warn-soft: var(--gold-soft);
 
-  /* ========== MISC ========== */
-  --ring: #1D4ED8;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  /* Radii */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.03);
+
+  /* Type */
+  --sans: var(--font-geist-sans), 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: var(--font-geist-mono), 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ── Backwards-compat aliases (legacy names still used across the app) ──
+     New code should use the canonical names above. These aliases keep
+     existing utility classes (text-text-primary, bg-bg-secondary, etc.)
+     working while we migrate. Do not add new aliases. */
+
+  /* Surfaces */
+  --bg-deep:      var(--bg-0);
+  --bg-primary:   var(--paper);
+  --bg-secondary: var(--paper-2);
+  --bg-elevated:  var(--card-elev);
+  --bg-card:      var(--card);
+
+  /* Text */
+  --text-primary:   var(--ink-2);   /* body text */
+  --text-secondary: var(--ink-3);
+  --text-muted:     var(--ink-4);
+  --text-inverted:  var(--bg-0);
+  --text-strong:    var(--ink);     /* NEW: for headings / hero copy */
+
+  /* Brand */
+  --brand:         var(--gold);
+  --brand-hover:   var(--gold-deep);
+  --brand-muted:   var(--gold-bg-2);
+  --brand-subtle:  var(--gold-bg);
+  --brand-ink:     var(--gold-ink);
+
+  /* Status (renamed to legacy spellings) */
+  --success:         var(--ok);
+  --success-muted:   var(--ok-deep);
+  --success-subtle:  var(--ok-bg);
+  --error:           var(--bad);
+  --error-muted:     var(--bad-deep);
+  --error-subtle:    var(--bad-bg);
+  --warning:         var(--warn);
+  --warning-muted:   var(--gold-bg-2);
+  --info-light:      var(--info);
+  --info-muted:      var(--info-bg-2);
+  --info-subtle:     var(--info-bg);
+
+  /* Borders */
+  --border-default: var(--line);
+  --border-strong:  var(--line-2);
+  --border-focus:   var(--info-deep);
+  --ring:           var(--info-deep);
+
+  /* Radii (legacy rem-based names) */
+  --radius-sm:   var(--r-sm);
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-lg);
+  --radius-xl:   var(--r-xl);
   --radius-full: 9999px;
 }
 
-/* Light mode - same as dark for now */
+/* Light mode — same as dark (we ship a single dark theme today). */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg-primary: #0a0a0a;
-    --bg-secondary: #1a1a1a;
-    --bg-elevated: #27272a;
-    --text-primary: #cccccc;
-    --text-secondary: #a3a3a3;
+    /* intentionally empty: dark stays canonical */
   }
 }
 
-/* Register theme with Tailwind */
+/* ============================================================
+   Tailwind theme bindings.
+   Anything referenced as `bg-<name>`, `text-<name>`, `border-<name>`
+   in Tailwind classes needs to be registered here.
+   ============================================================ */
 @theme inline {
   /* Backgrounds */
-  --color-bg-primary: var(--bg-primary);
-  --color-bg-secondary: var(--bg-secondary);
-  --color-bg-elevated: var(--bg-elevated);
-  --color-bg-deep: var(--bg-deep);
-  --color-bg-card: var(--bg-card);
+  --color-bg-primary:    var(--bg-primary);
+  --color-bg-secondary:  var(--bg-secondary);
+  --color-bg-elevated:   var(--bg-elevated);
+  --color-bg-deep:       var(--bg-deep);
+  --color-bg-card:       var(--bg-card);
+  --color-paper:         var(--paper);
+  --color-paper-2:       var(--paper-2);
+  --color-card:          var(--card);
+  --color-card-elev:     var(--card-elev);
 
   /* Text */
-  --color-text-primary: var(--text-primary);
+  --color-text-primary:   var(--text-primary);
   --color-text-secondary: var(--text-secondary);
-  --color-text-muted: var(--text-muted);
-  --color-text-inverted: var(--text-inverted);
+  --color-text-muted:     var(--text-muted);
+  --color-text-strong:    var(--text-strong);
+  --color-text-inverted:  var(--text-inverted);
+  --color-ink:            var(--ink);
+  --color-ink-2:          var(--ink-2);
+  --color-ink-3:          var(--ink-3);
+  --color-ink-4:          var(--ink-4);
 
   /* Brand */
-  --color-brand: var(--brand);
-  --color-brand-hover: var(--brand-hover);
-  --color-brand-muted: var(--brand-muted);
+  --color-brand:        var(--brand);
+  --color-brand-hover:  var(--brand-hover);
+  --color-brand-muted:  var(--brand-muted);
   --color-brand-subtle: var(--brand-subtle);
+  --color-brand-ink:    var(--brand-ink);
+  --color-gold:         var(--gold);
+  --color-gold-deep:    var(--gold-deep);
+  --color-gold-bg:      var(--gold-bg);
+  --color-gold-bg-2:    var(--gold-bg-2);
+  --color-gold-ink:     var(--gold-ink);
 
   /* Accent */
-  --color-accent: var(--accent);
-  --color-accent-light: var(--accent-light);
-  --color-accent-muted: var(--accent-muted);
-  --color-accent-subtle: var(--accent-subtle);
+  --color-accent:        var(--accent);
+  --color-accent-soft:   var(--accent-soft);
+  --color-accent-ink:    var(--accent-ink);
 
-  /* Success */
-  --color-success: var(--success);
-  --color-success-muted: var(--success-muted);
-  --color-success-subtle: var(--success-subtle);
-
-  /* Error */
-  --color-error: var(--error);
-  --color-error-muted: var(--error-muted);
-  --color-error-subtle: var(--error-subtle);
-
-  /* Warning */
-  --color-warning: var(--warning);
-  --color-warning-muted: var(--warning-muted);
-
-  /* Info */
-  --color-info: var(--info);
-  --color-info-muted: var(--info-muted);
-  --color-info-subtle: var(--info-subtle);
+  /* Status */
+  --color-success:        var(--ok);
+  --color-success-muted:  var(--ok-deep);
+  --color-success-subtle: var(--ok-bg);
+  --color-error:          var(--bad);
+  --color-error-muted:    var(--bad-deep);
+  --color-error-subtle:   var(--bad-bg);
+  --color-warning:        var(--warn);
+  --color-warning-muted:  var(--brand-muted);
+  --color-info:           var(--info);
+  --color-info-light:     var(--info);
+  --color-info-deep:      var(--info-deep);
+  --color-info-muted:     var(--info-muted);
+  --color-info-subtle:    var(--info-subtle);
+  --color-ok:             var(--ok);
+  --color-ok-bg:          var(--ok-bg);
+  --color-bad:            var(--bad);
+  --color-bad-bg:         var(--bad-bg);
 
   /* Borders */
   --color-border-default: var(--border-default);
-  --color-border-strong: var(--border-strong);
-  --color-border-focus: var(--border-focus);
-
-  /* Grays */
-  --color-gray-50: var(--gray-50);
-  --color-gray-100: var(--gray-100);
-  --color-gray-200: var(--gray-200);
-  --color-gray-300: var(--gray-300);
-  --color-gray-400: var(--gray-400);
-  --color-gray-500: var(--gray-500);
-  --color-gray-600: var(--gray-600);
-  --color-gray-700: var(--gray-700);
-  --color-gray-800: var(--gray-800);
+  --color-border-strong:  var(--border-strong);
+  --color-border-focus:   var(--border-focus);
+  --color-line:           var(--line);
+  --color-line-2:         var(--line-2);
 
   /* Misc */
   --color-ring: var(--ring);
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-full: var(--radius-full);
 
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  /* Radii */
+  --radius-sm:   var(--r-sm);
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-lg);
+  --radius-xl:   var(--r-xl);
+  --radius-full: 9999px;
+
+  /* Type */
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
-/* Base Styles */
+/* ============================================================
+   Base styles
+   Match reference: 13px base, line-height 1.5, tight letter-spacing.
+   ============================================================ */
+html {
+  font-size: 13px;
+}
+
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-family: var(--sans);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Focus Styles */
+/* Headings default to bright white ink and tight tracking (per reference
+   `.serif` utility — sans 600 with tight letter-spacing). */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+
+/* Focus */
 *:focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--info-deep);
   outline-offset: 2px;
 }
 
-/* Cursors
-   Tailwind v4 reset removes the default cursor:pointer from buttons, so
-   every interactive element has to opt back in. Set sensible defaults
-   once here instead of remembering to add `cursor-pointer` on every
-   <button> across the app. */
+/* ============================================================
+   Cursors
+   Tailwind v4 drops the default cursor:pointer on buttons; opt back
+   in here once so every component doesn't have to remember it.
+   ============================================================ */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 [role="tab"]:not([aria-disabled="true"]),
@@ -197,7 +285,17 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-/* Anchor tags without an href shouldn't show a hand. */
 a:not([href]) {
   cursor: default;
+}
+
+/* ============================================================
+   Utility: monospace meta (timestamps, IDs, status pills)
+   `.mono` is the reference's `.metric` / `.mono` shorthand.
+   ============================================================ */
+.font-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
