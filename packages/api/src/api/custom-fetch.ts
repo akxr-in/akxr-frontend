@@ -4,7 +4,7 @@ const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
 function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 }
 
 function getToken(key: string): string | null {
