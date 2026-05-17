@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Custom hooks for endpoints added after initial orval codegen.
  * Follows the same customFetch + React Query pattern as generated hooks.
@@ -5,6 +7,16 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
 import type { UseQueryOptions, UseQueryResult, UseMutationResult } from '@tanstack/react-query'
 import { customFetch } from './custom-fetch'
+import { hasAuthToken } from './auth-storage'
+
+function useAuthQuery<TQueryFnData, TError, TData = TQueryFnData>(
+  options: UseQueryOptions<TQueryFnData, TError, TData>,
+): UseQueryResult<TData, TError> {
+  return useAuthQuery({
+    ...options,
+    enabled: hasAuthToken() && (options.enabled ?? true),
+  })
+}
 
 // ── shared types ──────────────────────────────────────────────────────────────
 
@@ -104,7 +116,7 @@ export const getUserBatchesQueryKey = () => ['getUserBatches'] as const
 export function useGetUserBatches<TData = GetUserBatchesResponse, TError = unknown>(
   options?: UseQueryOptions<GetUserBatchesResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getUserBatchesQueryKey(),
     queryFn: getUserBatches,
     ...options,
@@ -128,7 +140,7 @@ export const getUserAttendanceQueryKey = () => ['getUserAttendance'] as const
 export function useGetUserAttendance<TData = GetUserAttendanceResponse, TError = unknown>(
   options?: UseQueryOptions<GetUserAttendanceResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getUserAttendanceQueryKey(),
     queryFn: getUserAttendance,
     ...options,
@@ -152,7 +164,7 @@ export const getMentorBatchesQueryKey = () => ['getMentorBatches'] as const
 export function useGetMentorBatches<TData = GetMentorBatchesResponse, TError = unknown>(
   options?: UseQueryOptions<GetMentorBatchesResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getMentorBatchesQueryKey(),
     queryFn: getMentorBatches,
     ...options,
@@ -176,7 +188,7 @@ export const getAdminDashboardQueryKey = () => ['getAdminDashboard'] as const
 export function useGetAdminDashboard<TData = GetAdminDashboardResponse, TError = unknown>(
   options?: UseQueryOptions<GetAdminDashboardResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getAdminDashboardQueryKey(),
     queryFn: getAdminDashboard,
     ...options,
@@ -251,7 +263,7 @@ export const getAdminBatchesQueryKey = () => ['getAdminBatches'] as const
 export function useGetAdminBatches<TData = GetAdminBatchesResponse, TError = unknown>(
   options?: UseQueryOptions<GetAdminBatchesResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getAdminBatchesQueryKey(),
     queryFn: getAdminBatches,
     ...options,
@@ -269,7 +281,7 @@ export const getAdminCoursesQueryKey = () => ['/admin/courses'] as const
 export function useGetAdminCourses<TData = GetAdminCoursesResponse, TError = unknown>(
   options?: UseQueryOptions<GetAdminCoursesResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getAdminCoursesQueryKey(),
     queryFn: getAdminCourses,
     ...options,
@@ -285,7 +297,7 @@ export const getAdminUsersQueryKey = () => ['getAdminUsers'] as const
 export function useGetAdminUsers<TData = GetAdminUsersResponse, TError = unknown>(
   options?: UseQueryOptions<GetAdminUsersResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getAdminUsersQueryKey(),
     queryFn: getAdminUsers,
     ...options,
@@ -322,7 +334,7 @@ export function useGetMeetingByRoomId<TData = MeetingByRoomResponse, TError = un
   roomId: string,
   options?: UseQueryOptions<MeetingByRoomResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getMeetingByRoomIdQueryKey(roomId),
     queryFn: () => getMeetingByRoomId(roomId),
     enabled: !!roomId,
@@ -355,7 +367,7 @@ export function useGetMeetingToken<TData = MeetingTokenResponse, TError = unknow
   meetingId: string,
   options?: UseQueryOptions<MeetingTokenResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getMeetingTokenQueryKey(meetingId),
     queryFn: () => getMeetingToken(meetingId),
     enabled: !!meetingId,
@@ -388,7 +400,7 @@ export function useGetBatchStudents<TData = GetBatchStudentsResponse, TError = u
   batchId: string,
   options?: Omit<UseQueryOptions<GetBatchStudentsResponse, TError, TData>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getBatchStudentsQueryKey(batchId),
     queryFn: () => getBatchStudents(batchId),
     enabled: !!batchId,
@@ -668,7 +680,7 @@ export const getUserCoursesQueryKey = () => ['getUserCourses'] as const
 export function useGetUserCourses<TData = GetUserCoursesResponse, TError = unknown>(
   options?: UseQueryOptions<GetUserCoursesResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getUserCoursesQueryKey(),
     queryFn: getUserCourses,
     ...options,
@@ -697,7 +709,7 @@ export function useGetUserCourse<TData = GetUserCourseResponse, TError = unknown
   courseId: string,
   options?: Omit<UseQueryOptions<GetUserCourseResponse, TError, TData>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getUserCourseQueryKey(courseId),
     queryFn: () => getUserCourse(courseId),
     enabled: !!courseId,
@@ -725,7 +737,7 @@ export const getContinueLearningQueryKey = () => ['getContinueLearning'] as cons
 export function useGetContinueLearning<TData = ContinueLearningResponse, TError = unknown>(
   options?: UseQueryOptions<ContinueLearningResponse, TError, TData>
 ): UseQueryResult<TData, TError> {
-  return useQuery({
+  return useAuthQuery({
     queryKey: getContinueLearningQueryKey(),
     queryFn: getContinueLearning,
     ...options,

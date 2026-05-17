@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getGetUserQueryKey, getUserGithubLogin, usePostUserAuthSignin } from "@akxr/api";
-import { setAuthTokens } from "@akxr/api";
+import { getUserGithubLogin, usePostUserAuthSignin, setAuthTokens } from "@akxr/api";
+import { resetAuthQueries } from "@/lib/auth-session";
 import { toast } from "../../providers";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -95,12 +95,13 @@ export default function LoginPage() {
           }
           const { access_token, refresh_token, user } = response.data.data;
           setAuthTokens(access_token, refresh_token);
-          queryClient.removeQueries({ queryKey: getGetUserQueryKey() });
-          if (user.profile_status === "AUTHENTICATED") {
-            router.push("/complete-profile");
-          } else {
-            router.push("/");
-          }
+          void resetAuthQueries(queryClient).then(() => {
+            if (user.profile_status === "AUTHENTICATED") {
+              router.push("/complete-profile");
+            } else {
+              router.push("/");
+            }
+          });
         },
       }
     );

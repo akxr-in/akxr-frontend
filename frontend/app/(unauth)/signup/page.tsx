@@ -6,7 +6,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getGetUserQueryKey, usePostUserAuthSignup, type PostUserAuthSignupBody, getUserGithubLogin } from "@akxr/api";
+import { usePostUserAuthSignup, type PostUserAuthSignupBody, getUserGithubLogin } from "@akxr/api";
+import { resetAuthQueries } from "@/lib/auth-session";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "../../providers";
 import { setAuthTokens } from "@/lib/utils";
@@ -65,16 +66,16 @@ export default function SignupPage() {
 
                     // Store tokens in both localStorage and cookies
                     setAuthTokens(access_token, refresh_token);
-                    queryClient.removeQueries({ queryKey: getGetUserQueryKey() });
 
                     toast.success("Account created successfully!");
 
-                    // Redirect based on profile status
-                    if (user.profile_status === "AUTHENTICATED") {
-                        router.push("/complete-profile");
-                    } else {
-                        router.push("/");
-                    }
+                    void resetAuthQueries(queryClient).then(() => {
+                        if (user.profile_status === "AUTHENTICATED") {
+                            router.push("/complete-profile");
+                        } else {
+                            router.push("/");
+                        }
+                    });
                 },
             }
         );

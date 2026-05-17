@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getGetUserQueryKey, setAuthTokens } from "@akxr/api";
+import { setAuthTokens } from "@akxr/api";
+import { resetAuthQueries } from "@/lib/auth-session";
 import { toast } from "../../../providers";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/lib/constants";
 import { Spinner } from "@akxr/design-system";
@@ -29,19 +30,20 @@ export default function GithubCallbackPage() {
         }
 
         setAuthTokens(access_token, refresh_token);
-        queryClient.removeQueries({ queryKey: getGetUserQueryKey() });
 
-        if (is_new_user) {
-            toast.success("Account created successfully!");
-            router.push("/complete-profile");
-        } else {
+        void resetAuthQueries(queryClient).then(() => {
+            if (is_new_user) {
+                toast.success("Account created successfully!");
+                router.push("/complete-profile");
+                return;
+            }
             toast.success("Login successful!");
             if (profile_status === "AUTHENTICATED") {
                 router.push("/complete-profile");
             } else {
                 router.push("/");
             }
-        }
+        });
     }, [router, queryClient]);
 
     return (

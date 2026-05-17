@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useGetContinueLearning } from "@akxr/api";
 import { useAuthenticatedUser } from "@/lib/auth-hooks";
+import { useGetContinueLearning } from "@akxr/api";
 import { dc, initDc } from "@/lib/dc";
 
 export function DcBootstrapper() {

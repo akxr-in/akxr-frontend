@@ -1,6 +1,13 @@
 export const ACCESS_TOKEN_KEY = 'access_token';
 export const REFRESH_TOKEN_KEY = 'refresh_token';
 
+/** Bumped on login/logout so stale in-flight 401s cannot wipe a new session. */
+let authGeneration = 0;
+
+export function getAuthGeneration(): number {
+  return authGeneration;
+}
+
 const AUTH_ERROR_PATTERNS = [
   '401',
   '403',
@@ -42,12 +49,38 @@ export function getToken(key: string): string | null {
   return null;
 }
 
+export function shouldClearSessionOnAuthFailure(
+  requestGeneration: number,
+  hadToken: boolean,
+  tokenUsed: string | null,
+): boolean {
+  if (getAuthGeneration() !== requestGeneration) {
+    // Login/logout happened while this request was in flight.
+    return false;
+  }
+
+  const currentToken = getToken(ACCESS_TOKEN_KEY);
+
+  if (!hadToken && currentToken) {
+    // 401 from a pre-login request after tokens were stored.
+    return false;
+  }
+
+  if (hadToken && currentToken && tokenUsed && currentToken !== tokenUsed) {
+    // Token rotated (refresh/login) since this request was sent.
+    return false;
+  }
+
+  return true;
+}
+
 export function setTokens(accessToken: string, refreshToken: string) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   document.cookie = `${ACCESS_TOKEN_KEY}=${encodeURIComponent(accessToken)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
   document.cookie = `${REFRESH_TOKEN_KEY}=${encodeURIComponent(refreshToken)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+  authGeneration += 1;
 }
 
 export function clearTokens() {
@@ -56,6 +89,7 @@ export function clearTokens() {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   document.cookie = `${ACCESS_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
   document.cookie = `${REFRESH_TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
+  authGeneration += 1;
 }
 
 export class AuthError extends Error {

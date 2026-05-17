@@ -4,36 +4,54 @@ import {
   ACCESS_TOKEN_KEY,
   AuthError,
   clearTokens,
+  getAuthGeneration,
   getToken,
   REFRESH_TOKEN_KEY,
   setTokens,
+  shouldClearSessionOnAuthFailure,
 } from './auth-storage';
 
 function getBaseUrl() {
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 }
 
-// Strip any hardcoded hostname (from orval codegen) and replace with runtime base URL.
-// Handles: absolute URLs (http://localhost:3000/path) and relative URLs (/path).
 function resolveUrl(url: string): string {
   const base = getBaseUrl().replace(/\/$/, '');
-  // Relative path → prepend base. Absolute URL → swap origin with base.
   if (!url.startsWith('http')) return `${base}${url}`;
   return url.replace(/^https?:\/\/[^/]+/, base);
+}
+
+function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
+  if (!headers) return {};
+
+  if (headers instanceof Headers) {
+    const out: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      out[key] = value;
+    });
+    return out;
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+
+  return { ...headers };
 }
 
 let isRefreshing = false;
 let refreshQueue: Array<(token: string) => void> = [];
 
 async function attemptRefresh(): Promise<string | null> {
+  const accessToken = getToken(ACCESS_TOKEN_KEY);
   const refreshToken = getToken(REFRESH_TOKEN_KEY);
-  if (!refreshToken) return null;
+  if (!accessToken || !refreshToken) return null;
 
   const base = getBaseUrl().replace(/\/$/, '');
   const res = await fetch(`${base}/user/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    body: JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }),
   });
 
   if (!res.ok) return null;
@@ -46,8 +64,14 @@ async function attemptRefresh(): Promise<string | null> {
   return data.access_token;
 }
 
-function failAuth(): never {
-  clearTokens();
+function failAuth(
+  requestGeneration: number,
+  hadToken: boolean,
+  tokenUsed: string | null,
+): never {
+  if (shouldClearSessionOnAuthFailure(requestGeneration, hadToken, tokenUsed)) {
+    clearTokens();
+  }
   throw new AuthError();
 }
 
@@ -56,10 +80,11 @@ async function handle401(
   options: RequestInit,
   buildHeaders: (t: string | null) => HeadersInit,
   hadToken: boolean,
+  tokenUsed: string | null,
+  requestGeneration: number,
 ): Promise<Response> {
-  // No token was sent — refresh cannot help; clear stale cookies and stop.
   if (!hadToken) {
-    failAuth();
+    failAuth(requestGeneration, false, null);
   }
 
   if (!isRefreshing) {
@@ -77,7 +102,7 @@ async function handle401(
       });
 
       if (retryResponse.status === 401) {
-        failAuth();
+        failAuth(requestGeneration, true, tokenUsed);
       }
 
       return retryResponse;
@@ -85,7 +110,7 @@ async function handle401(
 
     refreshQueue.forEach((cb) => cb(''));
     refreshQueue = [];
-    failAuth();
+    failAuth(requestGeneration, true, tokenUsed);
   }
 
   const newToken = await new Promise<string>((resolve) => {
@@ -93,7 +118,7 @@ async function handle401(
   });
 
   if (!newToken) {
-    failAuth();
+    failAuth(requestGeneration, true, tokenUsed);
   }
 
   const retryResponse = await fetch(finalUrl, {
@@ -102,7 +127,7 @@ async function handle401(
   });
 
   if (retryResponse.status === 401) {
-    failAuth();
+    failAuth(requestGeneration, true, tokenUsed);
   }
 
   return retryResponse;
@@ -110,15 +135,16 @@ async function handle401(
 
 export const customFetch = async <T>(
   url: string,
-  options: RequestInit
+  options: RequestInit,
 ): Promise<T> => {
+  const requestGeneration = getAuthGeneration();
   const finalUrl = resolveUrl(url);
   const token = getToken(ACCESS_TOKEN_KEY);
   const hadToken = !!token;
 
   const buildHeaders = (t: string | null): HeadersInit => ({
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...normalizeHeaders(options.headers),
     ...(t ? { Authorization: `Bearer ${t}` } : {}),
   });
 
@@ -128,17 +154,28 @@ export const customFetch = async <T>(
   });
 
   if (response.status === 401) {
-    response = await handle401(finalUrl, options, buildHeaders, hadToken);
+    response = await handle401(
+      finalUrl,
+      options,
+      buildHeaders,
+      hadToken,
+      token,
+      requestGeneration,
+    );
   }
 
   const data = await response.json();
 
   if (!response.ok) {
-    const errorMessage = data?.message || data?.error || `HTTP ${response.status}: ${response.statusText}`;
+    const errorMessage =
+      data?.message || data?.error || `HTTP ${response.status}: ${response.statusText}`;
+
     if (response.status === 401 || response.status === 403) {
-      clearTokens();
+      if (shouldClearSessionOnAuthFailure(requestGeneration, hadToken, token)) {
+        clearTokens();
+      }
       throw new AuthError(
-        typeof errorMessage === 'string' ? errorMessage : 'Session expired. Please log in again.'
+        typeof errorMessage === 'string' ? errorMessage : 'Session expired. Please log in again.',
       );
     }
     throw new Error(errorMessage);
