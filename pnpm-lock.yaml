@@ -15,8 +15,8 @@ importers:
   frontend:
     dependencies:
       '@akxr-in/data-collection-sdk':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@akxr/api':
         specifier: workspace:*
         version: link:../packages/api
@@ -130,8 +130,8 @@ importers:
 
 packages:
 
-  '@akxr-in/data-collection-sdk@0.1.0':
-    resolution: {integrity: sha512-UmXa3HZRApoR8YWGQvnhmwIXdRsAX2BwxDQ4EzIjZa6T+rYZ/+8ClSTgIxTEv12CaOtiVMMj6sjAs+V0CP72nw==, tarball: https://npm.pkg.github.com/download/@akxr-in/data-collection-sdk/0.1.0/46698bf70fc960029b8c56646c874b7b7e148c8f}
+  '@akxr-in/data-collection-sdk@0.1.1':
+    resolution: {integrity: sha512-s5GFGc45ewOXOx+eAZEYGr+D3EruCm0b8taQD+O4o1vZmr0rHvEit4lWUrp+nenAcoJkdR8xCjtIs9gfYvL86A==, tarball: https://npm.pkg.github.com/download/@akxr-in/data-collection-sdk/0.1.1/7982876d0431b4a6944745bcac1c22027ae90e27}
     engines: {node: '>=18'}
 
   '@alloc/quick-lru@5.2.0':
@@ -2900,7 +2900,7 @@ packages:
 
 snapshots:
 
-  '@akxr-in/data-collection-sdk@0.1.0':
+  '@akxr-in/data-collection-sdk@0.1.1':
     dependencies:
       openapi-fetch: 0.17.0
 
